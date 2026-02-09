@@ -1,504 +1,1418 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Editor de Texto Avançado</title>
     <!-- Tailwind CSS CDN para estilização -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Biblioteca Lucide Icons para ícones modernos -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
     <style>
-        /* Variável CSS para a coluna da régua, usada para posicionamento dinâmico */
-        :root {
-            --ruler-column: 80;
-        }
-        html, body {
-            height: 100%;
-            overflow: hidden; /* Impede o scroll no body */
-        }
-        body {
-            font-family: 'Inter', sans-serif;
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-        #editor {
-            font-family: 'Roboto Mono', monospace; /* Fonte monoespaçada para consistência */
-            resize: none; /* O redimensionamento é controlado pelo layout flex */
-        }
-        
-        /* Estilo da linha da régua */
-        #ruler-line {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            /* Calcula a posição baseada na variável CSS e no padding do editor */
-            left: calc(var(--ruler-column) * 1ch + 1rem); /* 1rem = p-4 */
-            border-left: 1px solid #ef4444; /* Cor vermelha para a régua */
-            z-index: 0;
-            opacity: 0.6;
-            pointer-events: none; /* Impede que a linha intercepte cliques */
-        }
-        /* Efeito de transição suave para modais */
-        .modal-overlay {
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-        }
-        .modal-content {
-             transition: transform 0.3s ease, opacity 0.3s ease;
-        }
-        .modal-overlay.show {
-            opacity: 1;
-            visibility: visible;
-        }
-        .modal-overlay.show .modal-content {
-            transform: translateY(0);
-            opacity: 1;
-        }
-        /* Estilo para a caixa de mensagem flutuante (Toast) */
-        #message-box {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            background-color: #2d3748;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
-            z-index: 2000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-        .dark #message-box {
-             background-color: #e2e8f0;
-             color: #1a202c;
-        }
-        #message-box.show {
-            opacity: 1;
-            visibility: visible;
-            transform: translateX(-50%) translateY(0);
-        }
+      /* Variável CSS para a coluna da régua, usada para posicionamento dinâmico */
+      :root {
+        --ruler-column: 80;
+      }
+      html,
+      body {
+        height: 100%;
+        overflow: hidden; /* Impede o scroll no body */
+      }
+      body {
+        font-family: "Inter", sans-serif;
+        transition:
+          background-color 0.3s ease,
+          color 0.3s ease;
+      }
+      #editor {
+        font-family:
+          "Roboto Mono", monospace; /* Fonte monoespaçada para consistência */
+        resize: none; /* O redimensionamento é controlado pelo layout flex */
+      }
+
+      /* Estilo da linha da régua */
+      #ruler-line {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        /* Calcula a posição baseada na variável CSS e no padding do editor */
+        left: calc(var(--ruler-column) * 1ch + 1rem); /* 1rem = p-4 */
+        border-left: 1px solid #ef4444; /* Cor vermelha para a régua */
+        z-index: 0;
+        opacity: 0.6;
+        pointer-events: none; /* Impede que a linha intercepte cliques */
+      }
+      /* Efeito de transição suave para modais */
+      .modal-overlay {
+        transition:
+          opacity 0.3s ease,
+          visibility 0.3s ease;
+      }
+      .modal-content {
+        transition:
+          transform 0.3s ease,
+          opacity 0.3s ease;
+      }
+      .modal-overlay.show {
+        opacity: 1;
+        visibility: visible;
+      }
+      .modal-overlay.show .modal-content {
+        transform: translateY(0);
+        opacity: 1;
+      }
+      /* Estilo para a caixa de mensagem flutuante (Toast) */
+      #message-box {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%) translateY(100px);
+        background-color: #2d3748;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        z-index: 2000;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      }
+      .dark #message-box {
+        background-color: #e2e8f0;
+        color: #1a202c;
+      }
+      #message-box.show {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(-50%) translateY(0);
+      }
+      
+      /* Indicador de seleções múltiplas */
+      #multi-selection-indicator {
+        position: fixed;
+        top: 50%;
+        right: 20px;
+        transform: translateY(-50%);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+        z-index: 1500;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      #multi-selection-indicator.show {
+        opacity: 1;
+        visibility: visible;
+      }
+      #multi-selection-indicator:hover {
+        transform: translateY(-50%) scale(1.05);
+        box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
+      }
+      
+      /* Sistema de numeração de linhas */
+      #editor-wrapper {
+        position: relative;
+        display: flex;
+      }
+      
+      #line-numbers {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 50px;
+        background: #e2e8f0;
+        border-right: 1px solid #cbd5e1;
+        overflow: hidden;
+        user-select: none;
+        pointer-events: none;
+        font-family: 'Roboto Mono', monospace;
+        font-size: 16px;
+        line-height: 24px;
+        padding: 16px 8px;
+        color: #64748b;
+        text-align: right;
+        z-index: 1;
+      }
+      
+      body.dark #line-numbers {
+        background: #1e293b;
+        border-right-color: #334155;
+        color: #475569;
+      }
+      
+      .line-number {
+        display: block;
+        height: 24px;
+        line-height: 24px;
+      }
+      
+      .line-number.highlighted {
+        background: rgba(102, 126, 234, 0.15);
+        color: #667eea;
+        font-weight: 700;
+        margin-left: -8px;
+        margin-right: -8px;
+        padding-left: 8px;
+        padding-right: 8px;
+        border-left: 3px solid #667eea;
+      }
+      
+      body.dark .line-number.highlighted {
+        background: rgba(102, 126, 234, 0.2);
+        color: #818cf8;
+        border-left-color: #818cf8;
+      }
+      
+      #editor {
+        padding-left: 60px !important;
+        white-space: pre;
+        font-family: 'Roboto Mono', monospace;
+        font-size: 16px;
+        line-height: 24px;
+      }
     </style>
-</head>
-<body class="bg-slate-100 dark:bg-slate-900 flex flex-col">
-
-    <div id="main-container" class="w-full h-full flex flex-col bg-white dark:bg-slate-800">
-
-        <!-- Barra de Ferramentas Principal -->
-        <div class="toolbar flex flex-wrap items-center justify-between p-3 border-b border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 gap-2 flex-shrink-0">
-             <!-- Grupo de Documentos -->
-            <div class="flex items-center gap-2">
-                <button id="new-doc-btn" title="Novo Documento (Ctrl+N)" class="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"><i data-lucide="file-plus-2"></i></button>
-                <select id="doc-selector" class="p-2 border border-gray-300 rounded-md bg-white dark:bg-slate-700 dark:border-slate-600 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
-                <button id="delete-doc-btn" title="Excluir Documento Atual" class="p-2 rounded-md hover:bg-red-200 dark:hover:bg-red-800 transition-colors text-red-600 dark:text-red-400"><i data-lucide="trash-2"></i></button>
-            </div>
-            
-            <!-- Grupo de Ferramentas de Edição -->
-            <div class="flex items-center gap-2">
-                 <button id="download-btn" title="Baixar como .txt" class="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"><i data-lucide="download"></i></button>
-                 <button id="find-replace-btn" title="Localizar e Substituir (Ctrl+F)" class="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"><i data-lucide="search"></i></button>
-            </div>
-
-            <!-- Grupo de Configurações e Ajuda -->
-            <div class="flex items-center gap-2">
-                <div class="ruler-input-group flex items-center gap-2 text-slate-600 dark:text-slate-300">
-                    <i data-lucide="ruler" class=""></i>
-                    <input type="number" id="ruler-column-input" min="10" max="200" value="80" class="w-16 p-1 border border-gray-300 rounded-md bg-white dark:bg-slate-700 dark:border-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500">
-                </div>
-                <button id="toggle-mode-btn" title="Alternar Tema" class="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"><i data-lucide="moon"></i></button>
-                <button id="show-shortcuts-btn" title="Ver Atalhos" class="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"><i data-lucide="keyboard"></i></button>
-            </div>
+  </head>
+  <body class="bg-slate-100 dark:bg-slate-900 flex flex-col">
+    <div
+      id="main-container"
+      class="w-full h-full flex flex-col bg-white dark:bg-slate-800"
+    >
+      <!-- Barra de Ferramentas Principal -->
+      <div
+        class="toolbar flex flex-wrap items-center justify-between p-3 border-b border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 gap-2 flex-shrink-0"
+      >
+        <!-- Grupo de Documentos -->
+        <div class="flex items-center gap-2">
+          <button
+            id="new-doc-btn"
+            title="Novo Documento (Ctrl+N)"
+            class="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
+          >
+            <i data-lucide="file-plus-2"></i>
+          </button>
+          <select
+            id="doc-selector"
+            class="p-2 border border-gray-300 rounded-md bg-white dark:bg-slate-700 dark:border-slate-600 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          ></select>
+          <button
+            id="rename-doc-btn"
+            title="Renomear Documento"
+            class="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
+          >
+            <i data-lucide="edit-3"></i>
+          </button>
+          <button
+            id="delete-doc-btn"
+            title="Excluir Documento Atual"
+            class="p-2 rounded-md hover:bg-red-200 dark:hover:bg-red-800 transition-colors text-red-600 dark:text-red-400"
+          >
+            <i data-lucide="trash-2"></i>
+          </button>
         </div>
 
-        <!-- Área de Edição de Texto Wrapper -->
-        <div id="editor-wrapper" class="relative flex-grow bg-white dark:bg-slate-900">
-            <div id="ruler-line"></div>
-            <textarea id="editor" class="w-full h-full p-4 text-base focus:outline-none z-10 bg-transparent text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500" placeholder="Carregando..."></textarea>
+        <!-- Grupo de Ferramentas de Edição -->
+        <div class="flex items-center gap-2">
+          <button
+            id="download-btn"
+            title="Baixar como .txt"
+            class="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
+          >
+            <i data-lucide="download"></i>
+          </button>
+          <button
+            id="find-replace-btn"
+            title="Localizar e Substituir (Ctrl+F)"
+            class="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
+          >
+            <i data-lucide="search"></i>
+          </button>
         </div>
 
-        <!-- Barra de Status -->
-        <div class="status-bar flex justify-end items-center p-2 border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 text-sm text-gray-600 dark:text-gray-400 gap-4 flex-shrink-0">
-            <span id="save-status"></span>
-            <span id="word-count">Palavras: 0</span>
-            <span id="char-count">Caracteres: 0</span>
-            <span id="user-id-display" class="font-mono text-xs" title="Seu ID de Usuário"></span>
+        <!-- Grupo de Configurações e Ajuda -->
+        <div class="flex items-center gap-2">
+          <div
+            class="ruler-input-group flex items-center gap-2 text-slate-600 dark:text-slate-300"
+          >
+            <i data-lucide="ruler" class=""></i>
+            <input
+              type="number"
+              id="ruler-column-input"
+              min="10"
+              max="200"
+              value="80"
+              class="w-16 p-1 border border-gray-300 dark:border-slate-600 rounded-md text-center bg-white dark:bg-slate-700 dark:text-slate-200"
+            />
+          </div>
+          <button
+            id="toggle-mode-btn"
+            title="Alternar Tema"
+            class="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
+          >
+            <i data-lucide="moon"></i>
+          </button>
+          <button
+            id="show-shortcuts-btn"
+            title="Ver Atalhos"
+            class="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
+          >
+            <i data-lucide="keyboard"></i>
+          </button>
         </div>
+      </div>
+
+      <!-- Área de Edição de Texto Wrapper -->
+      <div
+        id="editor-wrapper"
+        class="relative flex-grow bg-white dark:bg-slate-900"
+      >
+        <div id="line-numbers"></div>
+        <div id="ruler-line"></div>
+        <textarea
+          id="editor"
+          class="w-full h-full p-4 text-base focus:outline-none z-10 bg-transparent text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500"
+          placeholder="Carregando..."
+        ></textarea>
+      </div>
+
+      <!-- Barra de Status -->
+      <div
+        class="status-bar flex justify-end items-center p-2 border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 text-sm text-gray-600 dark:text-gray-400 gap-4 flex-shrink-0"
+      >
+        <span id="save-status"></span>
+        <span id="word-count">Palavras: 0</span>
+        <span id="char-count">Caracteres: 0</span>
+        <span
+          id="user-id-display"
+          class="font-mono text-xs"
+          title="Seu ID de Usuário"
+        ></span>
+      </div>
     </div>
 
     <!-- Modais -->
-    <div id="shortcuts-modal-overlay" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 opacity-0 invisible">
-        <div class="modal-content bg-white dark:bg-slate-800 p-8 rounded-lg shadow-xl max-w-lg w-full relative transform -translate-y-5 text-slate-800 dark:text-slate-200">
-            <button id="shortcuts-modal-close-btn" class="modal-close-btn absolute top-3 right-3 p-1 rounded-full text-2xl hover:bg-gray-200 dark:hover:bg-slate-700">&times;</button>
+    <div
+      id="shortcuts-modal-overlay"
+      class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 opacity-0 invisible"
+    >
+      <div
+        class="modal-content bg-white dark:bg-slate-800 p-8 rounded-lg shadow-xl max-w-lg w-full relative transform -translate-y-5 text-slate-800 dark:text-slate-200"
+      >
+        <button
+          id="shortcuts-modal-close-btn"
+          class="modal-close-btn absolute top-3 right-3 p-1 rounded-full text-2xl hover:bg-gray-200 dark:hover:bg-slate-700"
+        >
+          &times;
+        </button>
             <h2 class="text-2xl font-bold mb-4">Atalhos de Teclado</h2>
             <div class="space-y-2">
                 <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + S</kbd>: Forçar salvamento do documento.</p>
                 <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + F</kbd>: Abrir Localizar e Substituir.</p>
                 <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + N</kbd>: Criar novo documento.</p>
-                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + D</kbd>: Selecionar próxima ocorrência.</p>
+                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + D</kbd>: Selecionar próxima ocorrência (pressione múltiplas vezes).</p>
+                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + Shift + L</kbd>: Selecionar todas as ocorrências.</p>
+                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + M</kbd>: Abrir ações para múltiplas seleções.</p>
                 <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + Shift + D</kbd>: Duplicar linha atual.</p>
+                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + Shift + U</kbd>: Converter seleção para maiúsculas.</p>
                 <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Alt + Shift + ↑/↓</kbd>: Mover linha para cima/baixo.</p>
-                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + U</kbd>: Converter seleção para maiúsculas.</p>
+                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Esc</kbd>: Cancelar seleções múltiplas.</p>
+            </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="find-replace-modal-overlay"
+      class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 opacity-0 invisible"
+    >
+      <div
+        class="modal-content bg-white dark:bg-slate-800 p-6 rounded-lg shadow-xl max-w-md w-full relative transform -translate-y-5 text-slate-800 dark:text-slate-200"
+      >
+        <button
+          id="find-replace-modal-close-btn"
+          class="modal-close-btn absolute top-3 right-3 text-2xl p-1 rounded-full hover:bg-gray-200 dark:hover:bg-slate-700"
+        >
+          &times;
+        </button>
+        <h2 class="text-xl font-bold mb-4">Localizar e Substituir</h2>
+        <div class="space-y-4">
+          <input
+            type="text"
+            id="find-input"
+            placeholder="Localizar..."
+            class="w-full p-2 border rounded-md bg-white dark:bg-slate-700 dark:border-slate-600"
+          />
+          <input
+            type="text"
+            id="replace-input"
+            placeholder="Substituir por..."
+            class="w-full p-2 border rounded-md bg-white dark:bg-slate-700 dark:border-slate-600"
+          />
+          <div class="flex justify-end gap-2">
+            <button
+              id="replace-btn"
+              class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              Substituir
+            </button>
+            <button
+              id="replace-all-btn"
+              class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              Substituir Tudo
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Ações Múltiplas -->
+    <div id="multi-actions-modal-overlay" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 opacity-0 invisible">
+        <div class="modal-content bg-white dark:bg-slate-800 p-6 rounded-lg shadow-xl max-w-md w-full relative transform -translate-y-5 text-slate-800 dark:text-slate-200">
+            <button id="multi-actions-modal-close-btn" class="modal-close-btn absolute top-3 right-3 text-2xl p-1 rounded-full hover:bg-gray-200 dark:hover:bg-slate-700">&times;</button>
+            <h2 class="text-xl font-bold mb-4">Ações em Múltiplas Seleções</h2>
+            <p id="multi-selection-count" class="text-sm mb-4 text-gray-600 dark:text-gray-400"></p>
+            
+            <div class="space-y-3">
+                <!-- Campo de substituição -->
+                <div>
+                    <label class="block text-sm font-medium mb-1">Substituir por:</label>
+                    <input type="text" id="multi-replace-input" placeholder="Digite o novo texto..." class="w-full p-2 border rounded-md bg-white dark:bg-slate-700 dark:border-slate-600">
+                </div>
+                
+                <!-- Botões de ação -->
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="multi-replace-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center justify-center gap-2">
+                        <i data-lucide="replace" class="w-4 h-4"></i>
+                        Substituir
+                    </button>
+                    <button id="multi-uppercase-btn" class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 flex items-center justify-center gap-2">
+                        <i data-lucide="type" class="w-4 h-4"></i>
+                        MAIÚSCULAS
+                    </button>
+                    <button id="multi-lowercase-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 flex items-center justify-center gap-2">
+                        <i data-lucide="type" class="w-4 h-4"></i>
+                        minúsculas
+                    </button>
+                    <button id="multi-delete-btn" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center justify-center gap-2">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        Excluir
+                    </button>
+                </div>
+                
+                <button id="multi-cancel-btn" class="w-full px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 mt-2">
+                    Cancelar (Esc)
+                </button>
             </div>
         </div>
     </div>
 
-    <div id="find-replace-modal-overlay" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 opacity-0 invisible">
-        <div class="modal-content bg-white dark:bg-slate-800 p-6 rounded-lg shadow-xl max-w-md w-full relative transform -translate-y-5 text-slate-800 dark:text-slate-200">
-            <button id="find-replace-modal-close-btn" class="modal-close-btn absolute top-3 right-3 text-2xl p-1 rounded-full hover:bg-gray-200 dark:hover:bg-slate-700">&times;</button>
-            <h2 class="text-xl font-bold mb-4">Localizar e Substituir</h2>
-            <div class="space-y-4">
-                <input type="text" id="find-input" placeholder="Localizar..." class="w-full p-2 border rounded-md bg-white dark:bg-slate-700 dark:border-slate-600">
-                <input type="text" id="replace-input" placeholder="Substituir por..." class="w-full p-2 border rounded-md bg-white dark:bg-slate-700 dark:border-slate-600">
-                <div class="flex justify-end gap-2">
-                    <button id="replace-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Substituir</button>
-                    <button id="replace-all-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Substituir Tudo</button>
-                </div>
-            </div>
-        </div>
+    <!-- Indicador de Seleções Múltiplas -->
+    <div id="multi-selection-indicator" title="Clique para abrir ações (Ctrl+M)">
+      <div id="multi-selection-text">0 selecionadas</div>
     </div>
 
     <!-- Caixa de Mensagem (Toast) -->
     <div id="message-box" role="alert" aria-live="polite"></div>
-    
+
     <!-- Scripts do Editor 100% Offline com IndexedDB -->
     <script>
-/* --- IndexedDB Helper --- */
-const DB_NAME = 'editor-codigo-db';
-const STORE_NAME = 'documents';
-let db = null;
+      /* --- IndexedDB Helper --- */
+      const DB_NAME = "editor-codigo-db";
+      const STORE_NAME = "documents";
+      let db = null;
 
-function openDB() {
-    return new Promise((resolve, reject) => {
-        if (db) return resolve(db);
-        const request = indexedDB.open(DB_NAME, 1);
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => {
+      function openDB() {
+        return new Promise((resolve, reject) => {
+          if (db) return resolve(db);
+          const request = indexedDB.open(DB_NAME, 1);
+          request.onerror = () => reject(request.error);
+          request.onsuccess = () => {
             db = request.result;
             resolve(db);
-        };
-        request.onupgradeneeded = (event) => {
+          };
+          request.onupgradeneeded = (event) => {
             const db = event.target.result;
             if (!db.objectStoreNames.contains(STORE_NAME)) {
-                db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+              db.createObjectStore(STORE_NAME, { keyPath: "id" });
             }
-        };
-    });
-}
+          };
+        });
+      }
 
-function getAllDocs() {
-    return openDB().then(db => {
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction(STORE_NAME, 'readonly');
+      function getAllDocs() {
+        return openDB().then((db) => {
+          return new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE_NAME, "readonly");
             const store = tx.objectStore(STORE_NAME);
             const req = store.getAll();
             req.onsuccess = () => resolve(req.result);
             req.onerror = () => reject(req.error);
+          });
         });
-    });
-}
+      }
 
-function getDoc(id) {
-    return openDB().then(db => {
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction(STORE_NAME, 'readonly');
+      function getDoc(id) {
+        return openDB().then((db) => {
+          return new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE_NAME, "readonly");
             const store = tx.objectStore(STORE_NAME);
             const req = store.get(id);
             req.onsuccess = () => resolve(req.result);
             req.onerror = () => reject(req.error);
+          });
         });
-    });
-}
+      }
 
-function saveDoc(doc) {
-    return openDB().then(db => {
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction(STORE_NAME, 'readwrite');
+      function saveDoc(doc) {
+        return openDB().then((db) => {
+          return new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE_NAME, "readwrite");
             const store = tx.objectStore(STORE_NAME);
             const req = store.put(doc);
             req.onsuccess = () => resolve();
             req.onerror = () => reject(req.error);
+          });
         });
-    });
-}
+      }
 
-function deleteDocById(id) {
-    return openDB().then(db => {
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction(STORE_NAME, 'readwrite');
+      function deleteDocById(id) {
+        return openDB().then((db) => {
+          return new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE_NAME, "readwrite");
             const store = tx.objectStore(STORE_NAME);
             const req = store.delete(id);
             req.onsuccess = () => resolve();
             req.onerror = () => reject(req.error);
+          });
         });
-    });
-}
+      }
 
-/* --- DOM Elements --- */
-const editor = document.getElementById('editor');
-const saveStatus = document.getElementById('save-status');
-const wordCountEl = document.getElementById('word-count');
-const charCountEl = document.getElementById('char-count');
-const toggleModeBtn = document.getElementById('toggle-mode-btn');
-const rulerColumnInput = document.getElementById('ruler-column-input');
-const rulerLine = document.getElementById('ruler-line');
-const docSelector = document.getElementById('doc-selector');
-const newDocBtn = document.getElementById('new-doc-btn');
-const deleteDocBtn = document.getElementById('delete-doc-btn');
-const downloadBtn = document.getElementById('download-btn');
-const userIdDisplay = document.getElementById('user-id-display');
-const messageBox = document.getElementById('message-box');
-const showShortcutsBtn = document.getElementById('show-shortcuts-btn');
-const findReplaceBtn = document.getElementById('find-replace-btn');
-const shortcutsModalOverlay = document.getElementById('shortcuts-modal-overlay');
-const findReplaceModalOverlay = document.getElementById('find-replace-modal-overlay');
+      /* --- DOM Elements --- */
+      const editor = document.getElementById("editor");
+      const saveStatus = document.getElementById("save-status");
+      const wordCountEl = document.getElementById("word-count");
+      const charCountEl = document.getElementById("char-count");
+      const toggleModeBtn = document.getElementById("toggle-mode-btn");
+      const rulerColumnInput = document.getElementById("ruler-column-input");
+      const rulerLine = document.getElementById("ruler-line");
+      const docSelector = document.getElementById("doc-selector");
+      const newDocBtn = document.getElementById("new-doc-btn");
+      const deleteDocBtn = document.getElementById("delete-doc-btn");
+      const downloadBtn = document.getElementById("download-btn");
+      const userIdDisplay = document.getElementById("user-id-display");
+      const messageBox = document.getElementById("message-box");
+      const showShortcutsBtn = document.getElementById("show-shortcuts-btn");
+      const findReplaceBtn = document.getElementById("find-replace-btn");
+      const shortcutsModalOverlay = document.getElementById(
+        "shortcuts-modal-overlay",
+      );
+      const findReplaceModalOverlay = document.getElementById(
+        "find-replace-modal-overlay",
+      );
+      const multiActionsModalOverlay = document.getElementById(
+        "multi-actions-modal-overlay",
+      );
+      const multiSelectionIndicator = document.getElementById("multi-selection-indicator");
+      const multiSelectionText = document.getElementById("multi-selection-text");
+      const lineNumbers = document.getElementById("line-numbers");
 
-let currentDocId = null;
-let saveTimeout = null;
-let isSaving = false;
-let editorReady = false;
+      let currentDocId = null;
+      let saveTimeout = null;
+      let isSaving = false;
+      let editorReady = false;
 
-/* --- Document Management --- */
-async function loadDocumentsList() {
-    const docs = await getAllDocs();
-    docs.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
-    docSelector.innerHTML = '';
-    if (docs.length === 0) {
-        await createNewDocument("Primeiro Documento");
-        return;
-    }
-    docs.forEach(docData => {
-        const option = document.createElement('option');
-        option.value = docData.id;
-        option.textContent = docData.title || `Documento ${docData.id.substring(0, 4)}`;
-        docSelector.appendChild(option);
-    });
-    const lastDocId = localStorage.getItem(`lastDocId`) || docs[0].id;
-    if (docs.some(d => d.id === lastDocId)) {
-        docSelector.value = lastDocId;
-    }
-    await switchDocument(docSelector.value);
-}
-
-async function switchDocument(docId) {
-    if (currentDocId === docId) return;
-    currentDocId = docId;
-    localStorage.setItem(`lastDocId`, docId);
-    editor.value = "Carregando...";
-    editor.disabled = true;
-    const doc = await getDoc(currentDocId);
-    if (doc) {
-        editor.value = doc.content || '';
-        updateStatusBar();
-    } else {
-        editor.value = '';
-    }
-    editor.disabled = false;
-}
-
-async function createNewDocument(title = "Novo Documento") {
-    const newTitle = prompt("Digite o título do novo documento:", title);
-    if (!newTitle) return;
-    const newDoc = {
-        id: crypto.randomUUID(),
-        title: newTitle,
-        content: "",
-        createdAt: Date.now(),
-        updatedAt: Date.now()
-    };
-    await saveDoc(newDoc);
-    showMessage(`Documento "${newTitle}" criado!`);
-    await loadDocumentsList();
-    docSelector.value = newDoc.id;
-    await switchDocument(newDoc.id);
-}
-
-async function deleteCurrentDocument() {
-    if (!currentDocId) return;
-    const docTitle = docSelector.options[docSelector.selectedIndex].text;
-    if (confirm(`Tem certeza que deseja excluir o documento "${docTitle}"? Esta ação não pode ser desfeita.`)) {
-        await deleteDocById(currentDocId);
-        showMessage("Documento excluído.");
-        currentDocId = null;
-        await loadDocumentsList();
-    }
-}
-
-function debounceSave() {
-    clearTimeout(saveTimeout);
-    if (!editorReady || isSaving) return;
-    saveStatus.textContent = 'Salvando...';
-    saveTimeout = setTimeout(async () => {
-        if (!currentDocId) {
-            saveStatus.textContent = "Nenhum documento ativo para salvar.";
-            return;
+      /* --- Document Management --- */
+      async function loadDocumentsList() {
+        const docs = await getAllDocs();
+        docs.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+        docSelector.innerHTML = "";
+        if (docs.length === 0) {
+          await createNewDocument("Primeiro Documento");
+          return;
         }
-        isSaving = true;
+        docs.forEach((docData) => {
+          const option = document.createElement("option");
+          option.value = docData.id;
+          option.textContent =
+            docData.name || `Documento ${docData.id.substring(0, 4)}`;
+          docSelector.appendChild(option);
+        });
+        const lastDocId = localStorage.getItem(`lastDocId`) || docs[0].id;
+        if (docs.some((d) => d.id === lastDocId)) {
+          docSelector.value = lastDocId;
+        }
+        await switchDocument(docSelector.value);
+      }
+
+      async function switchDocument(docId) {
+        if (currentDocId === docId) return;
+        currentDocId = docId;
+        localStorage.setItem(`lastDocId`, docId);
+        editor.value = "Carregando...";
+        editor.disabled = true;
         const doc = await getDoc(currentDocId);
         if (doc) {
+          editor.value = doc.content || "";
+          updateStatusBar();
+        } else {
+          editor.value = "";
+        }
+        editor.disabled = false;
+      }
+
+      async function createNewDocument(title = "Novo Documento") {
+        const newTitle = prompt("Digite o título do novo documento:", title);
+        if (!newTitle) return;
+        const newDoc = {
+          id: crypto.randomUUID(),
+          title: newTitle,
+          content: "",
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        };
+        await saveDoc(newDoc);
+        showMessage(`Documento "${newTitle}" criado!`);
+        await loadDocumentsList();
+        docSelector.value = newDoc.id;
+        await switchDocument(newDoc.id);
+      }
+
+      async function deleteCurrentDocument() {
+        if (!currentDocId) return;
+        const docTitle = docSelector.options[docSelector.selectedIndex].text;
+        if (
+          confirm(
+            `Tem certeza que deseja excluir o documento "${docTitle}"? Esta ação não pode ser desfeita.`,
+          )
+        ) {
+          await deleteDocById(currentDocId);
+          showMessage("Documento excluído.");
+          currentDocId = null;
+          await loadDocumentsList();
+        }
+      }
+
+      async function renameDocument() {
+        if (!currentDocId) {
+          showMessage("Nenhum documento selecionado", 2000);
+          return;
+        }
+        
+        const doc = await getDoc(currentDocId);
+        if (!doc) return;
+        
+        const newName = prompt("Novo nome do documento:", doc.name);
+        if (!newName || newName.trim() === "") {
+          showMessage("Nome inválido", 2000);
+          return;
+        }
+        
+        if (newName === doc.name) {
+          showMessage("Nome não foi alterado", 2000);
+          return;
+        }
+        
+        doc.name = newName.trim();
+        doc.updatedAt = Date.now();
+        await saveDoc(doc);
+        
+        // Recarrega a lista e mantém o documento atual selecionado
+        await loadDocumentsList();
+        docSelector.value = currentDocId;
+        
+        showMessage(`Documento renomeado para "${newName}"`, 2000);
+      }
+
+      function debounceSave() {
+        clearTimeout(saveTimeout);
+        if (!editorReady || isSaving) return;
+        saveStatus.textContent = "Salvando...";
+        saveTimeout = setTimeout(async () => {
+          if (!currentDocId) {
+            saveStatus.textContent = "Nenhum documento ativo para salvar.";
+            return;
+          }
+          isSaving = true;
+          const doc = await getDoc(currentDocId);
+          if (doc) {
             doc.content = editor.value;
             doc.updatedAt = Date.now();
             await saveDoc(doc);
-            saveStatus.textContent = 'Salvo localmente';
+            saveStatus.textContent = "Salvo localmente";
+          }
+          isSaving = false;
+        }, 1500);
+      }
+
+      /* --- Editor Features (mantém igual) --- */
+      function updateStatusBar() {
+        const text = editor.value;
+        const chars = text.length;
+        const words = text.trim().split(/\s+/).filter(Boolean).length;
+        wordCountEl.textContent = `Palavras: ${words}`;
+        charCountEl.textContent = `Caracteres: ${chars}`;
+      }
+
+      function downloadAsTxt() {
+        const text = editor.value;
+        const blob = new Blob([text], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        let docTitle = "documento";
+        if (docSelector.selectedIndex !== -1) {
+          docTitle = docSelector.options[docSelector.selectedIndex].text
+            .replace(/[^a-z0-9]/gi, "_")
+            .toLowerCase();
         }
-        isSaving = false;
-    }, 1500);
-}
+        a.download = `${docTitle}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
 
-/* --- Editor Features (mantém igual) --- */
-function updateStatusBar() {
-    const text = editor.value;
-    const chars = text.length;
-    const words = text.trim().split(/\s+/).filter(Boolean).length;
-    wordCountEl.textContent = `Palavras: ${words}`;
-    charCountEl.textContent = `Caracteres: ${chars}`;
-}
+      /* --- UI Management (tema, régua, modais) --- */
+      function loadTheme() {
+        if (localStorage.getItem("theme") === "dark") {
+          document.documentElement.classList.add("dark");
+          toggleModeBtn.innerHTML = '<i data-lucide="sun"></i>';
+        } else {
+          document.documentElement.classList.remove("dark");
+          toggleModeBtn.innerHTML = '<i data-lucide="moon"></i>';
+        }
+      }
+      function toggleTheme() {
+        document.documentElement.classList.toggle("dark");
+        const isDark = document.documentElement.classList.contains("dark");
+        localStorage.setItem("theme", isDark ? "dark" : "light");
+        loadTheme();
+        lucide.createIcons();
+      }
+      function updateRulerPosition() {
+        const column = parseInt(rulerColumnInput.value) || 80;
+        document.documentElement.style.setProperty("--ruler-column", column);
+        localStorage.setItem("rulerColumn", column);
+      }
+      function loadRulerPosition() {
+        const savedColumn = localStorage.getItem("rulerColumn");
+        if (savedColumn) {
+          rulerColumnInput.value = savedColumn;
+        }
+        updateRulerPosition();
+      }
+      function showMessage(message, duration = 3000) {
+        messageBox.textContent = message;
+        messageBox.classList.add("show");
+        setTimeout(() => {
+          messageBox.classList.remove("show");
+        }, duration);
+      }
+      function openModal(overlay) {
+        overlay.classList.add("show");
+      }
+      function closeModal(overlay) {
+        overlay.classList.remove("show");
+      }
 
-function downloadAsTxt() {
-    const text = editor.value;
-    const blob = new Blob([text], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    let docTitle = 'documento';
-    if (docSelector.selectedIndex !== -1) {
-        docTitle = docSelector.options[docSelector.selectedIndex].text.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-    }
-    a.download = `${docTitle}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-}
+      /* --- Event Listeners --- */
+      function addEventListeners() {
+        editor.addEventListener("input", () => {
+          if (editorReady) debounceSave();
+          updateStatusBar();
+          updateLineNumbers();
+        });
+        editor.addEventListener("scroll", () => {
+          rulerLine.style.transform = `translateX(-${editor.scrollLeft}px)`;
+          lineNumbers.style.transform = `translateY(-${editor.scrollTop}px)`;
+        });
+        editor.addEventListener("keydown", (e) => {
+          // Abre modal de ações para múltiplas seleções com Ctrl+M
+          if (multiSelections.length > 1 && e.ctrlKey && e.key.toLowerCase() === 'm') {
+            e.preventDefault();
+            openMultiActionsModal();
+            return;
+          }
+          // Limpa seleções múltiplas ao pressionar Escape
+          if (e.key === 'Escape' && multiSelections.length > 0) {
+            multiSelections = [];
+            multiSelectionIndicator.classList.remove("show");
+            showMessage("Seleções múltiplas canceladas", 1500);
+            return;
+          }
+          handleKeyboardShortcuts(e);
+        });
+        toggleModeBtn.addEventListener("click", toggleTheme);
+        rulerColumnInput.addEventListener("input", updateRulerPosition);
+        docSelector.addEventListener("change", (e) =>
+          switchDocument(e.target.value),
+        );
+        newDocBtn.addEventListener("click", () => createNewDocument());
+        deleteDocBtn.addEventListener("click", deleteCurrentDocument);
+        document.getElementById("rename-doc-btn").addEventListener("click", renameDocument);
+        downloadBtn.addEventListener("click", downloadAsTxt);
+        document.getElementById("toggle-mode-btn").addEventListener("click", toggleTheme);
+        showShortcutsBtn.addEventListener("click", () =>
+          openModal(shortcutsModalOverlay),
+        );
+        document
+          .getElementById("shortcuts-modal-close-btn")
+          .addEventListener("click", () => closeModal(shortcutsModalOverlay));
+        shortcutsModalOverlay.addEventListener(
+          "click",
+          (e) =>
+            e.target === shortcutsModalOverlay &&
+            closeModal(shortcutsModalOverlay),
+        );
+        findReplaceBtn.addEventListener("click", () =>
+          openModal(findReplaceModalOverlay),
+        );
+        document
+          .getElementById("find-replace-modal-close-btn")
+          .addEventListener("click", () => closeModal(findReplaceModalOverlay));
+        findReplaceModalOverlay.addEventListener(
+          "click",
+          (e) =>
+            e.target === findReplaceModalOverlay &&
+            closeModal(findReplaceModalOverlay),
+        );
+        
+        // Modal de ações múltiplas
+        document.getElementById("multi-actions-modal-close-btn").addEventListener("click", () => closeModal(multiActionsModalOverlay));
+        document.getElementById("multi-cancel-btn").addEventListener("click", () => {
+          multiSelections = [];
+          multiSelectionIndicator.classList.remove("show");
+          closeModal(multiActionsModalOverlay);
+        });
+        multiActionsModalOverlay.addEventListener("click", (e) => {
+          if (e.target === multiActionsModalOverlay) {
+            multiSelections = [];
+            multiSelectionIndicator.classList.remove("show");
+            closeModal(multiActionsModalOverlay);
+          }
+        });
+        
+        // Clicar no indicador abre o modal
+        multiSelectionIndicator.addEventListener("click", () => {
+          if (multiSelections.length > 1) {
+            openMultiActionsModal();
+          }
+        });
+        
+        document.getElementById("multi-replace-btn").addEventListener("click", () => {
+          const replaceValue = document.getElementById("multi-replace-input").value;
+          if (replaceValue) {
+            replaceMultiSelections(replaceValue);
+            multiSelectionIndicator.classList.remove("show");
+            closeModal(multiActionsModalOverlay);
+          }
+        });
+        
+        document.getElementById("multi-uppercase-btn").addEventListener("click", () => {
+          convertMultiSelectionsToUpperCase();
+          multiSelectionIndicator.classList.remove("show");
+          closeModal(multiActionsModalOverlay);
+        });
+        
+        document.getElementById("multi-lowercase-btn").addEventListener("click", () => {
+          convertMultiSelectionsToLowerCase();
+          multiSelectionIndicator.classList.remove("show");
+          closeModal(multiActionsModalOverlay);
+        });
+        
+        document.getElementById("multi-delete-btn").addEventListener("click", () => {
+          deleteMultiSelections();
+          multiSelectionIndicator.classList.remove("show");
+          closeModal(multiActionsModalOverlay);
+        });
+        
+        // Localizar e substituir
+        const findInput = document.getElementById("find-input");
+        const replaceInput = document.getElementById("replace-input");
+        document.getElementById("replace-btn").addEventListener("click", () => {
+          const findValue = findInput.value;
+          const replaceValue = replaceInput.value;
+          if (!findValue) return;
+          const currentSelection = editor.value.substring(
+            editor.selectionStart,
+            editor.selectionEnd,
+          );
+          if (currentSelection.toLowerCase() === findValue.toLowerCase()) {
+            editor.setRangeText(
+              replaceValue,
+              editor.selectionStart,
+              editor.selectionEnd,
+              "select",
+            );
+          } else {
+            const nextIndex = editor.value.indexOf(
+              findValue,
+              editor.selectionEnd,
+            );
+            if (nextIndex !== -1) {
+              editor.setSelectionRange(nextIndex, nextIndex + findValue.length);
+            } else {
+              showMessage("Fim do documento.", 2000);
+            }
+          }
+          editor.focus();
+        });
+        document
+          .getElementById("replace-all-btn")
+          .addEventListener("click", () => {
+            const findValue = findInput.value;
+            const replaceValue = replaceInput.value;
+            if (!findValue) return;
+            const originalValue = editor.value;
+            const newValue = originalValue.replaceAll(findValue, replaceValue);
+            if (originalValue !== newValue) {
+              editor.value = newValue;
+              showMessage("Todas as ocorrências foram substituídas.", 2000);
+            } else {
+              showMessage("Nenhuma ocorrência encontrada.", 2000);
+            }
+          });
+      }
+      function handleKeyboardShortcuts(e) {
+        const isCtrlOrCmd = e.ctrlKey || e.metaKey;
+        const key = e.key.toLowerCase();
 
-/* --- UI Management (tema, régua, modais) --- */
-function loadTheme() {
-    if (localStorage.getItem('theme') === 'dark') {
-        document.documentElement.classList.add('dark');
-        toggleModeBtn.innerHTML = '<i data-lucide="sun"></i>';
-    } else {
-        document.documentElement.classList.remove('dark');
-        toggleModeBtn.innerHTML = '<i data-lucide="moon"></i>';
-    }
-}
-function toggleTheme() {
-    document.documentElement.classList.toggle('dark');
-    const isDark = document.documentElement.classList.contains('dark');
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
-    loadTheme();
-    lucide.createIcons();
-}
-function updateRulerPosition() {
-    const column = parseInt(rulerColumnInput.value) || 80;
-    document.documentElement.style.setProperty('--ruler-column', column);
-    localStorage.setItem('rulerColumn', column);
-}
-function loadRulerPosition() {
-    const savedColumn = localStorage.getItem('rulerColumn');
-    if (savedColumn) {
-        rulerColumnInput.value = savedColumn;
-    }
-    updateRulerPosition();
-}
-function showMessage(message, duration = 3000) {
-    messageBox.textContent = message;
-    messageBox.classList.add('show');
-    setTimeout(() => {
-        messageBox.classList.remove('show');
-    }, duration);
-}
-function openModal(overlay) { overlay.classList.add('show'); }
-function closeModal(overlay) { overlay.classList.remove('show'); }
+        // Ctrl + S: Salvar
+        if (isCtrlOrCmd && key === "s") {
+          e.preventDefault();
+          clearTimeout(saveTimeout);
+          debounceSave();
+          showMessage("Salvando...", 1000);
+        }
+        // Ctrl + N: Novo documento
+        else if (isCtrlOrCmd && key === "n") {
+          e.preventDefault();
+          createNewDocument();
+        }
+        // Ctrl + F: Localizar e substituir
+        else if (isCtrlOrCmd && key === "f") {
+          e.preventDefault();
+          openModal(findReplaceModalOverlay);
+          document.getElementById("find-input").focus();
+        }
+        // Ctrl + D: Selecionar próxima ocorrência da palavra atual
+        else if (isCtrlOrCmd && !e.shiftKey && key === "d") {
+          e.preventDefault();
+          selectNextOccurrence();
+        }
+        // Ctrl + Shift + D: Duplicar linha atual
+        else if (isCtrlOrCmd && e.shiftKey && key === "d") {
+          e.preventDefault();
+          duplicateCurrentLine();
+        }
+        // Ctrl + Shift + U: Converter seleção para maiúsculas
+        else if (isCtrlOrCmd && e.shiftKey && key === "u") {
+          e.preventDefault();
+          convertToUpperCase();
+        }
+        // Ctrl + Shift + L: Selecionar todas as ocorrências
+        else if (isCtrlOrCmd && e.shiftKey && key === "l") {
+          e.preventDefault();
+          selectAllOccurrences();
+        }
+        // Alt + Shift + ↑: Mover linha para cima
+        else if (e.altKey && e.shiftKey && e.key === "ArrowUp") {
+          e.preventDefault();
+          moveLineUp();
+        }
+        // Alt + Shift + ↓: Mover linha para baixo
+        else if (e.altKey && e.shiftKey && e.key === "ArrowDown") {
+          e.preventDefault();
+          moveLineDown();
+        }
+      }
 
-/* --- Event Listeners --- */
-function addEventListeners() {
-    editor.addEventListener('input', () => {
+      /* --- Funções de Edição Avançada --- */
+
+      // Variável global para armazenar seleções múltiplas
+      let multiSelections = [];
+
+      // Selecionar próxima ocorrência da palavra selecionada (como Ctrl+D no VS Code)
+      function selectNextOccurrence() {
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+        const selectedText = editor.value.substring(start, end);
+
+        if (!selectedText) {
+          // Se nada está selecionado, seleciona a palavra sob o cursor
+          const text = editor.value;
+          let wordStart = start;
+          let wordEnd = start;
+
+          // Encontra o início da palavra
+          while (wordStart > 0 && /\w/.test(text[wordStart - 1])) {
+            wordStart--;
+          }
+          // Encontra o fim da palavra
+          while (wordEnd < text.length && /\w/.test(text[wordEnd])) {
+            wordEnd++;
+          }
+
+          if (wordStart < wordEnd) {
+            editor.setSelectionRange(wordStart, wordEnd);
+            multiSelections = [{ start: wordStart, end: wordEnd, text: text.substring(wordStart, wordEnd) }];
+          }
+          return;
+        }
+
+        // Adiciona a seleção atual se ainda não estiver na lista
+        if (multiSelections.length === 0 || multiSelections[multiSelections.length - 1].start !== start) {
+          multiSelections.push({ start, end, text: selectedText });
+        }
+
+        // Procura a próxima ocorrência após a seleção atual
+        const nextIndex = editor.value.indexOf(selectedText, end);
+        if (nextIndex !== -1) {
+          multiSelections.push({ start: nextIndex, end: nextIndex + selectedText.length, text: selectedText });
+          editor.setSelectionRange(nextIndex, nextIndex + selectedText.length);
+          
+          // Faz scroll para mostrar a seleção
+          scrollToSelection(nextIndex);
+          
+          editor.focus();
+          updateMultiSelectionIndicator();
+        } else {
+          updateMultiSelectionIndicator();
+        }
+      }
+
+      // Selecionar todas as ocorrências (Ctrl+Shift+L)
+      function selectAllOccurrences() {
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+        let selectedText = editor.value.substring(start, end);
+
+        if (!selectedText) {
+          // Se nada está selecionado, seleciona a palavra sob o cursor
+          const text = editor.value;
+          let wordStart = start;
+          let wordEnd = start;
+
+          while (wordStart > 0 && /\w/.test(text[wordStart - 1])) {
+            wordStart--;
+          }
+          while (wordEnd < text.length && /\w/.test(text[wordEnd])) {
+            wordEnd++;
+          }
+
+          if (wordStart < wordEnd) {
+            selectedText = text.substring(wordStart, wordEnd);
+          } else {
+            showMessage("Nenhuma palavra selecionada", 2000);
+            return;
+          }
+        }
+
+        // Encontra todas as ocorrências
+        multiSelections = [];
+        const text = editor.value;
+        let index = 0;
+
+        while ((index = text.indexOf(selectedText, index)) !== -1) {
+          multiSelections.push({ start: index, end: index + selectedText.length, text: selectedText });
+          index += selectedText.length;
+        }
+
+        if (multiSelections.length > 0) {
+          // Seleciona a última ocorrência
+          const last = multiSelections[multiSelections.length - 1];
+          editor.setSelectionRange(last.start, last.end);
+          
+          // Faz scroll para a última seleção
+          scrollToSelection(last.start);
+          
+          updateMultiSelectionIndicator();
+        } else {
+          showMessage("Nenhuma ocorrência encontrada", 2000);
+        }
+      }
+
+      // Atualizar indicador visual de seleções múltiplas
+      function updateMultiSelectionIndicator() {
+        if (multiSelections.length > 1) {
+          multiSelectionText.textContent = `${multiSelections.length} selecionadas`;
+          multiSelectionIndicator.classList.add("show");
+          highlightSelectedLines();
+        } else {
+          multiSelectionIndicator.classList.remove("show");
+          highlightSelectedLines(); // Remove destaques
+        }
+      }
+
+      // Fazer scroll para mostrar a seleção
+      function scrollToSelection(position) {
+        // Calcula a linha aproximada
+        const textBeforeSelection = editor.value.substring(0, position);
+        const lineHeight = 24; // Altura aproximada de uma linha
+        const lines = textBeforeSelection.split('\n').length;
+        const scrollPosition = (lines - 1) * lineHeight;
+        
+        // Faz scroll suave
+        editor.scrollTop = Math.max(0, scrollPosition - editor.clientHeight / 2);
+      }
+
+      // Atualizar numeração de linhas
+      function updateLineNumbers() {
+        const lines = editor.value.split('\n');
+        const lineCount = lines.length;
+        
+        // Gera HTML para numeração
+        let html = '';
+        for (let i = 1; i <= lineCount; i++) {
+          html += `<span class="line-number" data-line="${i}">${i}</span>`;
+        }
+        
+        lineNumbers.innerHTML = html;
+        
+        // Destaca linhas com seleções múltiplas
+        highlightSelectedLines();
+      }
+
+      // Destacar linhas que contêm seleções múltiplas
+      function highlightSelectedLines() {
+        if (multiSelections.length < 2) return;
+        
+        const text = editor.value;
+        const highlightedLines = new Set();
+        
+        // Encontra em qual linha cada seleção está
+        multiSelections.forEach(sel => {
+          const textBefore = text.substring(0, sel.start);
+          const lineNumber = textBefore.split('\n').length;
+          highlightedLines.add(lineNumber);
+        });
+        
+        // Aplica destaque nas linhas
+        const lineNumberElements = lineNumbers.querySelectorAll('.line-number');
+        lineNumberElements.forEach((el, index) => {
+          const lineNum = index + 1;
+          if (highlightedLines.has(lineNum)) {
+            el.classList.add('highlighted');
+          } else {
+            el.classList.remove('highlighted');
+          }
+        });
+      }
+
+      // Abrir modal de ações múltiplas
+      function openMultiActionsModal() {
+        if (multiSelections.length < 2) return;
+        
+        const count = multiSelections.length;
+        const word = multiSelections[0].text;
+        document.getElementById("multi-selection-count").textContent = 
+          `${count} ocorrências de "${word}" selecionadas`;
+        document.getElementById("multi-replace-input").value = "";
+        
+        openModal(multiActionsModalOverlay);
+        document.getElementById("multi-replace-input").focus();
+      }
+
+      // Substituir todas as seleções múltiplas
+      function replaceMultiSelections(newText) {
+        if (multiSelections.length < 2) return;
+
+        let text = editor.value;
+        let offset = 0;
+
+        // Ordena as seleções por posição
+        multiSelections.sort((a, b) => a.start - b.start);
+
+        // Substitui cada ocorrência
+        multiSelections.forEach(sel => {
+          const adjustedStart = sel.start + offset;
+          const adjustedEnd = sel.end + offset;
+          
+          text = text.substring(0, adjustedStart) + newText + text.substring(adjustedEnd);
+          
+          // Ajusta o offset para as próximas substituições
+          offset += newText.length - (sel.end - sel.start);
+        });
+
+        editor.value = text;
+        const count = multiSelections.length;
+        multiSelections = [];
+        showMessage(`${count} ocorrências substituídas por "${newText}"`, 2000);
+        
         if (editorReady) debounceSave();
         updateStatusBar();
-    });
-    editor.addEventListener('scroll', () => {
-        rulerLine.style.transform = `translateX(-${editor.scrollLeft}px)`;
-    });
-    editor.addEventListener('keydown', handleKeyboardShortcuts);
-    toggleModeBtn.addEventListener('click', toggleTheme);
-    rulerColumnInput.addEventListener('input', updateRulerPosition);
-    docSelector.addEventListener('change', (e) => switchDocument(e.target.value));
-    newDocBtn.addEventListener('click', () => createNewDocument());
-    deleteDocBtn.addEventListener('click', deleteCurrentDocument);
-    downloadBtn.addEventListener('click', downloadAsTxt);
-    showShortcutsBtn.addEventListener('click', () => openModal(shortcutsModalOverlay));
-    document.getElementById('shortcuts-modal-close-btn').addEventListener('click', () => closeModal(shortcutsModalOverlay));
-    shortcutsModalOverlay.addEventListener('click', (e) => e.target === shortcutsModalOverlay && closeModal(shortcutsModalOverlay));
-    findReplaceBtn.addEventListener('click', () => openModal(findReplaceModalOverlay));
-    document.getElementById('find-replace-modal-close-btn').addEventListener('click', () => closeModal(findReplaceModalOverlay));
-    findReplaceModalOverlay.addEventListener('click', (e) => e.target === findReplaceModalOverlay && closeModal(findReplaceModalOverlay));
-    // Localizar e substituir
-    const findInput = document.getElementById('find-input');
-    const replaceInput = document.getElementById('replace-input');
-    document.getElementById('replace-btn').addEventListener('click', () => {
-        const findValue = findInput.value;
-        const replaceValue = replaceInput.value;
-        if (!findValue) return;
-        const currentSelection = editor.value.substring(editor.selectionStart, editor.selectionEnd);
-        if(currentSelection.toLowerCase() === findValue.toLowerCase()) {
-            editor.setRangeText(replaceValue, editor.selectionStart, editor.selectionEnd, 'select');
-        } else {
-            const nextIndex = editor.value.indexOf(findValue, editor.selectionEnd);
-            if (nextIndex !== -1) {
-                editor.setSelectionRange(nextIndex, nextIndex + findValue.length);
-            } else {
-                showMessage("Fim do documento.", 2000);
-            }
-        }
-        editor.focus();
-    });
-    document.getElementById('replace-all-btn').addEventListener('click', () => {
-        const findValue = findInput.value;
-        const replaceValue = replaceInput.value;
-        if (!findValue) return;
-        const originalValue = editor.value;
-        const newValue = originalValue.replaceAll(findValue, replaceValue);
-        if(originalValue !== newValue){
-            editor.value = newValue;
-            showMessage("Todas as ocorrências foram substituídas.", 2000);
-        } else {
-            showMessage("Nenhuma ocorrência encontrada.", 2000);
-        }
-    });
-    document.addEventListener('keydown', handleKeyboardShortcuts);
-}
-function handleKeyboardShortcuts(e) {
-    const isCtrlOrCmd = e.ctrlKey || e.metaKey;
-    const key = e.key.toLowerCase();
-    if (isCtrlOrCmd && key === 's') {
-        e.preventDefault();
-        clearTimeout(saveTimeout);
-        debounceSave();
-        showMessage("Salvando...", 1000);
-    } else if (isCtrlOrCmd && key === 'n') {
-        e.preventDefault();
-        createNewDocument();
-    } else if (isCtrlOrCmd && key === 'f') {
-        e.preventDefault();
-        openModal(findReplaceModalOverlay);
-        document.getElementById('find-input').focus();
-    }
-}
+      }
 
-/* --- Inicialização --- */
-document.addEventListener('DOMContentLoaded', async () => {
-    loadTheme();
-    lucide.createIcons();
-    loadRulerPosition();
-    userIdDisplay.textContent = `Local`;
-    editor.placeholder = "Carregando documentos...";
-    await loadDocumentsList();
-    editorReady = true;
-    addEventListeners();
-    updateStatusBar();
-});
-</script>
-</body>
+      // Converter seleções múltiplas para MAIÚSCULAS
+      function convertMultiSelectionsToUpperCase() {
+        if (multiSelections.length < 2) return;
+
+        let text = editor.value;
+        let offset = 0;
+
+        multiSelections.sort((a, b) => a.start - b.start);
+
+        multiSelections.forEach(sel => {
+          const adjustedStart = sel.start + offset;
+          const adjustedEnd = sel.end + offset;
+          const upperText = text.substring(adjustedStart, adjustedEnd).toUpperCase();
+          
+          text = text.substring(0, adjustedStart) + upperText + text.substring(adjustedEnd);
+        });
+
+        editor.value = text;
+        const count = multiSelections.length;
+        multiSelections = [];
+        showMessage(`${count} ocorrências convertidas para MAIÚSCULAS`, 2000);
+        
+        if (editorReady) debounceSave();
+        updateStatusBar();
+      }
+
+      // Converter seleções múltiplas para minúsculas
+      function convertMultiSelectionsToLowerCase() {
+        if (multiSelections.length < 2) return;
+
+        let text = editor.value;
+        let offset = 0;
+
+        multiSelections.sort((a, b) => a.start - b.start);
+
+        multiSelections.forEach(sel => {
+          const adjustedStart = sel.start + offset;
+          const adjustedEnd = sel.end + offset;
+          const lowerText = text.substring(adjustedStart, adjustedEnd).toLowerCase();
+          
+          text = text.substring(0, adjustedStart) + lowerText + text.substring(adjustedEnd);
+        });
+
+        editor.value = text;
+        const count = multiSelections.length;
+        multiSelections = [];
+        showMessage(`${count} ocorrências convertidas para minúsculas`, 2000);
+        
+        if (editorReady) debounceSave();
+        updateStatusBar();
+      }
+
+      // Deletar todas as seleções múltiplas
+      function deleteMultiSelections() {
+        if (multiSelections.length < 2) return;
+
+        let text = editor.value;
+        let offset = 0;
+
+        // Ordena as seleções por posição
+        multiSelections.sort((a, b) => a.start - b.start);
+
+        // Remove cada ocorrência
+        multiSelections.forEach(sel => {
+          const adjustedStart = sel.start + offset;
+          const adjustedEnd = sel.end + offset;
+          
+          text = text.substring(0, adjustedStart) + text.substring(adjustedEnd);
+          
+          // Ajusta o offset para as próximas remoções
+          offset -= (sel.end - sel.start);
+        });
+
+        editor.value = text;
+        const count = multiSelections.length;
+        multiSelections = [];
+        showMessage(`${count} ocorrências foram excluídas`, 2000);
+        
+        if (editorReady) debounceSave();
+        updateStatusBar();
+      }
+
+      // Duplicar linha atual
+      function duplicateCurrentLine() {
+        const start = editor.selectionStart;
+        const text = editor.value;
+
+        // Encontra o início e fim da linha atual
+        let lineStart = text.lastIndexOf("\n", start - 1) + 1;
+        let lineEnd = text.indexOf("\n", start);
+        if (lineEnd === -1) lineEnd = text.length;
+
+        const currentLine = text.substring(lineStart, lineEnd);
+        const newText =
+          text.substring(0, lineEnd) +
+          "\n" +
+          currentLine +
+          text.substring(lineEnd);
+
+        editor.value = newText;
+        // Posiciona o cursor na linha duplicada
+        editor.setSelectionRange(lineEnd + 1, lineEnd + 1);
+        editor.focus();
+
+        if (editorReady) debounceSave();
+      }
+
+      // Converter seleção para maiúsculas
+      function convertToUpperCase() {
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+
+        if (start === end) {
+          showMessage("Selecione um texto para converter", 2000);
+          return;
+        }
+
+        const selectedText = editor.value.substring(start, end);
+        const upperText = selectedText.toUpperCase();
+
+        editor.setRangeText(upperText, start, end, "select");
+        editor.focus();
+
+        if (editorReady) debounceSave();
+      }
+
+      // Mover linha atual para cima
+      function moveLineUp() {
+        const start = editor.selectionStart;
+        const text = editor.value;
+
+        // Encontra a linha atual
+        let currentLineStart = text.lastIndexOf("\n", start - 1) + 1;
+        let currentLineEnd = text.indexOf("\n", start);
+        if (currentLineEnd === -1) currentLineEnd = text.length;
+
+        // Se já está na primeira linha, não faz nada
+        if (currentLineStart === 0) {
+          showMessage("Já está na primeira linha", 1500);
+          return;
+        }
+
+        // Encontra a linha anterior
+        let prevLineStart = text.lastIndexOf("\n", currentLineStart - 2) + 1;
+
+        const currentLine = text.substring(currentLineStart, currentLineEnd);
+        const prevLine = text.substring(prevLineStart, currentLineStart - 1);
+
+        // Reconstrói o texto com as linhas trocadas
+        const newText =
+          text.substring(0, prevLineStart) +
+          currentLine +
+          "\n" +
+          prevLine +
+          text.substring(currentLineEnd);
+
+        editor.value = newText;
+
+        // Ajusta a posição do cursor
+        const newCursorPos = start - (currentLineStart - prevLineStart);
+        editor.setSelectionRange(newCursorPos, newCursorPos);
+        editor.focus();
+
+        if (editorReady) debounceSave();
+      }
+
+      // Mover linha atual para baixo
+      function moveLineDown() {
+        const start = editor.selectionStart;
+        const text = editor.value;
+
+        // Encontra a linha atual
+        let currentLineStart = text.lastIndexOf("\n", start - 1) + 1;
+        let currentLineEnd = text.indexOf("\n", start);
+        if (currentLineEnd === -1) currentLineEnd = text.length;
+
+        // Encontra a próxima linha
+        let nextLineEnd = text.indexOf("\n", currentLineEnd + 1);
+        if (nextLineEnd === -1) nextLineEnd = text.length;
+
+        // Se já está na última linha, não faz nada
+        if (currentLineEnd === text.length) {
+          showMessage("Já está na última linha", 1500);
+          return;
+        }
+
+        const currentLine = text.substring(currentLineStart, currentLineEnd);
+        const nextLine = text.substring(currentLineEnd + 1, nextLineEnd);
+
+        // Reconstrói o texto com as linhas trocadas
+        const newText =
+          text.substring(0, currentLineStart) +
+          nextLine +
+          "\n" +
+          currentLine +
+          text.substring(nextLineEnd);
+
+        editor.value = newText;
+
+        // Ajusta a posição do cursor
+        const newCursorPos = start + (nextLineEnd - currentLineEnd);
+        editor.setSelectionRange(newCursorPos, newCursorPos);
+        editor.focus();
+
+        if (editorReady) debounceSave();
+      }
+
+      /* --- Funções de Tema --- */
+      function loadTheme() {
+        const theme = localStorage.getItem('theme') || 'dark';
+        if (theme === 'dark') {
+          document.body.classList.add('dark');
+        } else {
+          document.body.classList.remove('dark');
+        }
+        updateThemeIcon();
+      }
+
+      function toggleTheme() {
+        const isDark = document.body.classList.contains('dark');
+        if (isDark) {
+          document.body.classList.remove('dark');
+          localStorage.setItem('theme', 'light');
+        } else {
+          document.body.classList.add('dark');
+          localStorage.setItem('theme', 'dark');
+        }
+        updateThemeIcon();
+      }
+
+      function updateThemeIcon() {
+        const themeBtn = document.getElementById('toggle-mode-btn');
+        if (!themeBtn) return; // Botão ainda não existe no DOM
+        
+        const icon = themeBtn.querySelector('i');
+        if (!icon) return;
+        
+        const isDark = document.body.classList.contains('dark');
+        
+        // Atualiza o ícone
+        icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+        lucide.createIcons();
+      }
+
+      /* --- Inicialização --- */
+      document.addEventListener("DOMContentLoaded", async () => {
+        loadTheme();
+        lucide.createIcons();
+        loadRulerPosition();
+        userIdDisplay.textContent = `Local`;
+        editor.placeholder = "Carregando documentos...";
+        await loadDocumentsList();
+        editorReady = true;
+        addEventListeners();
+        updateStatusBar();
+        updateLineNumbers(); // Inicializa numeração de linhas
+      });
+    </script>
+  </body>
 </html>
