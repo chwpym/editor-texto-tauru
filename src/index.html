@@ -14,210 +14,50 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
-    <style>
-      /* Variável CSS para a coluna da régua, usada para posicionamento dinâmico */
-      :root {
-        --ruler-column: 80;
+    
+    <!-- Configuração do Tailwind CSS para modo dark -->
+    <script>
+      tailwind.config = {
+        darkMode: 'class'
       }
-      html,
-      body {
-        height: 100%;
-        overflow: hidden; /* Impede o scroll no body */
-      }
-      body {
-        font-family: "Inter", sans-serif;
-        transition:
-          background-color 0.3s ease,
-          color 0.3s ease;
-      }
-      #editor {
-        font-family:
-          "Roboto Mono", monospace; /* Fonte monoespaçada para consistência */
-        resize: none; /* O redimensionamento é controlado pelo layout flex */
-      }
-
-      /* Estilo da linha da régua */
-      #ruler-line {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        /* Calcula a posição baseada na variável CSS e no padding do editor */
-        left: calc(var(--ruler-column) * 1ch + 1rem); /* 1rem = p-4 */
-        border-left: 1px solid #ef4444; /* Cor vermelha para a régua */
-        z-index: 0;
-        opacity: 0.6;
-        pointer-events: none; /* Impede que a linha intercepte cliques */
-      }
-      /* Efeito de transição suave para modais */
-      .modal-overlay {
-        transition:
-          opacity 0.3s ease,
-          visibility 0.3s ease;
-      }
-      .modal-content {
-        transition:
-          transform 0.3s ease,
-          opacity 0.3s ease;
-      }
-      .modal-overlay.show {
-        opacity: 1;
-        visibility: visible;
-      }
-      .modal-overlay.show .modal-content {
-        transform: translateY(0);
-        opacity: 1;
-      }
-      /* Estilo para a caixa de mensagem flutuante (Toast) */
-      #message-box {
-        position: fixed;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%) translateY(100px);
-        background-color: #2d3748;
-        color: white;
-        padding: 12px 24px;
-        border-radius: 8px;
-        z-index: 2000;
-        opacity: 0;
-        visibility: hidden;
-        transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-      }
-      .dark #message-box {
-        background-color: #e2e8f0;
-        color: #1a202c;
-      }
-      #message-box.show {
-        opacity: 1;
-        visibility: visible;
-        transform: translateX(-50%) translateY(0);
-      }
-      
-      /* Indicador de seleções múltiplas */
-      #multi-selection-indicator {
-        position: fixed;
-        top: 50%;
-        right: 20px;
-        transform: translateY(-50%);
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 12px 20px;
-        border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
-        z-index: 1500;
-        opacity: 0;
-        visibility: hidden;
-        transition: all 0.3s ease;
-        font-weight: 600;
-        font-size: 14px;
-        cursor: pointer;
-      }
-      #multi-selection-indicator.show {
-        opacity: 1;
-        visibility: visible;
-      }
-      #multi-selection-indicator:hover {
-        transform: translateY(-50%) scale(1.05);
-        box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
-      }
-      
-      /* Sistema de numeração de linhas */
-      #editor-wrapper {
-        position: relative;
-        display: flex;
-      }
-      
-      #line-numbers {
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 50px;
-        background: #e2e8f0;
-        border-right: 1px solid #cbd5e1;
-        overflow: hidden;
-        user-select: none;
-        pointer-events: none;
-        font-family: 'Roboto Mono', monospace;
-        font-size: 16px;
-        line-height: 24px;
-        padding: 16px 8px;
-        color: #64748b;
-        text-align: right;
-        z-index: 1;
-      }
-      
-      body.dark #line-numbers {
-        background: #1e293b;
-        border-right-color: #334155;
-        color: #475569;
-      }
-      
-      .line-number {
-        display: block;
-        height: 24px;
-        line-height: 24px;
-      }
-      
-      .line-number.highlighted {
-        background: rgba(102, 126, 234, 0.15);
-        color: #667eea;
-        font-weight: 700;
-        margin-left: -8px;
-        margin-right: -8px;
-        padding-left: 8px;
-        padding-right: 8px;
-        border-left: 3px solid #667eea;
-      }
-      
-      body.dark .line-number.highlighted {
-        background: rgba(102, 126, 234, 0.2);
-        color: #818cf8;
-        border-left-color: #818cf8;
-      }
-      
-      #editor {
-        padding-left: 60px !important;
-        white-space: pre;
-        font-family: 'Roboto Mono', monospace;
-        font-size: 16px;
-        line-height: 24px;
-      }
-    </style>
+    </script>
+    
+    <!-- Estilos customizados -->
+    <link rel="stylesheet" href="css/main.css" />
   </head>
   <body class="bg-slate-100 dark:bg-slate-900 flex flex-col">
     <div
       id="main-container"
-      class="w-full h-full flex flex-col bg-white dark:bg-slate-800"
+      class="w-full h-full flex flex-col bg-white dark:bg-slate-950"
     >
       <!-- Barra de Ferramentas Principal -->
       <div
-        class="toolbar flex flex-wrap items-center justify-between p-3 border-b border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 gap-2 flex-shrink-0"
+        class="toolbar flex flex-wrap items-center justify-between p-3 bg-slate-200 dark:bg-slate-900 gap-2 flex-shrink-0"
       >
         <!-- Grupo de Documentos -->
         <div class="flex items-center gap-2">
           <button
             id="new-doc-btn"
-            title="Novo Documento (Ctrl+N)"
-            class="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
+            title="Novo Documento (Alt+N)"
+            class="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors"
           >
             <i data-lucide="file-plus-2"></i>
           </button>
           <select
             id="doc-selector"
-            class="p-2 border border-gray-300 rounded-md bg-white dark:bg-slate-700 dark:border-slate-600 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="p-2 border-none rounded-md bg-transparent text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
           ></select>
           <button
             id="rename-doc-btn"
             title="Renomear Documento"
-            class="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
+            class="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors"
           >
             <i data-lucide="edit-3"></i>
           </button>
           <button
             id="delete-doc-btn"
             title="Excluir Documento Atual"
-            class="p-2 rounded-md hover:bg-red-200 dark:hover:bg-red-800 transition-colors text-red-600 dark:text-red-400"
+            class="p-2 rounded-md hover:bg-red-200 dark:hover:bg-red-900 transition-colors text-red-600 dark:text-red-400"
           >
             <i data-lucide="trash-2"></i>
           </button>
@@ -228,14 +68,14 @@
           <button
             id="download-btn"
             title="Baixar como .txt"
-            class="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
+            class="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors"
           >
             <i data-lucide="download"></i>
           </button>
           <button
             id="find-replace-btn"
-            title="Localizar e Substituir (Ctrl+F)"
-            class="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
+            title="Localizar e Substituir (Ctrl+Shift+F)"
+            class="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors"
           >
             <i data-lucide="search"></i>
           </button>
@@ -253,22 +93,29 @@
               min="10"
               max="200"
               value="80"
-              class="w-16 p-1 border border-gray-300 dark:border-slate-600 rounded-md text-center bg-white dark:bg-slate-700 dark:text-slate-200"
+              class="w-16 p-1 border-none rounded-md text-center bg-transparent text-slate-600 dark:text-slate-300 focus:ring-0"
             />
           </div>
           <button
             id="toggle-mode-btn"
             title="Alternar Tema"
-            class="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
+            class="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors"
           >
             <i data-lucide="moon"></i>
           </button>
           <button
             id="show-shortcuts-btn"
             title="Ver Atalhos"
-            class="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
+            class="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors"
           >
             <i data-lucide="keyboard"></i>
+          </button>
+          <button
+            id="help-btn"
+            title="Guia de Uso e Dicas"
+            class="p-2 rounded-md text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors"
+          >
+            <i data-lucide="help-circle"></i>
           </button>
         </div>
       </div>
@@ -276,7 +123,7 @@
       <!-- Área de Edição de Texto Wrapper -->
       <div
         id="editor-wrapper"
-        class="relative flex-grow bg-white dark:bg-slate-900"
+        class="relative flex-grow bg-white dark:bg-slate-950"
       >
         <div id="line-numbers"></div>
         <div id="ruler-line"></div>
@@ -289,7 +136,7 @@
 
       <!-- Barra de Status -->
       <div
-        class="status-bar flex justify-end items-center p-2 border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 text-sm text-gray-600 dark:text-gray-400 gap-4 flex-shrink-0"
+        class="status-bar flex justify-end items-center p-2 px-4 bg-slate-200 dark:bg-slate-900 text-sm text-gray-600 dark:text-slate-400 gap-4 flex-shrink-0"
       >
         <span id="save-status"></span>
         <span id="word-count">Palavras: 0</span>
@@ -318,14 +165,14 @@
         </button>
             <h2 class="text-2xl font-bold mb-4">Atalhos de Teclado</h2>
             <div class="space-y-2">
-                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + S</kbd>: Forçar salvamento do documento.</p>
-                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + F</kbd>: Abrir Localizar e Substituir.</p>
-                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + N</kbd>: Criar novo documento.</p>
-                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + D</kbd>: Selecionar próxima ocorrência (pressione múltiplas vezes).</p>
+                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + S</kbd>: Salvar documento manualmente.</p>
+                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Alt + N</kbd>: Criar novo documento.</p>
+                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + Shift + F</kbd>: Abrir Localizar e Substituir.</p>
+                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + D</kbd>: Selecionar próxima ocorrência.</p>
                 <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + Shift + L</kbd>: Selecionar todas as ocorrências.</p>
-                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + M</kbd>: Abrir ações para múltiplas seleções.</p>
+                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + M</kbd>: Ações para múltiplas seleções.</p>
                 <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + Shift + D</kbd>: Duplicar linha atual.</p>
-                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + Shift + U</kbd>: Converter seleção para maiúsculas.</p>
+                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + Shift + U</kbd>: Converter seleção para MAIÚSCULAS.</p>
                 <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Alt + Shift + ↑/↓</kbd>: Mover linha para cima/baixo.</p>
                 <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Esc</kbd>: Cancelar seleções múltiplas.</p>
             </div>
@@ -419,7 +266,74 @@
         </div>
     </div>
 
-    <!-- Indicador de Seleções Múltiplas -->
+    <!-- Modal de Ajuda e Dicas -->
+    <div
+      id="help-modal-overlay"
+      class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 opacity-0 invisible"
+    >
+      <div
+        class="modal-content bg-white dark:bg-slate-800 p-8 rounded-lg shadow-xl max-w-2xl w-full relative transform -translate-y-5 text-slate-800 dark:text-slate-200 overflow-y-auto max-h-[90vh]"
+      >
+        <button
+          id="help-modal-close-btn"
+          class="modal-close-btn absolute top-3 right-3 p-1 rounded-full text-2xl hover:bg-gray-200 dark:hover:bg-slate-700"
+        >
+          &times;
+        </button>
+        <h2 class="text-2xl font-bold mb-4 flex items-center gap-2">
+          <i data-lucide="sparkles" class="text-yellow-500"></i>
+          Guia de Uso e Dicas de Ouro
+        </h2>
+        
+        <div class="space-y-6">
+          <!-- Dica de Espaçamento -->
+          <section class="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg border-l-4 border-blue-500">
+            <h3 class="font-bold text-lg mb-2 flex items-center gap-2">
+              <i data-lucide="info" class="w-5 h-5 text-blue-500"></i>
+              Evitando que as palavras "juntem"
+            </h3>
+            <p class="text-sm">Ao substituir um texto (ex: trocar <code>DE</code> por <code>DA</code>), se você não quer que o resultado fique grudado (<code>TESTANDODAATALHO</code>), lembre-se:</p>
+            <ul class="list-disc ml-5 mt-2 text-sm space-y-1">
+              <li>Se você selecionar apenas a palavra, a substituição deve incluir o espaço (ex: <code>"DA "</code>).</li>
+              <li>Sempre confira o resultado enquanto as palavras ainda estão destacadas logo após a troca.</li>
+            </ul>
+          </section>
+
+          <!-- Seleção Múltipla -->
+          <section>
+            <h3 class="font-bold text-lg mb-2">Seleção em Massa (Estilo VS Code)</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="p-3 bg-gray-100 dark:bg-slate-700 rounded">
+                <p class="font-semibold text-sm mb-1">Passo a Passo:</p>
+                <ol class="list-decimal ml-5 text-xs space-y-1">
+                  <li>Selecione uma palavra.</li>
+                  <li>Pressione <kbd class="bg-white dark:bg-slate-600 px-1 rounded">Ctrl + D</kbd> para selecionar a próxima igual.</li>
+                  <li>Pressione <kbd class="bg-white dark:bg-slate-600 px-1 rounded">Ctrl + M</kbd> para abrir o painel de ações.</li>
+                </ol>
+              </div>
+              <div class="p-3 bg-gray-100 dark:bg-slate-700 rounded">
+                <p class="font-semibold text-sm mb-1">Ações Rápidas:</p>
+                <p class="text-xs">No painel que abre, você pode transformar tudo em <strong>MAIÚSCULAS</strong>, deletar tudo de uma vez ou trocar por outro texto.</p>
+              </div>
+            </div>
+          </section>
+
+          <!-- Atalhos Cruciais -->
+          <section>
+            <h3 class="font-bold text-lg mb-2">Atalhos que você precisa saber</h3>
+            <div class="space-y-2 text-sm">
+                <p><kbd class="bg-gray-200 dark:bg-slate-600 px-1 rounded">Alt + N</kbd> : Novo Documento (evita conflitos com o navegador).</p>
+                <p><kbd class="bg-gray-200 dark:bg-slate-600 px-1 rounded">Ctrl + Shift + F</kbd> : Localizar e Substituir.</p>
+                <p><kbd class="bg-gray-200 dark:bg-slate-600 px-1 rounded">Alt + Shift + ↑/↓</kbd> : Move a linha inteira para cima ou para baixo.</p>
+            </div>
+          </section>
+        </div>
+
+        <button id="help-close-guide-btn" class="w-full mt-8 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
+          Entendi, vamos editar!
+        </button>
+      </div>
+    </div>
     <div id="multi-selection-indicator" title="Clique para abrir ações (Ctrl+M)">
       <div id="multi-selection-text">0 selecionadas</div>
     </div>
@@ -427,7 +341,7 @@
     <!-- Caixa de Mensagem (Toast) -->
     <div id="message-box" role="alert" aria-live="polite"></div>
 
-    <!-- Scripts do Editor 100% Offline com IndexedDB -->
+    <!-- Scripts do Editor -->
     <script>
       /* --- IndexedDB Helper --- */
       const DB_NAME = "editor-codigo-db";
@@ -498,6 +412,43 @@
             req.onerror = () => reject(req.error);
           });
         });
+      }
+
+      /* --- Funções de Tema --- */
+      function loadTheme() {
+        const theme = localStorage.getItem('theme') || 'dark';
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+        updateThemeIcon();
+      }
+
+      function toggleTheme() {
+        const isDark = document.documentElement.classList.contains('dark');
+        if (isDark) {
+          document.documentElement.classList.remove('dark');
+          localStorage.setItem('theme', 'light');
+        } else {
+          document.documentElement.classList.add('dark');
+          localStorage.setItem('theme', 'dark');
+        }
+        updateThemeIcon();
+      }
+
+      function updateThemeIcon() {
+        const themeBtn = document.getElementById('toggle-mode-btn');
+        if (!themeBtn) return;
+        
+        const icon = themeBtn.querySelector('i');
+        if (!icon) return;
+        
+        const isDark = document.documentElement.classList.contains('dark');
+        
+        // Atualiza o ícone
+        icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+        lucide.createIcons();
       }
 
       /* --- DOM Elements --- */
@@ -686,22 +637,7 @@
       }
 
       /* --- UI Management (tema, régua, modais) --- */
-      function loadTheme() {
-        if (localStorage.getItem("theme") === "dark") {
-          document.documentElement.classList.add("dark");
-          toggleModeBtn.innerHTML = '<i data-lucide="sun"></i>';
-        } else {
-          document.documentElement.classList.remove("dark");
-          toggleModeBtn.innerHTML = '<i data-lucide="moon"></i>';
-        }
-      }
-      function toggleTheme() {
-        document.documentElement.classList.toggle("dark");
-        const isDark = document.documentElement.classList.contains("dark");
-        localStorage.setItem("theme", isDark ? "dark" : "light");
-        loadTheme();
-        lucide.createIcons();
-      }
+
       function updateRulerPosition() {
         const column = parseInt(rulerColumnInput.value) || 80;
         document.documentElement.style.setProperty("--ruler-column", column);
@@ -764,7 +700,6 @@
         deleteDocBtn.addEventListener("click", deleteCurrentDocument);
         document.getElementById("rename-doc-btn").addEventListener("click", renameDocument);
         downloadBtn.addEventListener("click", downloadAsTxt);
-        document.getElementById("toggle-mode-btn").addEventListener("click", toggleTheme);
         showShortcutsBtn.addEventListener("click", () =>
           openModal(shortcutsModalOverlay),
         );
@@ -777,6 +712,15 @@
             e.target === shortcutsModalOverlay &&
             closeModal(shortcutsModalOverlay),
         );
+        
+        // Modal de Ajuda
+        const helpBtn = document.getElementById("help-btn");
+        const helpModalOverlay = document.getElementById("help-modal-overlay");
+        helpBtn.addEventListener("click", () => openModal(helpModalOverlay));
+        document.getElementById("help-modal-close-btn").addEventListener("click", () => closeModal(helpModalOverlay));
+        document.getElementById("help-close-guide-btn").addEventListener("click", () => closeModal(helpModalOverlay));
+        helpModalOverlay.addEventListener("click", (e) => e.target === helpModalOverlay && closeModal(helpModalOverlay));
+
         findReplaceBtn.addEventListener("click", () =>
           openModal(findReplaceModalOverlay),
         );
@@ -814,11 +758,10 @@
         
         document.getElementById("multi-replace-btn").addEventListener("click", () => {
           const replaceValue = document.getElementById("multi-replace-input").value;
-          if (replaceValue) {
-            replaceMultiSelections(replaceValue);
-            multiSelectionIndicator.classList.remove("show");
-            closeModal(multiActionsModalOverlay);
-          }
+          // Permite substituir mesmo que seja string vazia ou espaço
+          replaceMultiSelections(replaceValue);
+          multiSelectionIndicator.classList.remove("show");
+          closeModal(multiActionsModalOverlay);
         });
         
         document.getElementById("multi-uppercase-btn").addEventListener("click", () => {
@@ -897,13 +840,13 @@
           debounceSave();
           showMessage("Salvando...", 1000);
         }
-        // Ctrl + N: Novo documento
-        else if (isCtrlOrCmd && key === "n") {
+        // Alt + N: Novo documento
+        if (e.altKey && !e.ctrlKey && key === "n") {
           e.preventDefault();
           createNewDocument();
         }
-        // Ctrl + F: Localizar e substituir
-        else if (isCtrlOrCmd && key === "f") {
+        // Ctrl + Shift + F: Localizar e substituir
+        else if (isCtrlOrCmd && e.shiftKey && key === "f") {
           e.preventDefault();
           openModal(findReplaceModalOverlay);
           document.getElementById("find-input").focus();
@@ -1131,17 +1074,25 @@
         if (multiSelections.length < 2) return;
 
         let text = editor.value;
+        const newMultiSelections = [];
         let offset = 0;
 
-        // Ordena as seleções por posição
+        // Ordena as seleções por posição original para processamento sequencial
         multiSelections.sort((a, b) => a.start - b.start);
 
-        // Substitui cada ocorrência
+        // Substitui cada ocorrência e calcula as novas posições
         multiSelections.forEach(sel => {
           const adjustedStart = sel.start + offset;
           const adjustedEnd = sel.end + offset;
           
           text = text.substring(0, adjustedStart) + newText + text.substring(adjustedEnd);
+          
+          // Armazena a nova posição da seleção para manter o destaque
+          newMultiSelections.push({
+            start: adjustedStart,
+            end: adjustedStart + newText.length,
+            text: newText
+          });
           
           // Ajusta o offset para as próximas substituições
           offset += newText.length - (sel.end - sel.start);
@@ -1149,11 +1100,21 @@
 
         editor.value = text;
         const count = multiSelections.length;
-        multiSelections = [];
-        showMessage(`${count} ocorrências substituídas por "${newText}"`, 2000);
+        
+        // Mantém as seleções para o usuário conferir o resultado
+        multiSelections = newMultiSelections;
+        
+        if (newText === "") {
+          showMessage(`${count} ocorrências excluídas`, 2000);
+          multiSelections = []; // Se deletou tudo, limpa as seleções
+        } else {
+          showMessage(`${count} ocorrências substituídas por "${newText}"`, 2000);
+        }
         
         if (editorReady) debounceSave();
+        updateMultiSelectionIndicator();
         updateStatusBar();
+        updateLineNumbers();
       }
 
       // Converter seleções múltiplas para MAIÚSCULAS
@@ -1282,11 +1243,16 @@
         if (editorReady) debounceSave();
       }
 
-      // Mover linha atual para cima
       function moveLineUp() {
         const start = editor.selectionStart;
         const text = editor.value;
 
+        // Limpa seleções múltiplas para evitar corrupção de índices
+        if (multiSelections.length > 0) {
+          multiSelections = [];
+          updateMultiSelectionIndicator();
+        }
+        
         // Encontra a linha atual
         let currentLineStart = text.lastIndexOf("\n", start - 1) + 1;
         let currentLineEnd = text.indexOf("\n", start);
@@ -1304,7 +1270,7 @@
         const currentLine = text.substring(currentLineStart, currentLineEnd);
         const prevLine = text.substring(prevLineStart, currentLineStart - 1);
 
-        // Reconstrói o texto com as linhas trocadas
+        // Reconstrói o texto com as linhas trocadas de forma limpa
         const newText =
           text.substring(0, prevLineStart) +
           currentLine +
@@ -1314,12 +1280,14 @@
 
         editor.value = newText;
 
-        // Ajusta a posição do cursor
+        // Ajusta a posição do cursor e limpa seleção
         const newCursorPos = start - (currentLineStart - prevLineStart);
         editor.setSelectionRange(newCursorPos, newCursorPos);
         editor.focus();
 
         if (editorReady) debounceSave();
+        updateLineNumbers();
+        updateStatusBar();
       }
 
       // Mover linha atual para baixo
@@ -1327,20 +1295,26 @@
         const start = editor.selectionStart;
         const text = editor.value;
 
+        // Limpa seleções múltiplas para evitar corrupção de índices
+        if (multiSelections.length > 0) {
+          multiSelections = [];
+          updateMultiSelectionIndicator();
+        }
+
         // Encontra a linha atual
         let currentLineStart = text.lastIndexOf("\n", start - 1) + 1;
         let currentLineEnd = text.indexOf("\n", start);
         if (currentLineEnd === -1) currentLineEnd = text.length;
-
-        // Encontra a próxima linha
-        let nextLineEnd = text.indexOf("\n", currentLineEnd + 1);
-        if (nextLineEnd === -1) nextLineEnd = text.length;
 
         // Se já está na última linha, não faz nada
         if (currentLineEnd === text.length) {
           showMessage("Já está na última linha", 1500);
           return;
         }
+
+        // Encontra a próxima linha
+        let nextLineEnd = text.indexOf("\n", currentLineEnd + 1);
+        if (nextLineEnd === -1) nextLineEnd = text.length;
 
         const currentLine = text.substring(currentLineStart, currentLineEnd);
         const nextLine = text.substring(currentLineEnd + 1, nextLineEnd);
@@ -1355,50 +1329,21 @@
 
         editor.value = newText;
 
-        // Ajusta a posição do cursor
+        // Ajusta a posição do cursor e limpa seleção
         const newCursorPos = start + (nextLineEnd - currentLineEnd);
         editor.setSelectionRange(newCursorPos, newCursorPos);
         editor.focus();
 
         if (editorReady) debounceSave();
+        updateLineNumbers();
+        updateStatusBar();
       }
 
-      /* --- Funções de Tema --- */
-      function loadTheme() {
-        const theme = localStorage.getItem('theme') || 'dark';
-        if (theme === 'dark') {
-          document.body.classList.add('dark');
-        } else {
-          document.body.classList.remove('dark');
-        }
-        updateThemeIcon();
-      }
 
-      function toggleTheme() {
-        const isDark = document.body.classList.contains('dark');
-        if (isDark) {
-          document.body.classList.remove('dark');
-          localStorage.setItem('theme', 'light');
-        } else {
-          document.body.classList.add('dark');
-          localStorage.setItem('theme', 'dark');
-        }
-        updateThemeIcon();
-      }
 
-      function updateThemeIcon() {
-        const themeBtn = document.getElementById('toggle-mode-btn');
-        if (!themeBtn) return; // Botão ainda não existe no DOM
-        
-        const icon = themeBtn.querySelector('i');
-        if (!icon) return;
-        
-        const isDark = document.body.classList.contains('dark');
-        
-        // Atualiza o ícone
-        icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
-        lucide.createIcons();
-      }
+
+
+
 
       /* --- Inicialização --- */
       document.addEventListener("DOMContentLoaded", async () => {
