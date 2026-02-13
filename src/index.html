@@ -3,7 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Editor de Texto Avançado</title>
+    <title>editor-codigo</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="apple-touch-icon" href="icon.png">
     <!-- Tailwind CSS CDN para estilização -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Biblioteca Lucide Icons para ícones modernos -->
@@ -84,9 +87,15 @@
         <!-- Grupo de Configurações e Ajuda -->
         <div class="flex items-center gap-2">
           <div
-            class="ruler-input-group flex items-center gap-2 text-slate-600 dark:text-slate-300"
+            class="ruler-input-group flex items-center gap-1 text-slate-600 dark:text-slate-300"
           >
-            <i data-lucide="ruler" class=""></i>
+            <button 
+              id="ruler-toggle-btn" 
+              title="Mostrar/Ocultar Régua" 
+              class="p-1.5 rounded-md hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors"
+            >
+              <i data-lucide="ruler"></i>
+            </button>
             <input
               type="number"
               id="ruler-column-input"
@@ -117,6 +126,21 @@
           >
             <i data-lucide="help-circle"></i>
           </button>
+          <button
+            id="export-db-btn"
+            title="Exportar Todos os Documentos (Backup)"
+            class="p-2 rounded-md text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900 transition-colors"
+          >
+            <i data-lucide="download-cloud"></i>
+          </button>
+          <button
+            id="import-db-btn"
+            title="Importar Documentos de Backup"
+            class="p-2 rounded-md text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900 transition-colors"
+          >
+            <i data-lucide="upload-cloud"></i>
+          </button>
+          <input type="file" id="import-db-input" class="hidden" accept=".json,.txt" multiple />
         </div>
       </div>
 
@@ -139,6 +163,7 @@
         class="status-bar flex justify-end items-center p-2 px-4 bg-slate-200 dark:bg-slate-900 text-sm text-gray-600 dark:text-slate-400 gap-4 flex-shrink-0"
       >
         <span id="save-status"></span>
+        <span id="file-size" class="text-blue-500 font-mono"></span>
         <span id="word-count">Palavras: 0</span>
         <span id="char-count">Caracteres: 0</span>
         <span
@@ -320,11 +345,15 @@
 
           <!-- Atalhos Cruciais -->
           <section>
-            <h3 class="font-bold text-lg mb-2">Atalhos que você precisa saber</h3>
+            <h3 class="font-bold text-lg mb-2">Atalhos e Controles Úteis</h3>
             <div class="space-y-2 text-sm">
                 <p><kbd class="bg-gray-200 dark:bg-slate-600 px-1 rounded">Alt + N</kbd> : Novo Documento (evita conflitos com o navegador).</p>
                 <p><kbd class="bg-gray-200 dark:bg-slate-600 px-1 rounded">Ctrl + Shift + F</kbd> : Localizar e Substituir.</p>
                 <p><kbd class="bg-gray-200 dark:bg-slate-600 px-1 rounded">Alt + Shift + ↑/↓</kbd> : Move a linha inteira para cima ou para baixo.</p>
+                <p class="mt-4 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded border-l-4 border-yellow-500">
+                  <i data-lucide="ruler" class="inline w-4 h-4 mr-1"></i>
+                  <strong>Dica da Régua:</strong> Clique no ícone da régua na barra de ferramentas para mostrar ou ocultar a linha vermelha delimitadora.
+                </p>
             </div>
           </section>
         </div>
@@ -341,8 +370,144 @@
     <!-- Caixa de Mensagem (Toast) -->
     <div id="message-box" role="alert" aria-live="polite"></div>
 
+    <!-- Modal Dinâmico de Confirmação (Custom Confirm) -->
+    <div
+      id="confirm-modal-overlay"
+      class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-[100] opacity-0 invisible"
+    >
+      <div
+        class="modal-content bg-white dark:bg-slate-800 p-6 rounded-lg shadow-2xl max-w-sm w-full relative transform -translate-y-5 text-slate-800 dark:text-slate-200"
+      >
+        <h2 id="confirm-modal-title" class="text-xl font-bold mb-2 text-red-600 dark:text-red-400">Confirmar</h2>
+        <p id="confirm-modal-message" class="text-sm mb-6 text-gray-600 dark:text-gray-400"></p>
+        <div class="flex justify-end gap-3">
+          <button
+            id="confirm-modal-cancel-btn"
+            class="px-4 py-2 bg-gray-200 dark:bg-slate-700 rounded-md hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            id="confirm-modal-ok-btn"
+            class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 shadow-lg shadow-red-500/30 transition-all font-bold"
+          >
+            Sim, tenho certeza!
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Dinâmico de Entrada (Custom Prompt) -->
+    <div
+      id="prompt-modal-overlay"
+      class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-[100] opacity-0 invisible"
+    >
+      <div
+        class="modal-content bg-white dark:bg-slate-800 p-6 rounded-lg shadow-2xl max-w-sm w-full relative transform -translate-y-5 text-slate-800 dark:text-slate-200"
+      >
+        <h2 id="prompt-modal-title" class="text-xl font-bold mb-2 text-blue-600 dark:text-blue-400">Entrada</h2>
+        <p id="prompt-modal-message" class="text-sm mb-4 text-gray-600 dark:text-gray-400"></p>
+        <input
+          type="text"
+          id="prompt-modal-input"
+          class="w-full p-2 mb-6 border-2 border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:border-blue-500 outline-none transition-all"
+        />
+        <div class="flex justify-end gap-3">
+          <button
+            id="prompt-modal-cancel-btn"
+            class="px-4 py-2 bg-gray-200 dark:bg-slate-700 rounded-md hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            id="prompt-modal-ok-btn"
+            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all font-bold"
+          >
+            Confirmar
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Scripts do Editor -->
     <script>
+      /* --- Custom Dialogs (Replace Prompt/Confirm) --- */
+      function customConfirm(title, message) {
+        return new Promise((resolve) => {
+          const overlay = document.getElementById("confirm-modal-overlay");
+          const titleEl = document.getElementById("confirm-modal-title");
+          const messageEl = document.getElementById("confirm-modal-message");
+          const okBtn = document.getElementById("confirm-modal-ok-btn");
+          const cancelBtn = document.getElementById("confirm-modal-cancel-btn");
+
+          titleEl.textContent = title;
+          messageEl.textContent = message;
+          overlay.classList.add("show");
+
+          const handleOk = () => {
+            overlay.classList.remove("show");
+            cleanup();
+            resolve(true);
+          };
+          const handleCancel = () => {
+            overlay.classList.remove("show");
+            cleanup();
+            resolve(false);
+          };
+          const cleanup = () => {
+            okBtn.removeEventListener("click", handleOk);
+            cancelBtn.removeEventListener("click", handleCancel);
+          };
+
+          okBtn.addEventListener("click", handleOk);
+          cancelBtn.addEventListener("click", handleCancel);
+        });
+      }
+
+      function customPrompt(title, message, defaultValue = "") {
+        return new Promise((resolve) => {
+          const overlay = document.getElementById("prompt-modal-overlay");
+          const titleEl = document.getElementById("prompt-modal-title");
+          const messageEl = document.getElementById("prompt-modal-message");
+          const inputEl = document.getElementById("prompt-modal-input");
+          const okBtn = document.getElementById("prompt-modal-ok-btn");
+          const cancelBtn = document.getElementById("prompt-modal-cancel-btn");
+
+          titleEl.textContent = title;
+          messageEl.textContent = message;
+          inputEl.value = defaultValue;
+          overlay.classList.add("show");
+          
+          // Foco automático no input
+          setTimeout(() => inputEl.focus(), 100);
+
+          const handleOk = () => {
+            const val = inputEl.value;
+            overlay.classList.remove("show");
+            cleanup();
+            resolve(val);
+          };
+          const handleCancel = () => {
+            overlay.classList.remove("show");
+            cleanup();
+            resolve(null);
+          };
+          const cleanup = () => {
+            okBtn.removeEventListener("click", handleOk);
+            cancelBtn.removeEventListener("click", handleCancel);
+            inputEl.removeEventListener("keydown", handleKey);
+          };
+          const handleKey = (e) => {
+            if (e.key === "Enter") handleOk();
+            if (e.key === "Escape") handleCancel();
+          };
+
+          okBtn.addEventListener("click", handleOk);
+          cancelBtn.addEventListener("click", handleCancel);
+          inputEl.addEventListener("keydown", handleKey);
+        });
+      }
+
       /* --- IndexedDB Helper --- */
       const DB_NAME = "editor-codigo-db";
       const STORE_NAME = "documents";
@@ -454,6 +619,7 @@
       /* --- DOM Elements --- */
       const editor = document.getElementById("editor");
       const saveStatus = document.getElementById("save-status");
+      const fileSizeEl = document.getElementById("file-size");
       const wordCountEl = document.getElementById("word-count");
       const charCountEl = document.getElementById("char-count");
       const toggleModeBtn = document.getElementById("toggle-mode-btn");
@@ -525,11 +691,11 @@
       }
 
       async function createNewDocument(title = "Novo Documento") {
-        const newTitle = prompt("Digite o título do novo documento:", title);
+        const newTitle = await customPrompt("Novo Documento", "Digite o título do documento:", title);
         if (!newTitle) return;
         const newDoc = {
           id: crypto.randomUUID(),
-          title: newTitle,
+          name: newTitle,
           content: "",
           createdAt: Date.now(),
           updatedAt: Date.now(),
@@ -544,11 +710,8 @@
       async function deleteCurrentDocument() {
         if (!currentDocId) return;
         const docTitle = docSelector.options[docSelector.selectedIndex].text;
-        if (
-          confirm(
-            `Tem certeza que deseja excluir o documento "${docTitle}"? Esta ação não pode ser desfeita.`,
-          )
-        ) {
+        const confirmed = await customConfirm("Excluir Documento", `Tem certeza que deseja apagar "${docTitle}"? Esta ação é definitiva.`);
+        if (confirmed) {
           await deleteDocById(currentDocId);
           showMessage("Documento excluído.");
           currentDocId = null;
@@ -565,9 +728,9 @@
         const doc = await getDoc(currentDocId);
         if (!doc) return;
         
-        const newName = prompt("Novo nome do documento:", doc.name);
+        const newName = await customPrompt("Renomear Documento", "Digite o novo nome:", doc.name);
         if (!newName || newName.trim() === "") {
-          showMessage("Nome inválido", 2000);
+          if (newName !== null) showMessage("Nome inválido", 2000);
           return;
         }
         
@@ -613,8 +776,17 @@
         const text = editor.value;
         const chars = text.length;
         const words = text.trim().split(/\s+/).filter(Boolean).length;
+        
+        // Cálculo de tamanho (aproximado por bytes)
+        const bytes = new Blob([text]).size;
+        let sizeText = "";
+        if (bytes < 1024) sizeText = `${bytes} B`;
+        else if (bytes < 1048576) sizeText = `${(bytes / 1024).toFixed(1)} KB`;
+        else sizeText = `${(bytes / 1048576).toFixed(1)} MB`;
+
         wordCountEl.textContent = `Palavras: ${words}`;
         charCountEl.textContent = `Caracteres: ${chars}`;
+        if (fileSizeEl) fileSizeEl.textContent = `Tamanho: ${sizeText}`;
       }
 
       function downloadAsTxt() {
@@ -636,6 +808,90 @@
         URL.revokeObjectURL(url);
       }
 
+      async function exportAllDocuments() {
+        const docs = await getAllDocs();
+        if (docs.length === 0) {
+          showMessage("Nenhum documento para exportar.");
+          return;
+        }
+        
+        const data = JSON.stringify(docs, null, 2);
+        const blob = new Blob([data], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `backup_editor_taurus_${new Date().toISOString().slice(0,10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showMessage("Backup exportado com sucesso!");
+      }
+
+      async function importDocuments(event) {
+        const files = Array.from(event.target.files);
+        if (files.length === 0) return;
+
+        const db = await openDB();
+        const importPromises = files.map(file => {
+          return new Promise((resolve) => {
+            const reader = new FileReader();
+            
+            if (file.name.endsWith('.json')) {
+              reader.onload = async (e) => {
+                try {
+                  const docs = JSON.parse(e.target.result);
+                  if (Array.isArray(docs)) {
+                    const confirmed = await customConfirm("Importar Backup", `Deseja importar ${docs.length} documentos deste arquivo JSON?`);
+                    if (!confirmed) {
+                      resolve();
+                      return;
+                    }
+
+                    const transaction = db.transaction("documents", "readwrite");
+                    const store = transaction.objectStore("documents");
+                    for (const doc of docs) {
+                      // Garante que cada doc tenha um ID novo se não tiver ou se for duplicado
+                      if (!doc.id) doc.id = crypto.randomUUID();
+                      // Garante que use 'name' para consistência
+                      if (doc.title && !doc.name) doc.name = doc.title;
+                      store.put(doc);
+                    }
+                    transaction.oncomplete = () => resolve();
+                  } else { resolve(); }
+                } catch (err) { resolve(); }
+              };
+              reader.readAsText(file);
+            } else if (file.name.endsWith('.txt')) {
+              reader.onload = async (e) => {
+                const content = e.target.result;
+                const name = file.name.replace(/\.[^/.]+$/, "").replace(/__/g, " ").toUpperCase();
+                
+                const transaction = db.transaction("documents", "readwrite");
+                const store = transaction.objectStore("documents");
+                store.add({
+                  id: crypto.randomUUID(),
+                  name: name,
+                  content: content,
+                  createdAt: Date.now(),
+                  updatedAt: Date.now()
+                });
+                transaction.oncomplete = () => resolve();
+                transaction.onerror = () => resolve();
+              };
+              reader.readAsText(file);
+            } else {
+              resolve();
+            }
+          });
+        });
+
+        await Promise.all(importPromises);
+        showMessage(`${files.length} arquivos processados!`);
+        await loadDocumentsList();
+        event.target.value = '';
+      }
+
       /* --- UI Management (tema, régua, modais) --- */
 
       function updateRulerPosition() {
@@ -643,12 +899,42 @@
         document.documentElement.style.setProperty("--ruler-column", column);
         localStorage.setItem("rulerColumn", column);
       }
+      
+      function toggleRulerVisibility() {
+        const rulerLine = document.getElementById("ruler-line");
+        const btn = document.getElementById("ruler-toggle-btn");
+        const isVisible = localStorage.getItem("rulerVisible") !== "false";
+        
+        const newVisible = !isVisible;
+        localStorage.setItem("rulerVisible", newVisible);
+        
+        applyRulerVisibility(newVisible);
+      }
+
+      function applyRulerVisibility(visible) {
+        const rulerLine = document.getElementById("ruler-line");
+        const btn = document.getElementById("ruler-toggle-btn");
+        
+        if (visible) {
+          rulerLine.style.display = "block";
+          btn.classList.add("text-blue-600", "dark:text-blue-400");
+          btn.classList.remove("text-slate-600", "dark:text-slate-300");
+        } else {
+          rulerLine.style.display = "none";
+          btn.classList.add("text-slate-600", "dark:text-slate-300");
+          btn.classList.remove("text-blue-600", "dark:text-blue-400");
+        }
+      }
+
       function loadRulerPosition() {
         const savedColumn = localStorage.getItem("rulerColumn");
         if (savedColumn) {
           rulerColumnInput.value = savedColumn;
         }
         updateRulerPosition();
+        
+        const isVisible = localStorage.getItem("rulerVisible") !== "false";
+        applyRulerVisibility(isVisible);
       }
       function showMessage(message, duration = 3000) {
         messageBox.textContent = message;
@@ -692,6 +978,7 @@
           handleKeyboardShortcuts(e);
         });
         toggleModeBtn.addEventListener("click", toggleTheme);
+        document.getElementById("ruler-toggle-btn").addEventListener("click", toggleRulerVisibility);
         rulerColumnInput.addEventListener("input", updateRulerPosition);
         docSelector.addEventListener("change", (e) =>
           switchDocument(e.target.value),
@@ -706,6 +993,11 @@
         document
           .getElementById("shortcuts-modal-close-btn")
           .addEventListener("click", () => closeModal(shortcutsModalOverlay));
+        
+        document.getElementById("export-db-btn").addEventListener("click", exportAllDocuments);
+        document.getElementById("import-db-btn").addEventListener("click", () => document.getElementById("import-db-input").click());
+        document.getElementById("import-db-input").addEventListener("change", importDocuments);
+
         shortcutsModalOverlay.addEventListener(
           "click",
           (e) =>
@@ -1357,6 +1649,13 @@
         addEventListeners();
         updateStatusBar();
         updateLineNumbers(); // Inicializa numeração de linhas
+
+        // Registro do Service Worker para PWA
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.register('./service-worker.js')
+            .then(() => console.log('Service Worker registrado com sucesso.'))
+            .catch(err => console.log('Erro ao registrar Service Worker:', err));
+        }
       });
     </script>
   </body>

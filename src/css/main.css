@@ -31,8 +31,9 @@ body {
 #editor {
   font-family: "Roboto Mono", monospace;
   resize: none;
-  padding-left: 60px !important;
+  padding-left: 48px !important;
   white-space: pre;
+  overflow: auto;
   font-size: 16px;
   line-height: 24px;
 }
@@ -149,17 +150,18 @@ html.dark #message-box {
 #editor-wrapper {
   position: relative;
   display: flex;
+  flex-grow: 1;
+  overflow: hidden;
 }
 
 #line-numbers {
   position: absolute;
   left: 0;
   top: 0;
-  bottom: 0;
-  width: 50px;
+  width: 40px;
   background: transparent;
   border-right: none;
-  overflow: hidden;
+  overflow: visible;
   user-select: none;
   pointer-events: none;
   font-family: "Roboto Mono", monospace;
@@ -196,4 +198,15 @@ html.dark .line-number.highlighted {
   background: rgba(102, 126, 234, 0.2);
   color: #818cf8;
   border-left-color: #818cf8;
+}
+
+/* Corrigindo fundo do select no modo dark */
+html.dark #doc-selector {
+  background-color: #1e293b;
+  color: #f1f5f9;
+}
+
+html.dark #doc-selector option {
+  background-color: #1e293b;
+  color: #f1f5f9;
 }
