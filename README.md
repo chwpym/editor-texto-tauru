@@ -1,6 +1,6 @@
-# ✍️ Editor de Código Taurus
+# ✍️ Editor de Texto Taurus
 
-O **Editor Taurus** é uma ferramenta de escrita e codificação leve, moderna e totalmente Web, projetada para ser rápida, eficiente e acessível de qualquer lugar.
+O **Editor Taurus** é uma ferramenta de escrita leve, moderna e totalmente Web, projetada para ser uma alternativa ágil e produtiva aos editores pesados, focando em funcionalidades realmente úteis para o dia a dia.
 
 🚀 **[Acesse o Editor Taurus agora](https://chwpym.github.io/editor-texto-tauru/)**
 

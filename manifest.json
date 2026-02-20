@@ -1,7 +1,7 @@
 {
-  "name": "Editor de Código Taurus",
+  "name": "Editor Taurus",
   "short_name": "Editor Taurus",
-  "description": "Editor de código leve e moderno com suporte a seleções múltiplas.",
+  "description": "Editor de texto leve e moderno com funcionalidades produtivas.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",
