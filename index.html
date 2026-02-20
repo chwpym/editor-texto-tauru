@@ -1,0 +1,1663 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>editor-codigo</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="apple-touch-icon" href="icon.png">
+    <!-- Tailwind CSS CDN para estilização -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Biblioteca Lucide Icons para ícones modernos -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    
+    <!-- Configuração do Tailwind CSS para modo dark -->
+    <script>
+      tailwind.config = {
+        darkMode: 'class'
+      }
+    </script>
+    
+    <!-- Estilos customizados -->
+    <link rel="stylesheet" href="css/main.css" />
+  </head>
+  <body class="bg-slate-100 dark:bg-slate-900 flex flex-col">
+    <div
+      id="main-container"
+      class="w-full h-full flex flex-col bg-white dark:bg-slate-950"
+    >
+      <!-- Barra de Ferramentas Principal -->
+      <div
+        class="toolbar relative z-20 flex flex-wrap items-center justify-between p-3 bg-slate-200 dark:bg-slate-900 gap-2 flex-shrink-0 shadow-sm"
+      >
+        <!-- Grupo de Documentos -->
+        <div class="flex items-center gap-2">
+          <button
+            id="new-doc-btn"
+            title="Novo Documento (Alt+N)"
+            class="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors"
+          >
+            <i data-lucide="file-plus-2"></i>
+          </button>
+          <select
+            id="doc-selector"
+            class="p-2 border-none rounded-md bg-transparent text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+          ></select>
+          <button
+            id="rename-doc-btn"
+            title="Renomear Documento"
+            class="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors"
+          >
+            <i data-lucide="edit-3"></i>
+          </button>
+          <button
+            id="delete-doc-btn"
+            title="Excluir Documento Atual"
+            class="p-2 rounded-md hover:bg-red-200 dark:hover:bg-red-900 transition-colors text-red-600 dark:text-red-400"
+          >
+            <i data-lucide="trash-2"></i>
+          </button>
+        </div>
+
+        <!-- Grupo de Ferramentas de Edição -->
+        <div class="flex items-center gap-2">
+          <button
+            id="download-btn"
+            title="Baixar como .txt"
+            class="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors"
+          >
+            <i data-lucide="download"></i>
+          </button>
+          <button
+            id="find-replace-btn"
+            title="Localizar e Substituir (Ctrl+Shift+F)"
+            class="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors"
+          >
+            <i data-lucide="search"></i>
+          </button>
+        </div>
+
+        <!-- Grupo de Configurações e Ajuda -->
+        <div class="flex items-center gap-2">
+          <div
+            class="ruler-input-group flex items-center gap-1 text-slate-600 dark:text-slate-300"
+          >
+            <button 
+              id="ruler-toggle-btn" 
+              title="Mostrar/Ocultar Régua" 
+              class="p-1.5 rounded-md hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors"
+            >
+              <i data-lucide="ruler"></i>
+            </button>
+            <input
+              type="number"
+              id="ruler-column-input"
+              min="10"
+              max="200"
+              value="80"
+              class="w-16 p-1 border-none rounded-md text-center bg-transparent text-slate-600 dark:text-slate-300 focus:ring-0"
+            />
+          </div>
+          <button
+            id="toggle-mode-btn"
+            title="Alternar Tema"
+            class="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors"
+          >
+            <i data-lucide="moon"></i>
+          </button>
+          <button
+            id="show-shortcuts-btn"
+            title="Ver Atalhos"
+            class="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors"
+          >
+            <i data-lucide="keyboard"></i>
+          </button>
+          <button
+            id="help-btn"
+            title="Guia de Uso e Dicas"
+            class="p-2 rounded-md text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors"
+          >
+            <i data-lucide="help-circle"></i>
+          </button>
+          <button
+            id="export-db-btn"
+            title="Exportar Todos os Documentos (Backup)"
+            class="p-2 rounded-md text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900 transition-colors"
+          >
+            <i data-lucide="download-cloud"></i>
+          </button>
+          <button
+            id="import-db-btn"
+            title="Importar Documentos de Backup"
+            class="p-2 rounded-md text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900 transition-colors"
+          >
+            <i data-lucide="upload-cloud"></i>
+          </button>
+          <input type="file" id="import-db-input" class="hidden" accept=".json,.txt" multiple />
+        </div>
+      </div>
+
+      <!-- Área de Edição de Texto Wrapper -->
+      <div
+        id="editor-wrapper"
+        class="relative flex-grow bg-white dark:bg-slate-950"
+      >
+        <div id="line-numbers"></div>
+        <div id="ruler-line"></div>
+        <textarea
+          id="editor"
+          class="w-full h-full p-4 text-base focus:outline-none z-10 bg-transparent text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500"
+          placeholder="Carregando..."
+        ></textarea>
+      </div>
+
+      <!-- Barra de Status -->
+      <div
+        class="status-bar relative z-10 flex justify-end items-center p-2 px-4 bg-slate-200 dark:bg-slate-900 text-sm text-gray-600 dark:text-slate-400 gap-4 flex-shrink-0 shadow-[0_-1px_3px_rgba(0,0,0,0.1)]"
+      >
+        <span id="save-status"></span>
+        <span id="file-size" class="text-blue-500 font-mono"></span>
+        <span id="word-count">Palavras: 0</span>
+        <span id="char-count">Caracteres: 0</span>
+        <span
+          id="user-id-display"
+          class="font-mono text-xs"
+          title="Seu ID de Usuário"
+        ></span>
+      </div>
+    </div>
+
+    <!-- Modais -->
+    <div
+      id="shortcuts-modal-overlay"
+      class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 opacity-0 invisible"
+    >
+      <div
+        class="modal-content bg-white dark:bg-slate-800 p-8 rounded-lg shadow-xl max-w-lg w-full relative transform -translate-y-5 text-slate-800 dark:text-slate-200"
+      >
+        <button
+          id="shortcuts-modal-close-btn"
+          class="modal-close-btn absolute top-3 right-3 p-1 rounded-full text-2xl hover:bg-gray-200 dark:hover:bg-slate-700"
+        >
+          &times;
+        </button>
+            <h2 class="text-2xl font-bold mb-4">Atalhos de Teclado</h2>
+            <div class="space-y-2">
+                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + S</kbd>: Salvar documento manualmente.</p>
+                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Alt + N</kbd>: Criar novo documento.</p>
+                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + Shift + F</kbd>: Abrir Localizar e Substituir.</p>
+                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + D</kbd>: Selecionar próxima ocorrência.</p>
+                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + Shift + L</kbd>: Selecionar todas as ocorrências.</p>
+                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + M</kbd>: Ações para múltiplas seleções.</p>
+                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + Shift + D</kbd>: Duplicar linha atual.</p>
+                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + Shift + U</kbd>: Converter seleção para MAIÚSCULAS.</p>
+                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Alt + Shift + ↑/↓</kbd>: Mover linha para cima/baixo.</p>
+                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Esc</kbd>: Cancelar seleções múltiplas.</p>
+            </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="find-replace-modal-overlay"
+      class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 opacity-0 invisible"
+    >
+      <div
+        class="modal-content bg-white dark:bg-slate-800 p-6 rounded-lg shadow-xl max-w-md w-full relative transform -translate-y-5 text-slate-800 dark:text-slate-200"
+      >
+        <button
+          id="find-replace-modal-close-btn"
+          class="modal-close-btn absolute top-3 right-3 text-2xl p-1 rounded-full hover:bg-gray-200 dark:hover:bg-slate-700"
+        >
+          &times;
+        </button>
+        <h2 class="text-xl font-bold mb-4">Localizar e Substituir</h2>
+        <div class="space-y-4">
+          <input
+            type="text"
+            id="find-input"
+            placeholder="Localizar..."
+            class="w-full p-2 border rounded-md bg-white dark:bg-slate-700 dark:border-slate-600"
+          />
+          <input
+            type="text"
+            id="replace-input"
+            placeholder="Substituir por..."
+            class="w-full p-2 border rounded-md bg-white dark:bg-slate-700 dark:border-slate-600"
+          />
+          <div class="flex justify-end gap-2">
+            <button
+              id="replace-btn"
+              class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              Substituir
+            </button>
+            <button
+              id="replace-all-btn"
+              class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              Substituir Tudo
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Ações Múltiplas -->
+    <div id="multi-actions-modal-overlay" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 opacity-0 invisible">
+        <div class="modal-content bg-white dark:bg-slate-800 p-6 rounded-lg shadow-xl max-w-md w-full relative transform -translate-y-5 text-slate-800 dark:text-slate-200">
+            <button id="multi-actions-modal-close-btn" class="modal-close-btn absolute top-3 right-3 text-2xl p-1 rounded-full hover:bg-gray-200 dark:hover:bg-slate-700">&times;</button>
+            <h2 class="text-xl font-bold mb-4">Ações em Múltiplas Seleções</h2>
+            <p id="multi-selection-count" class="text-sm mb-4 text-gray-600 dark:text-gray-400"></p>
+            
+            <div class="space-y-3">
+                <!-- Campo de substituição -->
+                <div>
+                    <label class="block text-sm font-medium mb-1">Substituir por:</label>
+                    <input type="text" id="multi-replace-input" placeholder="Digite o novo texto..." class="w-full p-2 border rounded-md bg-white dark:bg-slate-700 dark:border-slate-600">
+                </div>
+                
+                <!-- Botões de ação -->
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="multi-replace-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center justify-center gap-2">
+                        <i data-lucide="replace" class="w-4 h-4"></i>
+                        Substituir
+                    </button>
+                    <button id="multi-uppercase-btn" class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 flex items-center justify-center gap-2">
+                        <i data-lucide="type" class="w-4 h-4"></i>
+                        MAIÚSCULAS
+                    </button>
+                    <button id="multi-lowercase-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 flex items-center justify-center gap-2">
+                        <i data-lucide="type" class="w-4 h-4"></i>
+                        minúsculas
+                    </button>
+                    <button id="multi-delete-btn" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center justify-center gap-2">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        Excluir
+                    </button>
+                </div>
+                
+                <button id="multi-cancel-btn" class="w-full px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 mt-2">
+                    Cancelar (Esc)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Ajuda e Dicas -->
+    <div
+      id="help-modal-overlay"
+      class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 opacity-0 invisible"
+    >
+      <div
+        class="modal-content bg-white dark:bg-slate-800 p-8 rounded-lg shadow-xl max-w-2xl w-full relative transform -translate-y-5 text-slate-800 dark:text-slate-200 overflow-y-auto max-h-[90vh]"
+      >
+        <button
+          id="help-modal-close-btn"
+          class="modal-close-btn absolute top-3 right-3 p-1 rounded-full text-2xl hover:bg-gray-200 dark:hover:bg-slate-700"
+        >
+          &times;
+        </button>
+        <h2 class="text-2xl font-bold mb-4 flex items-center gap-2">
+          <i data-lucide="sparkles" class="text-yellow-500"></i>
+          Guia de Uso e Dicas de Ouro
+        </h2>
+        
+        <div class="space-y-6">
+          <!-- Dica de Espaçamento -->
+          <section class="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg border-l-4 border-blue-500">
+            <h3 class="font-bold text-lg mb-2 flex items-center gap-2">
+              <i data-lucide="info" class="w-5 h-5 text-blue-500"></i>
+              Evitando que as palavras "juntem"
+            </h3>
+            <p class="text-sm">Ao substituir um texto (ex: trocar <code>DE</code> por <code>DA</code>), se você não quer que o resultado fique grudado (<code>TESTANDODAATALHO</code>), lembre-se:</p>
+            <ul class="list-disc ml-5 mt-2 text-sm space-y-1">
+              <li>Se você selecionar apenas a palavra, a substituição deve incluir o espaço (ex: <code>"DA "</code>).</li>
+              <li>Sempre confira o resultado enquanto as palavras ainda estão destacadas logo após a troca.</li>
+            </ul>
+          </section>
+
+          <!-- Seleção Múltipla -->
+          <section>
+            <h3 class="font-bold text-lg mb-2">Seleção em Massa (Estilo VS Code)</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="p-3 bg-gray-100 dark:bg-slate-700 rounded">
+                <p class="font-semibold text-sm mb-1">Passo a Passo:</p>
+                <ol class="list-decimal ml-5 text-xs space-y-1">
+                  <li>Selecione uma palavra.</li>
+                  <li>Pressione <kbd class="bg-white dark:bg-slate-600 px-1 rounded">Ctrl + D</kbd> para selecionar a próxima igual.</li>
+                  <li>Pressione <kbd class="bg-white dark:bg-slate-600 px-1 rounded">Ctrl + M</kbd> para abrir o painel de ações.</li>
+                </ol>
+              </div>
+              <div class="p-3 bg-gray-100 dark:bg-slate-700 rounded">
+                <p class="font-semibold text-sm mb-1">Ações Rápidas:</p>
+                <p class="text-xs">No painel que abre, você pode transformar tudo em <strong>MAIÚSCULAS</strong>, deletar tudo de uma vez ou trocar por outro texto.</p>
+              </div>
+            </div>
+          </section>
+
+          <!-- Atalhos Cruciais -->
+          <section>
+            <h3 class="font-bold text-lg mb-2">Atalhos e Controles Úteis</h3>
+            <div class="space-y-2 text-sm">
+                <p><kbd class="bg-gray-200 dark:bg-slate-600 px-1 rounded">Alt + N</kbd> : Novo Documento (evita conflitos com o navegador).</p>
+                <p><kbd class="bg-gray-200 dark:bg-slate-600 px-1 rounded">Ctrl + Shift + F</kbd> : Localizar e Substituir.</p>
+                <p><kbd class="bg-gray-200 dark:bg-slate-600 px-1 rounded">Alt + Shift + ↑/↓</kbd> : Move a linha inteira para cima ou para baixo.</p>
+                <p class="mt-4 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded border-l-4 border-yellow-500">
+                  <i data-lucide="ruler" class="inline w-4 h-4 mr-1"></i>
+                  <strong>Dica da Régua:</strong> Clique no ícone da régua na barra de ferramentas para mostrar ou ocultar a linha vermelha delimitadora.
+                </p>
+            </div>
+          </section>
+        </div>
+
+        <button id="help-close-guide-btn" class="w-full mt-8 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
+          Entendi, vamos editar!
+        </button>
+      </div>
+    </div>
+    <div id="multi-selection-indicator" title="Clique para abrir ações (Ctrl+M)">
+      <div id="multi-selection-text">0 selecionadas</div>
+    </div>
+
+    <!-- Caixa de Mensagem (Toast) -->
+    <div id="message-box" role="alert" aria-live="polite"></div>
+
+    <!-- Modal Dinâmico de Confirmação (Custom Confirm) -->
+    <div
+      id="confirm-modal-overlay"
+      class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-[100] opacity-0 invisible"
+    >
+      <div
+        class="modal-content bg-white dark:bg-slate-800 p-6 rounded-lg shadow-2xl max-w-sm w-full relative transform -translate-y-5 text-slate-800 dark:text-slate-200"
+      >
+        <h2 id="confirm-modal-title" class="text-xl font-bold mb-2 text-red-600 dark:text-red-400">Confirmar</h2>
+        <p id="confirm-modal-message" class="text-sm mb-6 text-gray-600 dark:text-gray-400"></p>
+        <div class="flex justify-end gap-3">
+          <button
+            id="confirm-modal-cancel-btn"
+            class="px-4 py-2 bg-gray-200 dark:bg-slate-700 rounded-md hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            id="confirm-modal-ok-btn"
+            class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 shadow-lg shadow-red-500/30 transition-all font-bold"
+          >
+            Sim, tenho certeza!
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Dinâmico de Entrada (Custom Prompt) -->
+    <div
+      id="prompt-modal-overlay"
+      class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-[100] opacity-0 invisible"
+    >
+      <div
+        class="modal-content bg-white dark:bg-slate-800 p-6 rounded-lg shadow-2xl max-w-sm w-full relative transform -translate-y-5 text-slate-800 dark:text-slate-200"
+      >
+        <h2 id="prompt-modal-title" class="text-xl font-bold mb-2 text-blue-600 dark:text-blue-400">Entrada</h2>
+        <p id="prompt-modal-message" class="text-sm mb-4 text-gray-600 dark:text-gray-400"></p>
+        <input
+          type="text"
+          id="prompt-modal-input"
+          class="w-full p-2 mb-6 border-2 border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:border-blue-500 outline-none transition-all"
+        />
+        <div class="flex justify-end gap-3">
+          <button
+            id="prompt-modal-cancel-btn"
+            class="px-4 py-2 bg-gray-200 dark:bg-slate-700 rounded-md hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            id="prompt-modal-ok-btn"
+            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all font-bold"
+          >
+            Confirmar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts do Editor -->
+    <script>
+      /* --- Custom Dialogs (Replace Prompt/Confirm) --- */
+      function customConfirm(title, message) {
+        return new Promise((resolve) => {
+          const overlay = document.getElementById("confirm-modal-overlay");
+          const titleEl = document.getElementById("confirm-modal-title");
+          const messageEl = document.getElementById("confirm-modal-message");
+          const okBtn = document.getElementById("confirm-modal-ok-btn");
+          const cancelBtn = document.getElementById("confirm-modal-cancel-btn");
+
+          titleEl.textContent = title;
+          messageEl.textContent = message;
+          overlay.classList.add("show");
+
+          const handleOk = () => {
+            overlay.classList.remove("show");
+            cleanup();
+            resolve(true);
+          };
+          const handleCancel = () => {
+            overlay.classList.remove("show");
+            cleanup();
+            resolve(false);
+          };
+          const cleanup = () => {
+            okBtn.removeEventListener("click", handleOk);
+            cancelBtn.removeEventListener("click", handleCancel);
+          };
+
+          okBtn.addEventListener("click", handleOk);
+          cancelBtn.addEventListener("click", handleCancel);
+        });
+      }
+
+      function customPrompt(title, message, defaultValue = "") {
+        return new Promise((resolve) => {
+          const overlay = document.getElementById("prompt-modal-overlay");
+          const titleEl = document.getElementById("prompt-modal-title");
+          const messageEl = document.getElementById("prompt-modal-message");
+          const inputEl = document.getElementById("prompt-modal-input");
+          const okBtn = document.getElementById("prompt-modal-ok-btn");
+          const cancelBtn = document.getElementById("prompt-modal-cancel-btn");
+
+          titleEl.textContent = title;
+          messageEl.textContent = message;
+          inputEl.value = defaultValue;
+          overlay.classList.add("show");
+          
+          // Foco automático no input
+          setTimeout(() => inputEl.focus(), 100);
+
+          const handleOk = () => {
+            const val = inputEl.value;
+            overlay.classList.remove("show");
+            cleanup();
+            resolve(val);
+          };
+          const handleCancel = () => {
+            overlay.classList.remove("show");
+            cleanup();
+            resolve(null);
+          };
+          const cleanup = () => {
+            okBtn.removeEventListener("click", handleOk);
+            cancelBtn.removeEventListener("click", handleCancel);
+            inputEl.removeEventListener("keydown", handleKey);
+          };
+          const handleKey = (e) => {
+            if (e.key === "Enter") handleOk();
+            if (e.key === "Escape") handleCancel();
+          };
+
+          okBtn.addEventListener("click", handleOk);
+          cancelBtn.addEventListener("click", handleCancel);
+          inputEl.addEventListener("keydown", handleKey);
+        });
+      }
+
+      /* --- IndexedDB Helper --- */
+      const DB_NAME = "editor-codigo-db";
+      const STORE_NAME = "documents";
+      let db = null;
+
+      function openDB() {
+        return new Promise((resolve, reject) => {
+          if (db) return resolve(db);
+          const request = indexedDB.open(DB_NAME, 1);
+          request.onerror = () => reject(request.error);
+          request.onsuccess = () => {
+            db = request.result;
+            resolve(db);
+          };
+          request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+              db.createObjectStore(STORE_NAME, { keyPath: "id" });
+            }
+          };
+        });
+      }
+
+      function getAllDocs() {
+        return openDB().then((db) => {
+          return new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE_NAME, "readonly");
+            const store = tx.objectStore(STORE_NAME);
+            const req = store.getAll();
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
+          });
+        });
+      }
+
+      function getDoc(id) {
+        return openDB().then((db) => {
+          return new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE_NAME, "readonly");
+            const store = tx.objectStore(STORE_NAME);
+            const req = store.get(id);
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
+          });
+        });
+      }
+
+      function saveDoc(doc) {
+        return openDB().then((db) => {
+          return new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE_NAME, "readwrite");
+            const store = tx.objectStore(STORE_NAME);
+            const req = store.put(doc);
+            req.onsuccess = () => resolve();
+            req.onerror = () => reject(req.error);
+          });
+        });
+      }
+
+      function deleteDocById(id) {
+        return openDB().then((db) => {
+          return new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE_NAME, "readwrite");
+            const store = tx.objectStore(STORE_NAME);
+            const req = store.delete(id);
+            req.onsuccess = () => resolve();
+            req.onerror = () => reject(req.error);
+          });
+        });
+      }
+
+      /* --- Funções de Tema --- */
+      function loadTheme() {
+        const theme = localStorage.getItem('theme') || 'dark';
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+        updateThemeIcon();
+      }
+
+      function toggleTheme() {
+        const isDark = document.documentElement.classList.contains('dark');
+        if (isDark) {
+          document.documentElement.classList.remove('dark');
+          localStorage.setItem('theme', 'light');
+        } else {
+          document.documentElement.classList.add('dark');
+          localStorage.setItem('theme', 'dark');
+        }
+        updateThemeIcon();
+      }
+
+      function updateThemeIcon() {
+        const themeBtn = document.getElementById('toggle-mode-btn');
+        if (!themeBtn) return;
+        
+        const icon = themeBtn.querySelector('i');
+        if (!icon) return;
+        
+        const isDark = document.documentElement.classList.contains('dark');
+        
+        // Atualiza o ícone
+        icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+        lucide.createIcons();
+      }
+
+      /* --- DOM Elements --- */
+      const editor = document.getElementById("editor");
+      const saveStatus = document.getElementById("save-status");
+      const fileSizeEl = document.getElementById("file-size");
+      const wordCountEl = document.getElementById("word-count");
+      const charCountEl = document.getElementById("char-count");
+      const toggleModeBtn = document.getElementById("toggle-mode-btn");
+      const rulerColumnInput = document.getElementById("ruler-column-input");
+      const rulerLine = document.getElementById("ruler-line");
+      const docSelector = document.getElementById("doc-selector");
+      const newDocBtn = document.getElementById("new-doc-btn");
+      const deleteDocBtn = document.getElementById("delete-doc-btn");
+      const downloadBtn = document.getElementById("download-btn");
+      const userIdDisplay = document.getElementById("user-id-display");
+      const messageBox = document.getElementById("message-box");
+      const showShortcutsBtn = document.getElementById("show-shortcuts-btn");
+      const findReplaceBtn = document.getElementById("find-replace-btn");
+      const shortcutsModalOverlay = document.getElementById(
+        "shortcuts-modal-overlay",
+      );
+      const findReplaceModalOverlay = document.getElementById(
+        "find-replace-modal-overlay",
+      );
+      const multiActionsModalOverlay = document.getElementById(
+        "multi-actions-modal-overlay",
+      );
+      const multiSelectionIndicator = document.getElementById("multi-selection-indicator");
+      const multiSelectionText = document.getElementById("multi-selection-text");
+      const lineNumbers = document.getElementById("line-numbers");
+
+      let currentDocId = null;
+      let saveTimeout = null;
+      let isSaving = false;
+      let editorReady = false;
+
+      /* --- Document Management --- */
+      async function loadDocumentsList() {
+        const docs = await getAllDocs();
+        docs.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+        docSelector.innerHTML = "";
+        if (docs.length === 0) {
+          await createNewDocument("Primeiro Documento");
+          return;
+        }
+        docs.forEach((docData) => {
+          const option = document.createElement("option");
+          option.value = docData.id;
+          option.textContent =
+            docData.name || `Documento ${docData.id.substring(0, 4)}`;
+          docSelector.appendChild(option);
+        });
+        const lastDocId = localStorage.getItem(`lastDocId`) || docs[0].id;
+        if (docs.some((d) => d.id === lastDocId)) {
+          docSelector.value = lastDocId;
+        }
+        await switchDocument(docSelector.value);
+      }
+
+      async function switchDocument(docId) {
+        if (currentDocId === docId) return;
+        currentDocId = docId;
+        localStorage.setItem(`lastDocId`, docId);
+        editor.value = "Carregando...";
+        editor.disabled = true;
+        const doc = await getDoc(currentDocId);
+        if (doc) {
+          editor.value = doc.content || "";
+          updateStatusBar();
+          updateLineNumbers();
+        } else {
+          editor.value = "";
+        }
+        editor.disabled = false;
+      }
+
+      async function createNewDocument(title = "Novo Documento") {
+        const newTitle = await customPrompt("Novo Documento", "Digite o título do documento:", title);
+        if (!newTitle) return;
+        const newDoc = {
+          id: crypto.randomUUID(),
+          name: newTitle,
+          content: "",
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        };
+        await saveDoc(newDoc);
+        showMessage(`Documento "${newTitle}" criado!`);
+        await loadDocumentsList();
+        docSelector.value = newDoc.id;
+        await switchDocument(newDoc.id);
+      }
+
+      async function deleteCurrentDocument() {
+        if (!currentDocId) return;
+        const docTitle = docSelector.options[docSelector.selectedIndex].text;
+        const confirmed = await customConfirm("Excluir Documento", `Tem certeza que deseja apagar "${docTitle}"? Esta ação é definitiva.`);
+        if (confirmed) {
+          await deleteDocById(currentDocId);
+          showMessage("Documento excluído.");
+          currentDocId = null;
+          await loadDocumentsList();
+        }
+      }
+
+      async function renameDocument() {
+        if (!currentDocId) {
+          showMessage("Nenhum documento selecionado", 2000);
+          return;
+        }
+        
+        const doc = await getDoc(currentDocId);
+        if (!doc) return;
+        
+        const newName = await customPrompt("Renomear Documento", "Digite o novo nome:", doc.name);
+        if (!newName || newName.trim() === "") {
+          if (newName !== null) showMessage("Nome inválido", 2000);
+          return;
+        }
+        
+        if (newName === doc.name) {
+          showMessage("Nome não foi alterado", 2000);
+          return;
+        }
+        
+        doc.name = newName.trim();
+        doc.updatedAt = Date.now();
+        await saveDoc(doc);
+        
+        // Recarrega a lista e mantém o documento atual selecionado
+        await loadDocumentsList();
+        docSelector.value = currentDocId;
+        
+        showMessage(`Documento renomeado para "${newName}"`, 2000);
+      }
+
+      function debounceSave() {
+        clearTimeout(saveTimeout);
+        if (!editorReady || isSaving) return;
+        saveStatus.textContent = "Salvando...";
+        saveTimeout = setTimeout(async () => {
+          if (!currentDocId) {
+            saveStatus.textContent = "Nenhum documento ativo para salvar.";
+            return;
+          }
+          isSaving = true;
+          const doc = await getDoc(currentDocId);
+          if (doc) {
+            doc.content = editor.value;
+            doc.updatedAt = Date.now();
+            await saveDoc(doc);
+            saveStatus.textContent = "Salvo localmente";
+          }
+          isSaving = false;
+        }, 1500);
+      }
+
+      /* --- Editor Features (mantém igual) --- */
+      function updateStatusBar() {
+        const text = editor.value;
+        const chars = text.length;
+        const words = text.trim().split(/\s+/).filter(Boolean).length;
+        
+        // Cálculo de tamanho (aproximado por bytes)
+        const bytes = new Blob([text]).size;
+        let sizeText = "";
+        if (bytes < 1024) sizeText = `${bytes} B`;
+        else if (bytes < 1048576) sizeText = `${(bytes / 1024).toFixed(1)} KB`;
+        else sizeText = `${(bytes / 1048576).toFixed(1)} MB`;
+
+        wordCountEl.textContent = `Palavras: ${words}`;
+        charCountEl.textContent = `Caracteres: ${chars}`;
+        if (fileSizeEl) fileSizeEl.textContent = `Tamanho: ${sizeText}`;
+      }
+
+      function downloadAsTxt() {
+        const text = editor.value;
+        const blob = new Blob([text], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        let docTitle = "documento";
+        if (docSelector.selectedIndex !== -1) {
+          docTitle = docSelector.options[docSelector.selectedIndex].text
+            .replace(/[^a-z0-9]/gi, "_")
+            .toLowerCase();
+        }
+        a.download = `${docTitle}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      async function exportAllDocuments() {
+        const docs = await getAllDocs();
+        if (docs.length === 0) {
+          showMessage("Nenhum documento para exportar.");
+          return;
+        }
+        
+        const data = JSON.stringify(docs, null, 2);
+        const blob = new Blob([data], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `backup_editor_taurus_${new Date().toISOString().slice(0,10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showMessage("Backup exportado com sucesso!");
+      }
+
+      async function importDocuments(event) {
+        const files = Array.from(event.target.files);
+        if (files.length === 0) return;
+
+        const db = await openDB();
+        const importPromises = files.map(file => {
+          return new Promise((resolve) => {
+            const reader = new FileReader();
+            
+            if (file.name.endsWith('.json')) {
+              reader.onload = async (e) => {
+                try {
+                  const docs = JSON.parse(e.target.result);
+                  if (Array.isArray(docs)) {
+                    const confirmed = await customConfirm("Importar Backup", `Deseja importar ${docs.length} documentos deste arquivo JSON?`);
+                    if (!confirmed) {
+                      resolve();
+                      return;
+                    }
+
+                    const transaction = db.transaction("documents", "readwrite");
+                    const store = transaction.objectStore("documents");
+                    for (const doc of docs) {
+                      // Garante que cada doc tenha um ID novo se não tiver ou se for duplicado
+                      if (!doc.id) doc.id = crypto.randomUUID();
+                      // Garante que use 'name' para consistência
+                      if (doc.title && !doc.name) doc.name = doc.title;
+                      store.put(doc);
+                    }
+                    transaction.oncomplete = () => resolve();
+                  } else { resolve(); }
+                } catch (err) { resolve(); }
+              };
+              reader.readAsText(file);
+            } else if (file.name.endsWith('.txt')) {
+              reader.onload = async (e) => {
+                const content = e.target.result;
+                const name = file.name.replace(/\.[^/.]+$/, "").replace(/__/g, " ").toUpperCase();
+                
+                const transaction = db.transaction("documents", "readwrite");
+                const store = transaction.objectStore("documents");
+                store.add({
+                  id: crypto.randomUUID(),
+                  name: name,
+                  content: content,
+                  createdAt: Date.now(),
+                  updatedAt: Date.now()
+                });
+                transaction.oncomplete = () => resolve();
+                transaction.onerror = () => resolve();
+              };
+              reader.readAsText(file);
+            } else {
+              resolve();
+            }
+          });
+        });
+
+        await Promise.all(importPromises);
+        showMessage(`${files.length} arquivos processados!`);
+        await loadDocumentsList();
+        event.target.value = '';
+      }
+
+      /* --- UI Management (tema, régua, modais) --- */
+
+      function updateRulerPosition() {
+        const column = parseInt(rulerColumnInput.value) || 80;
+        document.documentElement.style.setProperty("--ruler-column", column);
+        localStorage.setItem("rulerColumn", column);
+      }
+      
+      function toggleRulerVisibility() {
+        const rulerLine = document.getElementById("ruler-line");
+        const btn = document.getElementById("ruler-toggle-btn");
+        const isVisible = localStorage.getItem("rulerVisible") !== "false";
+        
+        const newVisible = !isVisible;
+        localStorage.setItem("rulerVisible", newVisible);
+        
+        applyRulerVisibility(newVisible);
+      }
+
+      function applyRulerVisibility(visible) {
+        const rulerLine = document.getElementById("ruler-line");
+        const btn = document.getElementById("ruler-toggle-btn");
+        
+        if (visible) {
+          rulerLine.style.display = "block";
+          btn.classList.add("text-blue-600", "dark:text-blue-400");
+          btn.classList.remove("text-slate-600", "dark:text-slate-300");
+        } else {
+          rulerLine.style.display = "none";
+          btn.classList.add("text-slate-600", "dark:text-slate-300");
+          btn.classList.remove("text-blue-600", "dark:text-blue-400");
+        }
+      }
+
+      function loadRulerPosition() {
+        const savedColumn = localStorage.getItem("rulerColumn");
+        if (savedColumn) {
+          rulerColumnInput.value = savedColumn;
+        }
+        updateRulerPosition();
+        
+        const isVisible = localStorage.getItem("rulerVisible") !== "false";
+        applyRulerVisibility(isVisible);
+      }
+      function showMessage(message, duration = 3000) {
+        messageBox.textContent = message;
+        messageBox.classList.add("show");
+        setTimeout(() => {
+          messageBox.classList.remove("show");
+        }, duration);
+      }
+      function openModal(overlay) {
+        overlay.classList.add("show");
+      }
+      function closeModal(overlay) {
+        overlay.classList.remove("show");
+      }
+
+      /* --- Event Listeners --- */
+      function addEventListeners() {
+        editor.addEventListener("input", () => {
+          if (editorReady) debounceSave();
+          updateStatusBar();
+          updateLineNumbers();
+        });
+        editor.addEventListener("scroll", () => {
+          rulerLine.style.transform = `translateX(-${editor.scrollLeft}px)`;
+          lineNumbers.style.transform = `translateY(-${editor.scrollTop}px)`;
+        });
+        editor.addEventListener("keydown", (e) => {
+          // Abre modal de ações para múltiplas seleções com Ctrl+M
+          if (multiSelections.length > 1 && e.ctrlKey && e.key.toLowerCase() === 'm') {
+            e.preventDefault();
+            openMultiActionsModal();
+            return;
+          }
+          // Limpa seleções múltiplas ao pressionar Escape
+          if (e.key === 'Escape' && multiSelections.length > 0) {
+            multiSelections = [];
+            multiSelectionIndicator.classList.remove("show");
+            showMessage("Seleções múltiplas canceladas", 1500);
+            return;
+          }
+          handleKeyboardShortcuts(e);
+        });
+        toggleModeBtn.addEventListener("click", toggleTheme);
+        document.getElementById("ruler-toggle-btn").addEventListener("click", toggleRulerVisibility);
+        rulerColumnInput.addEventListener("input", updateRulerPosition);
+        docSelector.addEventListener("change", (e) =>
+          switchDocument(e.target.value),
+        );
+        newDocBtn.addEventListener("click", () => createNewDocument());
+        deleteDocBtn.addEventListener("click", deleteCurrentDocument);
+        document.getElementById("rename-doc-btn").addEventListener("click", renameDocument);
+        downloadBtn.addEventListener("click", downloadAsTxt);
+        showShortcutsBtn.addEventListener("click", () =>
+          openModal(shortcutsModalOverlay),
+        );
+        document
+          .getElementById("shortcuts-modal-close-btn")
+          .addEventListener("click", () => closeModal(shortcutsModalOverlay));
+        
+        document.getElementById("export-db-btn").addEventListener("click", exportAllDocuments);
+        document.getElementById("import-db-btn").addEventListener("click", () => document.getElementById("import-db-input").click());
+        document.getElementById("import-db-input").addEventListener("change", importDocuments);
+
+        shortcutsModalOverlay.addEventListener(
+          "click",
+          (e) =>
+            e.target === shortcutsModalOverlay &&
+            closeModal(shortcutsModalOverlay),
+        );
+        
+        // Modal de Ajuda
+        const helpBtn = document.getElementById("help-btn");
+        const helpModalOverlay = document.getElementById("help-modal-overlay");
+        helpBtn.addEventListener("click", () => openModal(helpModalOverlay));
+        document.getElementById("help-modal-close-btn").addEventListener("click", () => closeModal(helpModalOverlay));
+        document.getElementById("help-close-guide-btn").addEventListener("click", () => closeModal(helpModalOverlay));
+        helpModalOverlay.addEventListener("click", (e) => e.target === helpModalOverlay && closeModal(helpModalOverlay));
+
+        findReplaceBtn.addEventListener("click", () =>
+          openModal(findReplaceModalOverlay),
+        );
+        document
+          .getElementById("find-replace-modal-close-btn")
+          .addEventListener("click", () => closeModal(findReplaceModalOverlay));
+        findReplaceModalOverlay.addEventListener(
+          "click",
+          (e) =>
+            e.target === findReplaceModalOverlay &&
+            closeModal(findReplaceModalOverlay),
+        );
+        
+        // Modal de ações múltiplas
+        document.getElementById("multi-actions-modal-close-btn").addEventListener("click", () => closeModal(multiActionsModalOverlay));
+        document.getElementById("multi-cancel-btn").addEventListener("click", () => {
+          multiSelections = [];
+          multiSelectionIndicator.classList.remove("show");
+          closeModal(multiActionsModalOverlay);
+        });
+        multiActionsModalOverlay.addEventListener("click", (e) => {
+          if (e.target === multiActionsModalOverlay) {
+            multiSelections = [];
+            multiSelectionIndicator.classList.remove("show");
+            closeModal(multiActionsModalOverlay);
+          }
+        });
+        
+        // Clicar no indicador abre o modal
+        multiSelectionIndicator.addEventListener("click", () => {
+          if (multiSelections.length > 1) {
+            openMultiActionsModal();
+          }
+        });
+        
+        document.getElementById("multi-replace-btn").addEventListener("click", () => {
+          const replaceValue = document.getElementById("multi-replace-input").value;
+          // Permite substituir mesmo que seja string vazia ou espaço
+          replaceMultiSelections(replaceValue);
+          multiSelectionIndicator.classList.remove("show");
+          closeModal(multiActionsModalOverlay);
+        });
+        
+        document.getElementById("multi-uppercase-btn").addEventListener("click", () => {
+          convertMultiSelectionsToUpperCase();
+          multiSelectionIndicator.classList.remove("show");
+          closeModal(multiActionsModalOverlay);
+        });
+        
+        document.getElementById("multi-lowercase-btn").addEventListener("click", () => {
+          convertMultiSelectionsToLowerCase();
+          multiSelectionIndicator.classList.remove("show");
+          closeModal(multiActionsModalOverlay);
+        });
+        
+        document.getElementById("multi-delete-btn").addEventListener("click", () => {
+          deleteMultiSelections();
+          multiSelectionIndicator.classList.remove("show");
+          closeModal(multiActionsModalOverlay);
+        });
+        
+        // Localizar e substituir
+        const findInput = document.getElementById("find-input");
+        const replaceInput = document.getElementById("replace-input");
+        document.getElementById("replace-btn").addEventListener("click", () => {
+          const findValue = findInput.value;
+          const replaceValue = replaceInput.value;
+          if (!findValue) return;
+          const currentSelection = editor.value.substring(
+            editor.selectionStart,
+            editor.selectionEnd,
+          );
+          if (currentSelection.toLowerCase() === findValue.toLowerCase()) {
+            editor.setRangeText(
+              replaceValue,
+              editor.selectionStart,
+              editor.selectionEnd,
+              "select",
+            );
+          } else {
+            const nextIndex = editor.value.indexOf(
+              findValue,
+              editor.selectionEnd,
+            );
+            if (nextIndex !== -1) {
+              editor.setSelectionRange(nextIndex, nextIndex + findValue.length);
+            } else {
+              showMessage("Fim do documento.", 2000);
+            }
+          }
+          editor.focus();
+        });
+        document
+          .getElementById("replace-all-btn")
+          .addEventListener("click", () => {
+            const findValue = findInput.value;
+            const replaceValue = replaceInput.value;
+            if (!findValue) return;
+            const originalValue = editor.value;
+            const newValue = originalValue.replaceAll(findValue, replaceValue);
+            if (originalValue !== newValue) {
+              editor.value = newValue;
+              showMessage("Todas as ocorrências foram substituídas.", 2000);
+            } else {
+              showMessage("Nenhuma ocorrência encontrada.", 2000);
+            }
+          });
+      }
+      function handleKeyboardShortcuts(e) {
+        const isCtrlOrCmd = e.ctrlKey || e.metaKey;
+        const key = e.key.toLowerCase();
+
+        // Ctrl + S: Salvar
+        if (isCtrlOrCmd && key === "s") {
+          e.preventDefault();
+          clearTimeout(saveTimeout);
+          debounceSave();
+          showMessage("Salvando...", 1000);
+        }
+        // Alt + N: Novo documento
+        if (e.altKey && !e.ctrlKey && key === "n") {
+          e.preventDefault();
+          createNewDocument();
+        }
+        // Ctrl + Shift + F: Localizar e substituir
+        else if (isCtrlOrCmd && e.shiftKey && key === "f") {
+          e.preventDefault();
+          openModal(findReplaceModalOverlay);
+          document.getElementById("find-input").focus();
+        }
+        // Ctrl + D: Selecionar próxima ocorrência da palavra atual
+        else if (isCtrlOrCmd && !e.shiftKey && key === "d") {
+          e.preventDefault();
+          selectNextOccurrence();
+        }
+        // Ctrl + Shift + D: Duplicar linha atual
+        else if (isCtrlOrCmd && e.shiftKey && key === "d") {
+          e.preventDefault();
+          duplicateCurrentLine();
+        }
+        // Ctrl + Shift + U: Converter seleção para maiúsculas
+        else if (isCtrlOrCmd && e.shiftKey && key === "u") {
+          e.preventDefault();
+          convertToUpperCase();
+        }
+        // Ctrl + Shift + L: Selecionar todas as ocorrências
+        else if (isCtrlOrCmd && e.shiftKey && key === "l") {
+          e.preventDefault();
+          selectAllOccurrences();
+        }
+        // Alt + Shift + ↑: Mover linha para cima
+        else if (e.altKey && e.shiftKey && e.key === "ArrowUp") {
+          e.preventDefault();
+          moveLineUp();
+        }
+        // Alt + Shift + ↓: Mover linha para baixo
+        else if (e.altKey && e.shiftKey && e.key === "ArrowDown") {
+          e.preventDefault();
+          moveLineDown();
+        }
+      }
+
+      /* --- Funções de Edição Avançada --- */
+
+      // Variável global para armazenar seleções múltiplas
+      let multiSelections = [];
+
+      // Selecionar próxima ocorrência da palavra selecionada (como Ctrl+D no VS Code)
+      function selectNextOccurrence() {
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+        const selectedText = editor.value.substring(start, end);
+
+        if (!selectedText) {
+          // Se nada está selecionado, seleciona a palavra sob o cursor
+          const text = editor.value;
+          let wordStart = start;
+          let wordEnd = start;
+
+          // Encontra o início da palavra
+          while (wordStart > 0 && /\w/.test(text[wordStart - 1])) {
+            wordStart--;
+          }
+          // Encontra o fim da palavra
+          while (wordEnd < text.length && /\w/.test(text[wordEnd])) {
+            wordEnd++;
+          }
+
+          if (wordStart < wordEnd) {
+            editor.setSelectionRange(wordStart, wordEnd);
+            multiSelections = [{ start: wordStart, end: wordEnd, text: text.substring(wordStart, wordEnd) }];
+          }
+          return;
+        }
+
+        // Adiciona a seleção atual se ainda não estiver na lista
+        if (multiSelections.length === 0 || multiSelections[multiSelections.length - 1].start !== start) {
+          multiSelections.push({ start, end, text: selectedText });
+        }
+
+        // Procura a próxima ocorrência após a seleção atual
+        const nextIndex = editor.value.indexOf(selectedText, end);
+        if (nextIndex !== -1) {
+          multiSelections.push({ start: nextIndex, end: nextIndex + selectedText.length, text: selectedText });
+          editor.setSelectionRange(nextIndex, nextIndex + selectedText.length);
+          
+          // Faz scroll para mostrar a seleção
+          scrollToSelection(nextIndex);
+          
+          editor.focus();
+          updateMultiSelectionIndicator();
+        } else {
+          updateMultiSelectionIndicator();
+        }
+      }
+
+      // Selecionar todas as ocorrências (Ctrl+Shift+L)
+      function selectAllOccurrences() {
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+        let selectedText = editor.value.substring(start, end);
+
+        if (!selectedText) {
+          // Se nada está selecionado, seleciona a palavra sob o cursor
+          const text = editor.value;
+          let wordStart = start;
+          let wordEnd = start;
+
+          while (wordStart > 0 && /\w/.test(text[wordStart - 1])) {
+            wordStart--;
+          }
+          while (wordEnd < text.length && /\w/.test(text[wordEnd])) {
+            wordEnd++;
+          }
+
+          if (wordStart < wordEnd) {
+            selectedText = text.substring(wordStart, wordEnd);
+          } else {
+            showMessage("Nenhuma palavra selecionada", 2000);
+            return;
+          }
+        }
+
+        // Encontra todas as ocorrências
+        multiSelections = [];
+        const text = editor.value;
+        let index = 0;
+
+        while ((index = text.indexOf(selectedText, index)) !== -1) {
+          multiSelections.push({ start: index, end: index + selectedText.length, text: selectedText });
+          index += selectedText.length;
+        }
+
+        if (multiSelections.length > 0) {
+          // Seleciona a última ocorrência
+          const last = multiSelections[multiSelections.length - 1];
+          editor.setSelectionRange(last.start, last.end);
+          
+          // Faz scroll para a última seleção
+          scrollToSelection(last.start);
+          
+          updateMultiSelectionIndicator();
+        } else {
+          showMessage("Nenhuma ocorrência encontrada", 2000);
+        }
+      }
+
+      // Atualizar indicador visual de seleções múltiplas
+      function updateMultiSelectionIndicator() {
+        if (multiSelections.length > 1) {
+          multiSelectionText.textContent = `${multiSelections.length} selecionadas`;
+          multiSelectionIndicator.classList.add("show");
+          highlightSelectedLines();
+        } else {
+          multiSelectionIndicator.classList.remove("show");
+          highlightSelectedLines(); // Remove destaques
+        }
+      }
+
+      // Fazer scroll para mostrar a seleção
+      function scrollToSelection(position) {
+        // Calcula a linha aproximada
+        const textBeforeSelection = editor.value.substring(0, position);
+        const lineHeight = 24; // Altura aproximada de uma linha
+        const lines = textBeforeSelection.split('\n').length;
+        const scrollPosition = (lines - 1) * lineHeight;
+        
+        // Faz scroll suave
+        editor.scrollTop = Math.max(0, scrollPosition - editor.clientHeight / 2);
+      }
+
+      // Atualizar numeração de linhas
+      function updateLineNumbers() {
+        const lines = editor.value.split('\n');
+        const lineCount = lines.length;
+        
+        // Gera HTML para numeração
+        let html = '';
+        for (let i = 1; i <= lineCount; i++) {
+          html += `<span class="line-number" data-line="${i}">${i}</span>`;
+        }
+        
+        lineNumbers.innerHTML = html;
+        
+        // Destaca linhas com seleções múltiplas
+        highlightSelectedLines();
+      }
+
+      // Destacar linhas que contêm seleções múltiplas
+      function highlightSelectedLines() {
+        if (multiSelections.length < 2) return;
+        
+        const text = editor.value;
+        const highlightedLines = new Set();
+        
+        // Encontra em qual linha cada seleção está
+        multiSelections.forEach(sel => {
+          const textBefore = text.substring(0, sel.start);
+          const lineNumber = textBefore.split('\n').length;
+          highlightedLines.add(lineNumber);
+        });
+        
+        // Aplica destaque nas linhas
+        const lineNumberElements = lineNumbers.querySelectorAll('.line-number');
+        lineNumberElements.forEach((el, index) => {
+          const lineNum = index + 1;
+          if (highlightedLines.has(lineNum)) {
+            el.classList.add('highlighted');
+          } else {
+            el.classList.remove('highlighted');
+          }
+        });
+      }
+
+      // Abrir modal de ações múltiplas
+      function openMultiActionsModal() {
+        if (multiSelections.length < 2) return;
+        
+        const count = multiSelections.length;
+        const word = multiSelections[0].text;
+        document.getElementById("multi-selection-count").textContent = 
+          `${count} ocorrências de "${word}" selecionadas`;
+        document.getElementById("multi-replace-input").value = "";
+        
+        openModal(multiActionsModalOverlay);
+        document.getElementById("multi-replace-input").focus();
+      }
+
+      // Substituir todas as seleções múltiplas
+      function replaceMultiSelections(newText) {
+        if (multiSelections.length < 2) return;
+
+        let text = editor.value;
+        const newMultiSelections = [];
+        let offset = 0;
+
+        // Ordena as seleções por posição original para processamento sequencial
+        multiSelections.sort((a, b) => a.start - b.start);
+
+        // Substitui cada ocorrência e calcula as novas posições
+        multiSelections.forEach(sel => {
+          const adjustedStart = sel.start + offset;
+          const adjustedEnd = sel.end + offset;
+          
+          text = text.substring(0, adjustedStart) + newText + text.substring(adjustedEnd);
+          
+          // Armazena a nova posição da seleção para manter o destaque
+          newMultiSelections.push({
+            start: adjustedStart,
+            end: adjustedStart + newText.length,
+            text: newText
+          });
+          
+          // Ajusta o offset para as próximas substituições
+          offset += newText.length - (sel.end - sel.start);
+        });
+
+        editor.value = text;
+        const count = multiSelections.length;
+        
+        // Mantém as seleções para o usuário conferir o resultado
+        multiSelections = newMultiSelections;
+        
+        if (newText === "") {
+          showMessage(`${count} ocorrências excluídas`, 2000);
+          multiSelections = []; // Se deletou tudo, limpa as seleções
+        } else {
+          showMessage(`${count} ocorrências substituídas por "${newText}"`, 2000);
+        }
+        
+        if (editorReady) debounceSave();
+        updateMultiSelectionIndicator();
+        updateStatusBar();
+        updateLineNumbers();
+      }
+
+      // Converter seleções múltiplas para MAIÚSCULAS
+      function convertMultiSelectionsToUpperCase() {
+        if (multiSelections.length < 2) return;
+
+        let text = editor.value;
+        let offset = 0;
+
+        multiSelections.sort((a, b) => a.start - b.start);
+
+        multiSelections.forEach(sel => {
+          const adjustedStart = sel.start + offset;
+          const adjustedEnd = sel.end + offset;
+          const upperText = text.substring(adjustedStart, adjustedEnd).toUpperCase();
+          
+          text = text.substring(0, adjustedStart) + upperText + text.substring(adjustedEnd);
+        });
+
+        editor.value = text;
+        const count = multiSelections.length;
+        multiSelections = [];
+        showMessage(`${count} ocorrências convertidas para MAIÚSCULAS`, 2000);
+        
+        if (editorReady) debounceSave();
+        updateStatusBar();
+      }
+
+      // Converter seleções múltiplas para minúsculas
+      function convertMultiSelectionsToLowerCase() {
+        if (multiSelections.length < 2) return;
+
+        let text = editor.value;
+        let offset = 0;
+
+        multiSelections.sort((a, b) => a.start - b.start);
+
+        multiSelections.forEach(sel => {
+          const adjustedStart = sel.start + offset;
+          const adjustedEnd = sel.end + offset;
+          const lowerText = text.substring(adjustedStart, adjustedEnd).toLowerCase();
+          
+          text = text.substring(0, adjustedStart) + lowerText + text.substring(adjustedEnd);
+        });
+
+        editor.value = text;
+        const count = multiSelections.length;
+        multiSelections = [];
+        showMessage(`${count} ocorrências convertidas para minúsculas`, 2000);
+        
+        if (editorReady) debounceSave();
+        updateStatusBar();
+      }
+
+      // Deletar todas as seleções múltiplas
+      function deleteMultiSelections() {
+        if (multiSelections.length < 2) return;
+
+        let text = editor.value;
+        let offset = 0;
+
+        // Ordena as seleções por posição
+        multiSelections.sort((a, b) => a.start - b.start);
+
+        // Remove cada ocorrência
+        multiSelections.forEach(sel => {
+          const adjustedStart = sel.start + offset;
+          const adjustedEnd = sel.end + offset;
+          
+          text = text.substring(0, adjustedStart) + text.substring(adjustedEnd);
+          
+          // Ajusta o offset para as próximas remoções
+          offset -= (sel.end - sel.start);
+        });
+
+        editor.value = text;
+        const count = multiSelections.length;
+        multiSelections = [];
+        showMessage(`${count} ocorrências foram excluídas`, 2000);
+        
+        if (editorReady) debounceSave();
+        updateStatusBar();
+      }
+
+      // Duplicar linha atual
+      function duplicateCurrentLine() {
+        const start = editor.selectionStart;
+        const text = editor.value;
+
+        // Encontra o início e fim da linha atual
+        let lineStart = text.lastIndexOf("\n", start - 1) + 1;
+        let lineEnd = text.indexOf("\n", start);
+        if (lineEnd === -1) lineEnd = text.length;
+
+        const currentLine = text.substring(lineStart, lineEnd);
+        const newText =
+          text.substring(0, lineEnd) +
+          "\n" +
+          currentLine +
+          text.substring(lineEnd);
+
+        editor.value = newText;
+        // Posiciona o cursor na linha duplicada
+        editor.setSelectionRange(lineEnd + 1, lineEnd + 1);
+        editor.focus();
+
+        if (editorReady) debounceSave();
+      }
+
+      // Converter seleção para maiúsculas
+      function convertToUpperCase() {
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+
+        if (start === end) {
+          showMessage("Selecione um texto para converter", 2000);
+          return;
+        }
+
+        const selectedText = editor.value.substring(start, end);
+        const upperText = selectedText.toUpperCase();
+
+        editor.setRangeText(upperText, start, end, "select");
+        editor.focus();
+
+        if (editorReady) debounceSave();
+      }
+
+      function moveLineUp() {
+        const start = editor.selectionStart;
+        const text = editor.value;
+
+        // Limpa seleções múltiplas para evitar corrupção de índices
+        if (multiSelections.length > 0) {
+          multiSelections = [];
+          updateMultiSelectionIndicator();
+        }
+        
+        // Encontra a linha atual
+        let currentLineStart = text.lastIndexOf("\n", start - 1) + 1;
+        let currentLineEnd = text.indexOf("\n", start);
+        if (currentLineEnd === -1) currentLineEnd = text.length;
+
+        // Se já está na primeira linha, não faz nada
+        if (currentLineStart === 0) {
+          showMessage("Já está na primeira linha", 1500);
+          return;
+        }
+
+        // Encontra a linha anterior
+        let prevLineStart = text.lastIndexOf("\n", currentLineStart - 2) + 1;
+
+        const currentLine = text.substring(currentLineStart, currentLineEnd);
+        const prevLine = text.substring(prevLineStart, currentLineStart - 1);
+
+        // Reconstrói o texto com as linhas trocadas de forma limpa
+        const newText =
+          text.substring(0, prevLineStart) +
+          currentLine +
+          "\n" +
+          prevLine +
+          text.substring(currentLineEnd);
+
+        editor.value = newText;
+
+        // Ajusta a posição do cursor e limpa seleção
+        const newCursorPos = start - (currentLineStart - prevLineStart);
+        editor.setSelectionRange(newCursorPos, newCursorPos);
+        editor.focus();
+
+        if (editorReady) debounceSave();
+        updateLineNumbers();
+        updateStatusBar();
+      }
+
+      // Mover linha atual para baixo
+      function moveLineDown() {
+        const start = editor.selectionStart;
+        const text = editor.value;
+
+        // Limpa seleções múltiplas para evitar corrupção de índices
+        if (multiSelections.length > 0) {
+          multiSelections = [];
+          updateMultiSelectionIndicator();
+        }
+
+        // Encontra a linha atual
+        let currentLineStart = text.lastIndexOf("\n", start - 1) + 1;
+        let currentLineEnd = text.indexOf("\n", start);
+        if (currentLineEnd === -1) currentLineEnd = text.length;
+
+        // Se já está na última linha, não faz nada
+        if (currentLineEnd === text.length) {
+          showMessage("Já está na última linha", 1500);
+          return;
+        }
+
+        // Encontra a próxima linha
+        let nextLineEnd = text.indexOf("\n", currentLineEnd + 1);
+        if (nextLineEnd === -1) nextLineEnd = text.length;
+
+        const currentLine = text.substring(currentLineStart, currentLineEnd);
+        const nextLine = text.substring(currentLineEnd + 1, nextLineEnd);
+
+        // Reconstrói o texto com as linhas trocadas
+        const newText =
+          text.substring(0, currentLineStart) +
+          nextLine +
+          "\n" +
+          currentLine +
+          text.substring(nextLineEnd);
+
+        editor.value = newText;
+
+        // Ajusta a posição do cursor e limpa seleção
+        const newCursorPos = start + (nextLineEnd - currentLineEnd);
+        editor.setSelectionRange(newCursorPos, newCursorPos);
+        editor.focus();
+
+        if (editorReady) debounceSave();
+        updateLineNumbers();
+        updateStatusBar();
+      }
+
+
+
+
+
+
+
+      /* --- Inicialização --- */
+      document.addEventListener("DOMContentLoaded", async () => {
+        loadTheme();
+        lucide.createIcons();
+        loadRulerPosition();
+        userIdDisplay.textContent = `Local`;
+        editor.placeholder = "Carregando documentos...";
+        await loadDocumentsList();
+        editorReady = true;
+        addEventListeners();
+        updateStatusBar();
+        updateLineNumbers(); // Inicializa numeração de linhas
+
+        // Registro do Service Worker para PWA
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.register('./service-worker.js')
+            .then(() => console.log('Service Worker registrado com sucesso.'))
+            .catch(err => console.log('Erro ao registrar Service Worker:', err));
+        }
+      });
+    </script>
+  </body>
+</html>

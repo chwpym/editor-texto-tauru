@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "tauri": "tauri",
+    "pwa": "npx http-server . -p 8080",
     "dev": "cd src-tauri && cargo tauri dev",
     "build": "cd src-tauri && cargo tauri build",
     "test": "echo \"Error: no test specified\" && exit 1"
