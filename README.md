@@ -10,9 +10,9 @@ O **Editor Taurus** é uma ferramenta de escrita leve, moderna e totalmente Web,
 
 - **💻 PWA (Progressive Web App)**: Instale o editor como um aplicativo nativo no Windows, macOS ou Android diretamente do seu navegador.
 - **⚡ Performance Extrema**: Zero dependências pesadas, carregamento instantâneo.
-- **📍 Seleções Múltiplas**: Suporte a edição em vários pontos simultâneos (Ctrl+D), igual aos editores profissionais como VS Code.
+- **📍 Seleções Múltiplas**: Suporte a edição em vários pontos simultâneos (Ctrl+D), permitindo edições rápidas e precisas.
 - **🎨 Temas Inteligentes**: Suporte total a Modo Escuro (Dark) e Claro (Light).
-- **📏 Régua Vertical**: Guia visual de coluna para manter a organização do código.
+- **📏 Régua Vertical**: Guia visual de coluna para manter a organização e o alinhamento do texto.
 - **📁 Gerenciamento de Documentos**: Salva seus textos localmente no navegador (IndexedDB) para que você nunca perca nada.
 - **🔢 Numeração Ilimitada**: Contador de linhas sincronizado e robusto.
 - **⚖️ Medidor de Tamanho**: Veja o peso real do seu arquivo em Bytes, KB ou MB em tempo real.
