@@ -35,7 +35,7 @@
     >
       <!-- Barra de Ferramentas Principal -->
       <div
-        class="toolbar flex flex-wrap items-center justify-between p-3 bg-slate-200 dark:bg-slate-900 gap-2 flex-shrink-0"
+        class="toolbar relative z-20 flex flex-wrap items-center justify-between p-3 bg-slate-200 dark:bg-slate-900 gap-2 flex-shrink-0 shadow-sm"
       >
         <!-- Grupo de Documentos -->
         <div class="flex items-center gap-2">
@@ -160,7 +160,7 @@
 
       <!-- Barra de Status -->
       <div
-        class="status-bar flex justify-end items-center p-2 px-4 bg-slate-200 dark:bg-slate-900 text-sm text-gray-600 dark:text-slate-400 gap-4 flex-shrink-0"
+        class="status-bar relative z-10 flex justify-end items-center p-2 px-4 bg-slate-200 dark:bg-slate-900 text-sm text-gray-600 dark:text-slate-400 gap-4 flex-shrink-0 shadow-[0_-1px_3px_rgba(0,0,0,0.1)]"
       >
         <span id="save-status"></span>
         <span id="file-size" class="text-blue-500 font-mono"></span>
@@ -684,6 +684,7 @@
         if (doc) {
           editor.value = doc.content || "";
           updateStatusBar();
+          updateLineNumbers();
         } else {
           editor.value = "";
         }

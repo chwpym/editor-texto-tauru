@@ -152,6 +152,7 @@ html.dark #message-box {
   display: flex;
   flex-grow: 1;
   overflow: hidden;
+  contain: content; /* Isolamento de renderização extra */
 }
 
 #line-numbers {
@@ -170,7 +171,7 @@ html.dark #message-box {
   padding: 16px 8px;
   color: #94a3b8;
   text-align: right;
-  z-index: 1;
+  z-index: 5; /* Abaixo do z-20 da barra de ferramentas */
 }
 
 html.dark #line-numbers {
