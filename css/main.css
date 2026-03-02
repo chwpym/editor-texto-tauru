@@ -232,3 +232,58 @@ html.dark #doc-selector option {
   background-color: #1e293b;
   color: #f1f5f9;
 }
+
+/* ========================================
+   AUTOCOMPLETE POPUP
+   ======================================== */
+
+#autocomplete-popup {
+  position: fixed;
+  background-color: #1e293b;
+  color: #94a3b8;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-family: "Roboto Mono", monospace;
+  font-size: 14px;
+  z-index: 100;
+  pointer-events: none;
+  display: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  max-width: 400px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#autocomplete-popup .autocomplete-prefix {
+  color: #94a3b8;
+}
+
+#autocomplete-popup .autocomplete-suffix {
+  color: #38bdf8; /* azul para a parte sugerida */
+  font-weight: 700;
+}
+
+#autocomplete-popup .autocomplete-hint {
+  color: #475569;
+  font-size: 11px;
+  margin-left: 8px;
+  font-family: "Inter", sans-serif;
+}
+
+html:not(.dark) #autocomplete-popup {
+  background-color: #f8fafc;
+  color: #475569;
+  border-color: #e2e8f0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+html:not(.dark) #autocomplete-popup .autocomplete-suffix {
+  color: #0284c7;
+}
+
+html:not(.dark) #autocomplete-popup .autocomplete-hint {
+  color: #94a3b8;
+}
+

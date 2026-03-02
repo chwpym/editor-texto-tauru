@@ -370,6 +370,12 @@
     <!-- Caixa de Mensagem (Toast) -->
     <div id="message-box" role="alert" aria-live="polite"></div>
 
+    <!-- Popup de Autocomplete -->
+    <div id="autocomplete-popup">
+      <span class="autocomplete-prefix"></span><span class="autocomplete-suffix"></span><span class="autocomplete-hint">Tab ↵</span>
+    </div>
+
+
     <!-- Modal Dinâmico de Confirmação (Custom Confirm) -->
     <div
       id="confirm-modal-overlay"
@@ -1126,6 +1132,25 @@
         const isCtrlOrCmd = e.ctrlKey || e.metaKey;
         const key = e.key.toLowerCase();
 
+        // Tab: aceitar autocomplete (se popup visível)
+        if (e.key === "Tab" && acSuggestion) {
+          if (acceptAutocomplete()) {
+            e.preventDefault();
+            return;
+          }
+        }
+
+        // Esc: fechar autocomplete
+        if (e.key === "Escape" && acSuggestion) {
+          hideAutocompletePopup();
+          // não bloqueia o Esc normal
+        }
+
+        // Qualquer tecla que quebra o contexto fecha o popup
+        if (acSuggestion && (e.key === "Enter" || e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === " " || e.key === "Backspace")) {
+          hideAutocompletePopup();
+        }
+
         // Ctrl + S: Salvar
         if (isCtrlOrCmd && key === "s") {
           e.preventDefault();
@@ -1638,7 +1663,158 @@
 
 
 
+      /* --- AUTOCOMPLETE --- */
+      const autocompletePopup = document.getElementById("autocomplete-popup");
+      const acPrefix = autocompletePopup.querySelector(".autocomplete-prefix");
+      const acSuffix = autocompletePopup.querySelector(".autocomplete-suffix");
+      let acSuggestion = ""; // Palavra completa sugerida
+      let acCurrentWord = ""; // Prefixo atual digitado
+      let acTimeout = null;
+
+      // Extrai dicionário único de palavras do documento (min 4 chars)
+      function buildWordDictionary(text) {
+        const words = text.match(/[A-Za-zÀ-ÿ0-9_-]{4,}/g) || [];
+        return [...new Set(words)].sort((a, b) => b.length - a.length); // ordena pelas mais longas
+      }
+
+      // Extrai a palavra atual à esquerda do cursor
+      function getCurrentWord(text, cursorPos) {
+        const before = text.slice(0, cursorPos);
+        const match = before.match(/[A-Za-zÀ-ÿ0-9_-]+$/);
+        return match ? match[0] : "";
+      }
+
+      // Encontra a melhor sugestão baseada no prefixo digitado
+      function findSuggestion(word, dictionary) {
+        if (word.length < 3) return null;
+        const upper = word.toUpperCase();
+        // Busca primeiro correspondência exata no mesmo case
+        const exact = dictionary.find(
+          (w) => w.startsWith(word) && w.length > word.length
+        );
+        if (exact) return exact;
+        // Busca case-insensitive (maiúsculas)
+        return dictionary.find(
+          (w) => w.toUpperCase().startsWith(upper) && w.length > word.length
+        ) || null;
+      }
+
+      // Calcula posição do popup aproximada (abaixo do cursor)
+      function getCaretCoordinates(el, pos) {
+        const div = document.createElement("div");
+        const style = getComputedStyle(el);
+        const props = [
+          "fontFamily", "fontSize", "fontWeight", "lineHeight",
+          "letterSpacing", "wordSpacing", "whiteSpace", "paddingLeft",
+          "paddingTop", "paddingRight", "paddingBottom", "borderLeftWidth",
+          "borderTopWidth", "borderRightWidth", "borderBottomWidth",
+          "width", "height", "overflowX", "overflowY"
+        ];
+        props.forEach(p => (div.style[p] = style[p]));
+        div.style.position = "absolute";
+        div.style.visibility = "hidden";
+        div.style.top = "0px";
+        div.style.left = "0px";
+        div.style.whiteSpace = "pre";
+        div.style.overflow = "hidden";
+        document.body.appendChild(div);
+
+        const textBeforeCursor = el.value.slice(0, pos);
+        const span = document.createElement("span");
+        span.textContent = textBeforeCursor;
+        div.appendChild(span);
+
+        const lineHeight = parseInt(style.lineHeight) || 24;
+        return {
+          // Aqui aproximamos baseado na posição do editor na tela
+          x: el.getBoundingClientRect().left,
+          y: el.getBoundingClientRect().top,
+          lineHeight,
+          finalDiv: div,
+        };
+      }
+
+      function showAutocompletePopup() {
+        const pos = editor.selectionStart;
+        const text = editor.value;
+        acCurrentWord = getCurrentWord(text, pos);
+        const dictionary = buildWordDictionary(text);
+        const suggestion = findSuggestion(acCurrentWord, dictionary);
+
+        if (!suggestion) {
+          hideAutocompletePopup();
+          return;
+        }
+
+        acSuggestion = suggestion;
+        const suffix = suggestion.slice(acCurrentWord.length);
+        acPrefix.textContent = acCurrentWord;
+        acSuffix.textContent = suffix;
+
+        // Posicionar popup: obtém coordenadas do textarea relativas à tela
+        const editorRect = editor.getBoundingClientRect();
+        const lineHeight = 24;
+
+        // Calcula linha e coluna aproximada do cursor
+        const textBeforeCursor = text.slice(0, pos);
+        const lines = textBeforeCursor.split("\n");
+        const currentLineIndex = lines.length - 1;
+        const currentLineText = lines[currentLineIndex];
+
+        // Estima x usando a largura do caractere monospace
+        const charWidth = parseFloat(getComputedStyle(editor).fontSize) * 0.6;
+        const paddingLeft = 48; // padding-left do editor
+
+        // Obtém o scroll atual do editor
+        const scrollLeft = editor.scrollLeft;
+        const scrollTop = editor.scrollTop;
+
+        const x = editorRect.left + paddingLeft + currentLineText.length * charWidth - scrollLeft;
+        const y = editorRect.top + (currentLineIndex + 1) * lineHeight - scrollTop;
+
+        // Garante que cabe na janela
+        const popupWidth = 350;
+        const finalX = Math.min(x, window.innerWidth - popupWidth - 10);
+        const finalY = Math.min(y, window.innerHeight - 50);
+
+        autocompletePopup.style.left = `${finalX}px`;
+        autocompletePopup.style.top = `${finalY}px`;
+        autocompletePopup.style.display = "block";
+      }
+
+      function hideAutocompletePopup() {
+        autocompletePopup.style.display = "none";
+        acSuggestion = "";
+        acCurrentWord = "";
+      }
+
+      function acceptAutocomplete() {
+        if (!acSuggestion) return false;
+        const pos = editor.selectionStart;
+        const suffix = acSuggestion.slice(acCurrentWord.length);
+        const before = editor.value.slice(0, pos);
+        const after = editor.value.slice(pos);
+        editor.value = before + suffix + after;
+        const newPos = pos + suffix.length;
+        editor.setSelectionRange(newPos, newPos);
+        hideAutocompletePopup();
+        debounceSave();
+        updateStatusBar();
+        updateLineNumbers();
+        return true;
+      }
+
+      // ========================
+      // Dispara autocomplete com debounce ao digitar
+      function triggerAutocomplete() {
+        clearTimeout(acTimeout);
+        acTimeout = setTimeout(() => {
+          showAutocompletePopup();
+        }, 180); // 180ms após parar de digitar
+      }
+
       /* --- Inicialização --- */
+
       document.addEventListener("DOMContentLoaded", async () => {
         loadTheme();
         lucide.createIcons();
@@ -1657,6 +1833,21 @@
             .then(() => console.log('Service Worker registrado com sucesso.'))
             .catch(err => console.log('Erro ao registrar Service Worker:', err));
         }
+
+        // Evento input: disparar autocomplete ao digitar
+        editor.addEventListener("input", () => {
+          triggerAutocomplete();
+        });
+
+        // Fechar popup ao perder foco
+        editor.addEventListener("blur", () => {
+          setTimeout(hideAutocompletePopup, 150);
+        });
+
+        // Fechar popup ao clicar fora do editor
+        editor.addEventListener("click", () => {
+          hideAutocompletePopup();
+        });
       });
     </script>
   </body>
