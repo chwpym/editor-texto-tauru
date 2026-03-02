@@ -159,21 +159,23 @@ html.dark #message-box {
   position: absolute;
   left: 0;
   top: 0;
-  bottom: 0; /* Para preencher a altura toda e esconder o texto na rolagem vertical também se necessário */
-  width: 48px; /* Ajuste para bater com o padding do textarea */
-  background-color: #f8fafc; /* Fundo sólido para cobrir o texto! */
-  border-right: 1px solid #e2e8f0; /* Borda limitadora */
-  overflow: visible;
+  /* SEM bottom:0 — deixa a div crescer naturalmente com o conteúdo */
+  width: 48px;
+  background-color: #f8fafc;
+  border-right: 1px solid #e2e8f0;
+  overflow: hidden; /* Oculta spans extras fora do viewport via transform */
   user-select: none;
   pointer-events: none;
   font-family: "Roboto Mono", monospace;
   font-size: 16px;
   line-height: 24px;
-  padding: 16px 12px 16px 4px; /* Ajustando padding para o texto alinhar a direita da barrihana */
+  padding: 16px 12px 16px 4px;
   color: #94a3b8;
   text-align: right;
-  z-index: 15; /* Maior que o z-10 do editor para cobrir o texto! */
-  box-shadow: 2px 0 5px rgba(0,0,0,0.05); /* Sombrinha para descolar do texto */
+  z-index: 15;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+  /* Altura mínima para cobrir a área visível do editor */
+  min-height: 100%;
 }
 
 html.dark #line-numbers {

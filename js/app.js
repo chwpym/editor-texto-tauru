@@ -194,6 +194,8 @@ const saveStatus = document.getElementById("save-status");
 const fileSizeEl = document.getElementById("file-size");
 const wordCountEl = document.getElementById("word-count");
 const charCountEl = document.getElementById("char-count");
+const lineCountEl = document.getElementById("line-count");
+const cursorPosEl = document.getElementById("cursor-pos");
 const toggleModeBtn = document.getElementById("toggle-mode-btn");
 const rulerColumnInput = document.getElementById("ruler-column-input");
 const rulerLine = document.getElementById("ruler-line");
@@ -321,7 +323,7 @@ function debounceSave() {
   saveStatus.textContent = "Salvando...";
   saveTimeout = setTimeout(async () => {
     if (!currentDocId) {
-      saveStatus.textContent = "Nenhum documento ativo para salvar.";
+      saveStatus.textContent = "Nenhum doc ativo.";
       return;
     }
     isSaving = true;
@@ -330,7 +332,10 @@ function debounceSave() {
       doc.content = editor.value;
       doc.updatedAt = Date.now();
       await saveDoc(doc);
-      saveStatus.textContent = "Salvo localmente";
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      saveStatus.textContent = `Salvo às ${hh}:${mm}`;
     }
     isSaving = false;
   }, 1500);
@@ -341,6 +346,7 @@ function updateStatusBar() {
   const text = editor.value;
   const chars = text.length;
   const words = text.trim().split(/\s+/).filter(Boolean).length;
+  const totalLines = text.split('\n').length;
 
   const bytes = new Blob([text]).size;
   let sizeText = "";
@@ -349,8 +355,20 @@ function updateStatusBar() {
   else sizeText = `${(bytes / 1048576).toFixed(1)} MB`;
 
   wordCountEl.textContent = `Palavras: ${words}`;
-  charCountEl.textContent = `Caracteres: ${chars}`;
-  if (fileSizeEl) fileSizeEl.textContent = `Tamanho: ${sizeText}`;
+  charCountEl.textContent = `Chars: ${chars}`;
+  if (fileSizeEl) fileSizeEl.textContent = `${sizeText}`;
+  if (lineCountEl) lineCountEl.textContent = `${totalLines} linhas`;
+  updateCursorPosition();
+}
+
+function updateCursorPosition() {
+  if (!cursorPosEl) return;
+  const pos = editor.selectionStart;
+  const textBefore = editor.value.slice(0, pos);
+  const lines = textBefore.split('\n');
+  const line = lines.length;
+  const col = lines[lines.length - 1].length + 1;
+  cursorPosEl.textContent = `Ln ${line}, Col ${col}`;
 }
 
 function downloadAsTxt() {
@@ -518,6 +536,9 @@ function addEventListeners() {
     updateStatusBar();
     updateLineNumbers();
   });
+  // Atualiza Linha/Coluna ao mover cursor
+  editor.addEventListener("keyup", updateCursorPosition);
+  editor.addEventListener("click", updateCursorPosition);
   editor.addEventListener("scroll", () => {
     rulerLine.style.transform = `translateX(-${editor.scrollLeft}px)`;
     lineNumbers.style.transform = `translateY(-${editor.scrollTop}px)`;
@@ -550,6 +571,22 @@ function addEventListeners() {
   document.getElementById("export-db-btn").addEventListener("click", exportAllDocuments);
   document.getElementById("import-db-btn").addEventListener("click", () => document.getElementById("import-db-input").click());
   document.getElementById("import-db-input").addEventListener("change", importDocuments);
+
+  // Dicionário Pessoal
+  document.getElementById("personal-dict-btn").addEventListener("click", openPersonalDictModal);
+  document.getElementById("personal-dict-modal-close-btn").addEventListener("click", () => closeModal(document.getElementById("personal-dict-modal-overlay")));
+  document.getElementById("dict-add-btn").addEventListener("click", addPersonalDictWord);
+  document.getElementById("dict-word-input").addEventListener("keydown", (e) => { if (e.key === "Enter") addPersonalDictWord(); });
+
+  // Ir para Linha (Ctrl+G)
+  const gotoOverlay = document.getElementById("goto-line-modal-overlay");
+  document.getElementById("goto-line-modal-close-btn").addEventListener("click", () => closeModal(gotoOverlay));
+  document.getElementById("goto-line-ok-btn").addEventListener("click", gotoLine);
+  document.getElementById("goto-line-input").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") gotoLine();
+    if (e.key === "Escape") closeModal(gotoOverlay);
+  });
+  gotoOverlay.addEventListener("click", (e) => e.target === gotoOverlay && closeModal(gotoOverlay));
 
   shortcutsModalOverlay.addEventListener("click", (e) =>
     e.target === shortcutsModalOverlay && closeModal(shortcutsModalOverlay)
@@ -678,6 +715,14 @@ function handleKeyboardShortcuts(e) {
     clearTimeout(saveTimeout);
     debounceSave();
     showMessage("Salvando...", 1000);
+  }
+  // Ctrl + G: Ir para Linha
+  if (isCtrlOrCmd && key === "g") {
+    e.preventDefault();
+    const gotoOverlay = document.getElementById("goto-line-modal-overlay");
+    openModal(gotoOverlay);
+    setTimeout(() => document.getElementById("goto-line-input").focus(), 100);
+    return;
   }
   // Alt + N: Novo documento
   if (e.altKey && !e.ctrlKey && key === "n") {
@@ -1105,6 +1150,92 @@ function moveLineDown() {
   updateStatusBar();
 }
 
+/* --- IR PARA LINHA (Ctrl+G) --- */
+function gotoLine() {
+  const gotoOverlay = document.getElementById("goto-line-modal-overlay");
+  const input = document.getElementById("goto-line-input");
+  const lineNum = parseInt(input.value);
+  if (!lineNum || lineNum < 1) return;
+
+  const lines = editor.value.split('\n');
+  const targetLine = Math.min(lineNum, lines.length);
+
+  // Calcula a posição do cursor até o início da linha alvo
+  let pos = 0;
+  for (let i = 0; i < targetLine - 1; i++) {
+    pos += lines[i].length + 1; // +1 pelo \n
+  }
+
+  editor.focus();
+  editor.setSelectionRange(pos, pos);
+  scrollToSelection(pos);
+  updateCursorPosition();
+  closeModal(gotoOverlay);
+  input.value = '';
+  showMessage(`Linha ${targetLine}`, 1500);
+}
+
+/* --- DICIONÁRIO PESSOAL --- */
+const PERSONAL_DICT_KEY = "editor-taurus-personal-dict";
+
+function getPersonalDict() {
+  try {
+    return JSON.parse(localStorage.getItem(PERSONAL_DICT_KEY)) || [];
+  } catch {
+    return [];
+  }
+}
+
+function savePersonalDict(words) {
+  localStorage.setItem(PERSONAL_DICT_KEY, JSON.stringify(words));
+}
+
+function renderPersonalDictWords() {
+  const list = document.getElementById("dict-words-list");
+  const words = getPersonalDict();
+  if (words.length === 0) {
+    list.innerHTML = '<span class="text-slate-400 text-sm italic p-2">Nenhuma palavra adicionada ainda.</span>';
+    return;
+  }
+  list.innerHTML = words.map(w =>
+    `<button class="dict-chip px-3 py-1 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-full text-sm font-mono hover:bg-red-100 dark:hover:bg-red-900/50 hover:text-red-600 dark:hover:text-red-400 transition-colors" data-word="${w}" title="Clique para remover">${w}</button>`
+  ).join('');
+  // Event: clique para remover
+  list.querySelectorAll('.dict-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const word = btn.dataset.word;
+      const words = getPersonalDict().filter(w => w !== word);
+      savePersonalDict(words);
+      renderPersonalDictWords();
+      showMessage(`"${word}" removido do dicionário`, 1500);
+    });
+  });
+}
+
+function addPersonalDictWord() {
+  const input = document.getElementById("dict-word-input");
+  const word = input.value.trim().toUpperCase();
+  if (!word || word.length < 2) return;
+  const words = getPersonalDict();
+  if (!words.includes(word)) {
+    words.push(word);
+    words.sort();
+    savePersonalDict(words);
+    showMessage(`"${word}" adicionado ao dicionário! ✓`, 1500);
+  } else {
+    showMessage(`"${word}" já está no dicionário`, 1500);
+  }
+  input.value = '';
+  input.focus();
+  renderPersonalDictWords();
+}
+
+function openPersonalDictModal() {
+  renderPersonalDictWords();
+  openModal(document.getElementById("personal-dict-modal-overlay"));
+  setTimeout(() => document.getElementById("dict-word-input").focus(), 100);
+}
+
 /* --- AUTOCOMPLETE --- */
 const autocompletePopup = document.getElementById("autocomplete-popup");
 const acPrefix = autocompletePopup.querySelector(".autocomplete-prefix");
@@ -1127,9 +1258,12 @@ function getCurrentWord(text, cursorPos) {
 function findSuggestion(word, dictionary) {
   if (word.length < 3) return null;
   const upper = word.toUpperCase();
-  const exact = dictionary.find((w) => w.startsWith(word) && w.length > word.length);
+  // Inclui palavras do dicionário pessoal com prioridade
+  const personalDict = getPersonalDict();
+  const combined = [...new Set([...personalDict, ...dictionary])];
+  const exact = combined.find((w) => w.startsWith(word) && w.length > word.length);
   if (exact) return exact;
-  return dictionary.find((w) => w.toUpperCase().startsWith(upper) && w.length > word.length) || null;
+  return combined.find((w) => w.toUpperCase().startsWith(upper) && w.length > word.length) || null;
 }
 
 function showAutocompletePopup() {
