@@ -255,13 +255,13 @@
                 <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + S</kbd>: Salvar documento manualmente.</p>
                 <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Alt + N</kbd>: Criar novo documento.</p>
                 <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + Shift + F</kbd>: Abrir Localizar e Substituir.</p>
-                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + D</kbd>: Selecionar prÃ³xima ocorrÃªncia.</p>
-                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + Shift + L</kbd>: Selecionar todas as ocorrÃªncias.</p>
-                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + M</kbd>: AÃ§Ãµes para mÃºltiplas seleÃ§Ãµes.</p>
+                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + D</kbd>: Selecionar próxima ocorrência.</p>
+                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + Shift + L</kbd>: Selecionar todas as ocorrências.</p>
+                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + M</kbd>: Ações para múltiplas seleções.</p>
                 <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + Shift + D</kbd>: Duplicar linha atual.</p>
-                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + Shift + U</kbd>: Converter seleÃ§Ã£o para MAIÃšSCULAS.</p>
-                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Alt + Shift + â†‘/â†“</kbd>: Mover linha para cima/baixo.</p>
-                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Esc</kbd>: Cancelar seleÃ§Ãµes mÃºltiplas.</p>
+                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Ctrl + Shift + U</kbd>: Converter seleção para MAIÚSCULAS.</p>
+                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Alt + Shift + ↑/↓</kbd>: Mover linha para cima/baixo.</p>
+                <p><kbd class="font-mono bg-gray-200 dark:bg-slate-600 p-1 rounded">Esc</kbd>: Cancelar seleções múltiplas.</p>
             </div>
         </div>
       </div>
@@ -333,17 +333,17 @@
     <div id="multi-actions-modal-overlay" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 opacity-0 invisible">
         <div class="modal-content bg-white dark:bg-slate-800 p-6 rounded-lg shadow-xl max-w-md w-full relative transform -translate-y-5 text-slate-800 dark:text-slate-200">
             <button id="multi-actions-modal-close-btn" class="modal-close-btn absolute top-3 right-3 text-2xl p-1 rounded-full hover:bg-gray-200 dark:hover:bg-slate-700">&times;</button>
-            <h2 class="text-xl font-bold mb-4">AÃ§Ãµes em MÃºltiplas SeleÃ§Ãµes</h2>
+            <h2 class="text-xl font-bold mb-4">Ações em Múltiplas Seleções</h2>
             <p id="multi-selection-count" class="text-sm mb-4 text-gray-600 dark:text-gray-400"></p>
             
             <div class="space-y-3">
-                <!-- Campo de substituiÃ§Ã£o -->
+                <!-- Campo de substituição -->
                 <div>
                     <label class="block text-sm font-medium mb-1">Substituir por:</label>
                     <input type="text" id="multi-replace-input" placeholder="Digite o novo texto..." class="w-full p-2 border rounded-md bg-white dark:bg-slate-700 dark:border-slate-600">
                 </div>
                 
-                <!-- BotÃµes de aÃ§Ã£o -->
+                <!-- Botões de ação -->
                 <div class="grid grid-cols-2 gap-2">
                     <button id="multi-replace-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center justify-center gap-2">
                         <i data-lucide="replace" class="w-4 h-4"></i>
@@ -351,11 +351,11 @@
                     </button>
                     <button id="multi-uppercase-btn" class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 flex items-center justify-center gap-2">
                         <i data-lucide="type" class="w-4 h-4"></i>
-                        MAIÃšSCULAS
+                        MAIÚSCULAS
                     </button>
                     <button id="multi-lowercase-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 flex items-center justify-center gap-2">
                         <i data-lucide="type" class="w-4 h-4"></i>
-                        minÃºsculas
+                        minúsculas
                     </button>
                     <button id="multi-delete-btn" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center justify-center gap-2">
                         <i data-lucide="trash-2" class="w-4 h-4"></i>
@@ -417,7 +417,7 @@
               </div>
               <div class="p-3 bg-gray-100 dark:bg-slate-700 rounded">
                 <p class="font-semibold text-sm mb-1">AÃ§Ãµes RÃ¡pidas:</p>
-                <p class="text-xs">No painel que abre, vocÃª pode transformar tudo em <strong>MAIÃšSCULAS</strong>, deletar tudo de uma vez ou trocar por outro texto.</p>
+                <p class="text-xs">No painel que abre, vocÃª pode transformar tudo em <strong>MAIÚSCULAS</strong>, deletar tudo de uma vez ou trocar por outro texto.</p>
               </div>
             </div>
           </section>
@@ -428,7 +428,7 @@
             <div class="space-y-2 text-sm">
                 <p><kbd class="bg-gray-200 dark:bg-slate-600 px-1 rounded">Alt + N</kbd> : Novo Documento (evita conflitos com o navegador).</p>
                 <p><kbd class="bg-gray-200 dark:bg-slate-600 px-1 rounded">Ctrl + Shift + F</kbd> : Localizar e Substituir.</p>
-                <p><kbd class="bg-gray-200 dark:bg-slate-600 px-1 rounded">Alt + Shift + â†‘/â†“</kbd> : Move a linha inteira para cima ou para baixo.</p>
+                <p><kbd class="bg-gray-200 dark:bg-slate-600 px-1 rounded">Alt + Shift + ↑/↓</kbd> : Move a linha inteira para cima ou para baixo.</p>
                 <p class="mt-4 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded border-l-4 border-yellow-500">
                   <i data-lucide="ruler" class="inline w-4 h-4 mr-1"></i>
                   <strong>Dica da RÃ©gua:</strong> Clique no Ã­cone da rÃ©gua na barra de ferramentas para mostrar ou ocultar a linha vermelha delimitadora.
@@ -518,3 +518,4 @@
     <script src="./js/app.js"></script>
   </body>
 </html>
+
