@@ -172,7 +172,7 @@ html.dark #message-box {
   padding: 16px 12px 16px 4px; /* Ajustando padding para o texto alinhar a direita da barrihana */
   color: #94a3b8;
   text-align: right;
-  z-index: 5; /* Abaixo do z-20 da barra de ferramentas, mas ACIMA do z-10 do editor */
+  z-index: 15; /* Maior que o z-10 do editor para cobrir o texto! */
   box-shadow: 2px 0 5px rgba(0,0,0,0.05); /* Sombrinha para descolar do texto */
 }
 
