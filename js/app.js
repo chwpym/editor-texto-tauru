@@ -535,13 +535,18 @@ function addEventListeners() {
     if (editorReady) debounceSave();
     updateStatusBar();
     updateLineNumbers();
+    checkContentProtection();
   });
   // Atualiza Linha/Coluna ao mover cursor
-  editor.addEventListener("keyup", updateCursorPosition);
+  editor.addEventListener("keyup", (e) => {
+    updateCursorPosition();
+    applyTypewriterScroll();
+  });
   editor.addEventListener("click", updateCursorPosition);
   editor.addEventListener("scroll", () => {
     rulerLine.style.transform = `translateX(-${editor.scrollLeft}px)`;
     lineNumbers.style.transform = `translateY(-${editor.scrollTop}px)`;
+    syncHighlightScroll();
   });
   editor.addEventListener("keydown", (e) => {
     if (multiSelections.length > 1 && e.ctrlKey && e.key.toLowerCase() === 'm') {
@@ -655,6 +660,16 @@ function addEventListeners() {
   // Localizar e substituir
   const findInput = document.getElementById("find-input");
   const replaceInput = document.getElementById("replace-input");
+
+  // Highlight de busca ao digitar no campo de busca
+  findInput.addEventListener("input", () => updateSearchHighlight(findInput.value));
+  findInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      navigateSearchMatch(e.shiftKey ? -1 : 1);
+    }
+  });
+
   document.getElementById("replace-btn").addEventListener("click", () => {
     const findValue = findInput.value;
     const replaceValue = replaceInput.value;
@@ -681,10 +696,24 @@ function addEventListeners() {
     if (originalValue !== newValue) {
       editor.value = newValue;
       showMessage("Todas as ocorrências foram substituídas.", 2000);
+      updateSearchHighlight(findValue);
     } else {
       showMessage("Nenhuma ocorrência encontrada.", 2000);
     }
   });
+
+  // Typewriter Mode
+  document.getElementById("typewriter-btn").addEventListener("click", toggleTypewriterMode);
+
+  // Proteção de Conteúdo
+  document.getElementById("content-undo-btn").addEventListener("click", undoContentDelete);
+  document.getElementById("content-save-anyway-btn").addEventListener("click", saveAnywayAfterProtection);
+
+  // Ctrl+P Quick Open
+  const quickOpenOverlay = document.getElementById("quickopen-modal-overlay");
+  document.getElementById("quickopen-input").addEventListener("input", renderQuickOpenList);
+  document.getElementById("quickopen-input").addEventListener("keydown", handleQuickOpenKeydown);
+  quickOpenOverlay.addEventListener("click", (e) => e.target === quickOpenOverlay && closeModal(quickOpenOverlay));
 }
 
 function handleKeyboardShortcuts(e) {
@@ -722,6 +751,12 @@ function handleKeyboardShortcuts(e) {
     const gotoOverlay = document.getElementById("goto-line-modal-overlay");
     openModal(gotoOverlay);
     setTimeout(() => document.getElementById("goto-line-input").focus(), 100);
+    return;
+  }
+  // Ctrl + P: Quick Open
+  if (isCtrlOrCmd && key === "p") {
+    e.preventDefault();
+    openQuickOpen();
     return;
   }
   // Alt + N: Novo documento
@@ -1336,6 +1371,304 @@ function triggerAutocomplete() {
   }, 180);
 }
 
+/* --- SEARCH HIGHLIGHT --- */
+let searchHighlightTerm = "";
+let searchMatchIndex = 0;
+
+function escapeRegex(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function updateSearchHighlight(term) {
+  const overlay = document.getElementById("search-highlight-overlay");
+  searchHighlightTerm = term;
+  searchMatchIndex = 0;
+
+  if (!term || term.length < 2) {
+    overlay.innerHTML = "";
+    updateFindMatchCount(0, 0);
+    return;
+  }
+
+  const text = editor.value;
+  const regex = new RegExp(escapeRegex(term), "gi");
+  let matches = [];
+  let m;
+  while ((m = regex.exec(text)) !== null) {
+    matches.push({ start: m.index, end: m.index + m[0].length });
+  }
+
+  updateFindMatchCount(searchMatchIndex + 1, matches.length);
+  if (matches.length === 0) {
+    overlay.innerHTML = "";
+    return;
+  }
+
+  // Renderiza texto com marcações (sem HTML perigoso)
+  let html = "";
+  let last = 0;
+  matches.forEach((match, i) => {
+    // Texto antes do match (escapa)
+    html += escapeHtml(text.slice(last, match.start));
+    const cls = i === searchMatchIndex ? "current-match" : "";
+    html += `<mark class="${cls}">${escapeHtml(text.slice(match.start, match.end))}</mark>`;
+    last = match.end;
+  });
+  html += escapeHtml(text.slice(last));
+  overlay.innerHTML = html;
+
+  // Sincroniza scroll
+  overlay.scrollTop = editor.scrollTop;
+  overlay.scrollLeft = editor.scrollLeft;
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function updateFindMatchCount(current, total) {
+  let el = document.getElementById("find-match-count");
+  if (!el) {
+    // Cria o elemento no modal de busca se não existir
+    const header = document.getElementById("find-replace-modal-overlay")?.querySelector("h2");
+    if (header) {
+      el = document.createElement("span");
+      el.id = "find-match-count";
+      el.className = "ml-2 text-sm font-normal";
+      header.appendChild(el);
+    }
+  }
+  if (!el) return;
+  if (total === 0) {
+    el.textContent = " — Nenhuma ocorrência";
+    el.style.color = "#ef4444";
+  } else {
+    el.textContent = ` ${current}/${total}`;
+    el.style.color = "#64748b";
+  }
+}
+
+function navigateSearchMatch(direction) {
+  if (!searchHighlightTerm) return;
+  const text = editor.value;
+  const regex = new RegExp(escapeRegex(searchHighlightTerm), "gi");
+  let matches = [];
+  let m;
+  while ((m = regex.exec(text)) !== null) {
+    matches.push({ start: m.index, end: m.index + m[0].length });
+  }
+  if (matches.length === 0) return;
+
+  searchMatchIndex = ((searchMatchIndex + direction) % matches.length + matches.length) % matches.length;
+  const match = matches[searchMatchIndex];
+  editor.setSelectionRange(match.start, match.end);
+  scrollToSelection(match.start);
+
+  updateFindMatchCount(searchMatchIndex + 1, matches.length);
+  updateSearchHighlight(searchHighlightTerm);
+}
+
+// Sincroniza overlay com scroll do editor
+function syncHighlightScroll() {
+  const overlay = document.getElementById("search-highlight-overlay");
+  if (overlay) {
+    overlay.scrollTop = editor.scrollTop;
+    overlay.scrollLeft = editor.scrollLeft;
+  }
+}
+
+/* --- TYPEWRITER MODE --- */
+let typewriterActive = false;
+
+function toggleTypewriterMode() {
+  typewriterActive = !typewriterActive;
+  const btn = document.getElementById("typewriter-btn");
+  if (typewriterActive) {
+    document.body.classList.add("typewriter-mode");
+    btn.classList.add("active");
+    btn.title = "Desativar Modo Máquina de Escrever";
+    localStorage.setItem("typewriterMode", "true");
+    showMessage("✍️ Modo Máquina de Escrever ativado", 2000);
+  } else {
+    document.body.classList.remove("typewriter-mode");
+    btn.classList.remove("active");
+    btn.title = "Modo Máquina de Escrever (cursor centralizado)";
+    localStorage.setItem("typewriterMode", "false");
+    showMessage("Modo Máquina de Escrever desativado", 1500);
+  }
+}
+
+function applyTypewriterScroll() {
+  if (!typewriterActive) return;
+  // Calcula posição vertical da linha atual
+  const pos = editor.selectionStart;
+  const textBefore = editor.value.slice(0, pos);
+  const lineIndex = textBefore.split("\n").length - 1;
+  const lineHeight = 24;
+  const lineY = lineIndex * lineHeight;
+  // Centraliza: scroll = lineY - (visível / 2)
+  const target = lineY - editor.clientHeight / 2 + lineHeight;
+  editor.scrollTop = Math.max(0, target);
+}
+
+function loadTypewriterMode() {
+  if (localStorage.getItem("typewriterMode") === "true") {
+    typewriterActive = false; // Vai ser invertido no toggle
+    toggleTypewriterMode();
+  }
+}
+
+/* --- CONTENT PROTECTION --- */
+let contentBeforeEdit = "";
+let protectionSaveTimeout = null;
+
+function checkContentProtection() {
+  const current = editor.value;
+  const before = contentBeforeEdit;
+  if (!before || before.length === 0) {
+    contentBeforeEdit = current;
+    return;
+  }
+  const deleted = before.length - current.length;
+  const pct = deleted / before.length;
+  // Dispara alerta se perdeu > 30% E mais de 50 caracteres
+  if (pct > 0.30 && deleted > 50) {
+    showContentProtectionBanner(before);
+  } else {
+    hideContentProtectionBanner();
+    contentBeforeEdit = current;
+  }
+}
+
+function showContentProtectionBanner(savedContent) {
+  const banner = document.getElementById("content-protection-banner");
+  banner.classList.remove("hidden");
+  banner.classList.add("flex");
+  banner.dataset.savedContent = savedContent;
+  // Para o auto-save enquanto o banner está ativo
+  clearTimeout(saveTimeout);
+  clearTimeout(protectionSaveTimeout);
+}
+
+function hideContentProtectionBanner() {
+  const banner = document.getElementById("content-protection-banner");
+  banner.classList.add("hidden");
+  banner.classList.remove("flex");
+}
+
+function undoContentDelete() {
+  const banner = document.getElementById("content-protection-banner");
+  const saved = banner.dataset.savedContent;
+  if (saved !== undefined) {
+    editor.value = saved;
+    contentBeforeEdit = saved;
+    updateStatusBar();
+    updateLineNumbers();
+  }
+  hideContentProtectionBanner();
+  showMessage("↩ Conteúdo restaurado!", 2000);
+}
+
+function saveAnywayAfterProtection() {
+  hideContentProtectionBanner();
+  contentBeforeEdit = editor.value;
+  debounceSave();
+}
+
+/* --- QUICKOPEN (Ctrl+P) --- */
+let quickOpenDocs = [];
+let quickOpenSelectedIndex = 0;
+
+async function openQuickOpen() {
+  quickOpenDocs = await getAllDocs();
+  quickOpenDocs.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  const input = document.getElementById("quickopen-input");
+  input.value = "";
+  quickOpenSelectedIndex = 0;
+  renderQuickOpenList();
+  openModal(document.getElementById("quickopen-modal-overlay"));
+  setTimeout(() => input.focus(), 50);
+}
+
+function renderQuickOpenList() {
+  const query = document.getElementById("quickopen-input").value.toLowerCase();
+  const list = document.getElementById("quickopen-list");
+  const count = document.getElementById("quickopen-count");
+
+  const filtered = query
+    ? quickOpenDocs.filter(d => d.name.toLowerCase().includes(query))
+    : quickOpenDocs;
+
+  count.textContent = `${filtered.length} docs`;
+  quickOpenSelectedIndex = Math.min(quickOpenSelectedIndex, filtered.length - 1);
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<li class="p-4 text-center text-slate-400 italic">Nenhum documento encontrado</li>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map((doc, i) => {
+    const name = query
+      ? doc.name.replace(new RegExp(`(${escapeRegex(query)})`, "gi"), '<span class="doc-match">$1</span>')
+      : doc.name;
+    const date = doc.updatedAt ? new Date(doc.updatedAt).toLocaleDateString("pt-BR") : "";
+    const active = i === quickOpenSelectedIndex ? "active" : "";
+    return `<li class="${active}" data-id="${doc.id}">
+      <span class="doc-name">${name}</span>
+      <span class="doc-date">${date}</span>
+    </li>`;
+  }).join("");
+
+  // Click para abrir
+  list.querySelectorAll("li[data-id]").forEach((li, i) => {
+    li.addEventListener("mouseenter", () => {
+      quickOpenSelectedIndex = i;
+      renderQuickOpenList();
+    });
+    li.addEventListener("click", () => {
+      selectQuickOpenItem(filtered[i]);
+    });
+  });
+
+  // Scroll para item ativo
+  const activeEl = list.querySelector(".active");
+  if (activeEl) activeEl.scrollIntoView({ block: "nearest" });
+}
+
+function handleQuickOpenKeydown(e) {
+  const input = document.getElementById("quickopen-input");
+  const query = input.value.toLowerCase();
+  const filtered = query
+    ? quickOpenDocs.filter(d => d.name.toLowerCase().includes(query))
+    : quickOpenDocs;
+
+  if (e.key === "ArrowDown") {
+    e.preventDefault();
+    quickOpenSelectedIndex = Math.min(quickOpenSelectedIndex + 1, filtered.length - 1);
+    renderQuickOpenList();
+  } else if (e.key === "ArrowUp") {
+    e.preventDefault();
+    quickOpenSelectedIndex = Math.max(quickOpenSelectedIndex - 1, 0);
+    renderQuickOpenList();
+  } else if (e.key === "Enter") {
+    e.preventDefault();
+    if (filtered[quickOpenSelectedIndex]) {
+      selectQuickOpenItem(filtered[quickOpenSelectedIndex]);
+    }
+  } else if (e.key === "Escape") {
+    closeModal(document.getElementById("quickopen-modal-overlay"));
+  }
+}
+
+function selectQuickOpenItem(doc) {
+  closeModal(document.getElementById("quickopen-modal-overlay"));
+  if (doc.id !== currentDocId) {
+    docSelector.value = doc.id;
+    switchDocument(doc.id);
+  }
+  editor.focus();
+}
+
 /* --- Inicialização --- */
 document.addEventListener("DOMContentLoaded", async () => {
   loadTheme();
@@ -1366,4 +1699,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   editor.addEventListener("click", () => {
     hideAutocompletePopup();
   });
+
+  // Inicializar modo typewriter se estava ativo
+  loadTypewriterMode();
+
+  // Inicializar proteção de conteúdo com o texto atual
+  contentBeforeEdit = editor.value;
 });
