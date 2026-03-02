@@ -7,9 +7,9 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
     <link rel="apple-touch-icon" href="icon.png">
-    <!-- Tailwind CSS CDN para estilizaÃ§Ã£o -->
+    <!-- Tailwind CSS CDN para estilização -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Biblioteca Lucide Icons para Ã­cones modernos -->
+    <!-- Biblioteca Lucide Icons para ícones modernos -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -18,7 +18,7 @@
       rel="stylesheet"
     />
     
-    <!-- ConfiguraÃ§Ã£o do Tailwind CSS para modo dark -->
+    <!-- Configuração do Tailwind CSS para modo dark -->
     <script>
       tailwind.config = {
         darkMode: 'class'
@@ -66,7 +66,7 @@
           </button>
         </div>
 
-        <!-- Grupo de Ferramentas de EdiÃ§Ã£o -->
+        <!-- Grupo de Ferramentas de Edição -->
         <div class="flex items-center gap-2">
           <button
             id="download-btn"
@@ -84,14 +84,14 @@
           </button>
         </div>
 
-        <!-- Grupo de ConfiguraÃ§Ãµes e Ajuda -->
+        <!-- Grupo de Configurações e Ajuda -->
         <div class="flex items-center gap-2">
           <div
             class="ruler-input-group flex items-center gap-1 text-slate-600 dark:text-slate-300"
           >
             <button 
               id="ruler-toggle-btn" 
-              title="Mostrar/Ocultar RÃ©gua" 
+              title="Mostrar/Ocultar Régua" 
               class="p-1.5 rounded-md hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors"
             >
               <i data-lucide="ruler"></i>
@@ -329,7 +329,7 @@
       </div>
     </div>
 
-    <!-- Modal de AÃ§Ãµes MÃºltiplas -->
+    <!-- Modal de Ações Múltiplas -->
     <div id="multi-actions-modal-overlay" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 opacity-0 invisible">
         <div class="modal-content bg-white dark:bg-slate-800 p-6 rounded-lg shadow-xl max-w-md w-full relative transform -translate-y-5 text-slate-800 dark:text-slate-200">
             <button id="multi-actions-modal-close-btn" class="modal-close-btn absolute top-3 right-3 text-2xl p-1 rounded-full hover:bg-gray-200 dark:hover:bg-slate-700">&times;</button>
@@ -390,48 +390,48 @@
         </h2>
         
         <div class="space-y-6">
-          <!-- Dica de EspaÃ§amento -->
+          <!-- Dica de Espaçamento -->
           <section class="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg border-l-4 border-blue-500">
             <h3 class="font-bold text-lg mb-2 flex items-center gap-2">
               <i data-lucide="info" class="w-5 h-5 text-blue-500"></i>
               Evitando que as palavras "juntem"
             </h3>
-            <p class="text-sm">Ao substituir um texto (ex: trocar <code>DE</code> por <code>DA</code>), se vocÃª nÃ£o quer que o resultado fique grudado (<code>TESTANDODAATALHO</code>), lembre-se:</p>
+            <p class="text-sm">Ao substituir um texto (ex: trocar <code>DE</code> por <code>DA</code>), se você não quer que o resultado fique grudado (<code>TESTANDODAATALHO</code>), lembre-se:</p>
             <ul class="list-disc ml-5 mt-2 text-sm space-y-1">
-              <li>Se vocÃª selecionar apenas a palavra, a substituiÃ§Ã£o deve incluir o espaÃ§o (ex: <code>"DA "</code>).</li>
-              <li>Sempre confira o resultado enquanto as palavras ainda estÃ£o destacadas logo apÃ³s a troca.</li>
+              <li>Se você selecionar apenas a palavra, a substituição deve incluir o espaço (ex: <code>"DA "</code>).</li>
+              <li>Sempre confira o resultado enquanto as palavras ainda estão destacadas logo após a troca.</li>
             </ul>
           </section>
 
-          <!-- SeleÃ§Ã£o MÃºltipla -->
+          <!-- Seleção Múltipla -->
           <section>
-            <h3 class="font-bold text-lg mb-2">SeleÃ§Ã£o em Massa (EdiÃ§Ã£o Inteligente)</h3>
+            <h3 class="font-bold text-lg mb-2">Seleção em Massa (Edição Inteligente)</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="p-3 bg-gray-100 dark:bg-slate-700 rounded">
                 <p class="font-semibold text-sm mb-1">Passo a Passo:</p>
                 <ol class="list-decimal ml-5 text-xs space-y-1">
                   <li>Selecione uma palavra.</li>
-                  <li>Pressione <kbd class="bg-white dark:bg-slate-600 px-1 rounded">Ctrl + D</kbd> para selecionar a prÃ³xima igual.</li>
-                  <li>Pressione <kbd class="bg-white dark:bg-slate-600 px-1 rounded">Ctrl + M</kbd> para abrir o painel de aÃ§Ãµes.</li>
+                  <li>Pressione <kbd class="bg-white dark:bg-slate-600 px-1 rounded">Ctrl + D</kbd> para selecionar a próxima igual.</li>
+                  <li>Pressione <kbd class="bg-white dark:bg-slate-600 px-1 rounded">Ctrl + M</kbd> para abrir o painel de ações.</li>
                 </ol>
               </div>
               <div class="p-3 bg-gray-100 dark:bg-slate-700 rounded">
-                <p class="font-semibold text-sm mb-1">AÃ§Ãµes RÃ¡pidas:</p>
-                <p class="text-xs">No painel que abre, vocÃª pode transformar tudo em <strong>MAIÚSCULAS</strong>, deletar tudo de uma vez ou trocar por outro texto.</p>
+                <p class="font-semibold text-sm mb-1">Ações Rápidas:</p>
+                <p class="text-xs">No painel que abre, você pode transformar tudo em <strong>MAIÚSCULAS</strong>, deletar tudo de uma vez ou trocar por outro texto.</p>
               </div>
             </div>
           </section>
 
           <!-- Atalhos Cruciais -->
           <section>
-            <h3 class="font-bold text-lg mb-2">Atalhos e Controles Ãšteis</h3>
+            <h3 class="font-bold text-lg mb-2">Atalhos e Controles Úteis</h3>
             <div class="space-y-2 text-sm">
                 <p><kbd class="bg-gray-200 dark:bg-slate-600 px-1 rounded">Alt + N</kbd> : Novo Documento (evita conflitos com o navegador).</p>
                 <p><kbd class="bg-gray-200 dark:bg-slate-600 px-1 rounded">Ctrl + Shift + F</kbd> : Localizar e Substituir.</p>
                 <p><kbd class="bg-gray-200 dark:bg-slate-600 px-1 rounded">Alt + Shift + ↑/↓</kbd> : Move a linha inteira para cima ou para baixo.</p>
                 <p class="mt-4 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded border-l-4 border-yellow-500">
                   <i data-lucide="ruler" class="inline w-4 h-4 mr-1"></i>
-                  <strong>Dica da RÃ©gua:</strong> Clique no Ã­cone da rÃ©gua na barra de ferramentas para mostrar ou ocultar a linha vermelha delimitadora.
+                  <strong>Dica da Régua:</strong> Clique no ícone da régua na barra de ferramentas para mostrar ou ocultar a linha vermelha delimitadora.
                 </p>
             </div>
           </section>
@@ -442,7 +442,7 @@
         </button>
       </div>
     </div>
-    <div id="multi-selection-indicator" title="Clique para abrir aÃ§Ãµes (Ctrl+M)">
+    <div id="multi-selection-indicator" title="Clique para abrir ações (Ctrl+M)">
       <div id="multi-selection-text">0 selecionadas</div>
     </div>
 
@@ -455,7 +455,7 @@
     </div>
 
 
-    <!-- Modal DinÃ¢mico de ConfirmaÃ§Ã£o (Custom Confirm) -->
+    <!-- Modal Dinâmico de Confirmação (Custom Confirm) -->
     <div
       id="confirm-modal-overlay"
       class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-[100] opacity-0 invisible"
@@ -482,7 +482,7 @@
       </div>
     </div>
 
-    <!-- Modal DinÃ¢mico de Entrada (Custom Prompt) -->
+    <!-- Modal Dinâmico de Entrada (Custom Prompt) -->
     <div
       id="prompt-modal-overlay"
       class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-[100] opacity-0 invisible"
