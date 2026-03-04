@@ -1705,4 +1705,162 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Inicializar proteção de conteúdo com o texto atual
   contentBeforeEdit = editor.value;
+
+  // Inicializar sistema de temas
+  initThemeSystem();
 });
+
+/* =============================================
+   SISTEMA DE TEMAS
+   ============================================= */
+
+const THEMES = [
+  {
+    id: "taurus",
+    name: "Taurus Dark",
+    dark: true,
+    editorBg: "#020617",
+    editorText: "#e2e8f0",
+    gutterBg: "#020617",
+    gutterText: "#475569",
+    line1: "#475569", line2: "#334155", line3: "#1e293b",
+  },
+  {
+    id: "vscode",
+    name: "VS Code Dark+",
+    dark: true,
+    editorBg: "#1e1e1e",
+    editorText: "#d4d4d4",
+    gutterBg: "#1e1e1e",
+    gutterText: "#858585",
+    line1: "#858585", line2: "#569cd6", line3: "#4ec9b0",
+  },
+  {
+    id: "tokyo",
+    name: "Tokyo Night",
+    dark: true,
+    editorBg: "#1a1b2e",
+    editorText: "#a9b1d6",
+    gutterBg: "#1a1b2e",
+    gutterText: "#3b4261",
+    line1: "#7aa2f7", line2: "#9ece6a", line3: "#bb9af7",
+  },
+  {
+    id: "ayu",
+    name: "Ayu Dark",
+    dark: true,
+    editorBg: "#0d1017",
+    editorText: "#bfbdb6",
+    gutterBg: "#0d1017",
+    gutterText: "#3d424d",
+    line1: "#e6b450", line2: "#7fd962", line3: "#59c2ff",
+  },
+  {
+    id: "dracula",
+    name: "Dracula",
+    dark: true,
+    editorBg: "#282a36",
+    editorText: "#f8f8f2",
+    gutterBg: "#282a36",
+    gutterText: "#6272a4",
+    line1: "#ff79c6", line2: "#50fa7b", line3: "#bd93f9",
+  },
+  {
+    id: "light",
+    name: "Light",
+    dark: false,
+    editorBg: "#ffffff",
+    editorText: "#1e293b",
+    gutterBg: "#ffffff",
+    gutterText: "#94a3b8",
+    line1: "#94a3b8", line2: "#334155", line3: "#3b82f6",
+  },
+];
+
+function buildThemeCard(theme, activeId) {
+  const isActive = theme.id === activeId;
+  return `
+    <button class="theme-card ${isActive ? 'active' : ''} bg-slate-100 dark:bg-slate-700/50 text-left w-full"
+            data-theme-id="${theme.id}" title="${theme.name}">
+      <div class="check-badge">✓</div>
+      <div class="preview" style="background:${theme.editorBg}">
+        <div class="preview-gutter" style="background:${theme.gutterBg}">
+          <span style="background:${theme.gutterText}"></span>
+          <span style="background:${theme.gutterText}"></span>
+          <span style="background:${theme.gutterText}"></span>
+          <span style="background:${theme.gutterText}"></span>
+        </div>
+        <div class="preview-content">
+          <div class="preview-line" style="background:${theme.line1};width:85%"></div>
+          <div class="preview-line" style="background:${theme.line2};width:65%"></div>
+          <div class="preview-line" style="background:${theme.line3};width:75%"></div>
+          <div class="preview-line" style="background:${theme.line1};width:50%"></div>
+        </div>
+      </div>
+      <div class="text-xs font-semibold text-center text-slate-700 dark:text-slate-300">${theme.name}</div>
+    </button>`;
+}
+
+function applyTheme(themeId) {
+  const theme = THEMES.find(t => t.id === themeId) || THEMES[0];
+  const html = document.documentElement;
+
+  // Aplica dark/light
+  if (theme.dark) {
+    html.classList.add("dark");
+  } else {
+    html.classList.remove("dark");
+  }
+
+  // Aplica data-theme para CSS vars
+  if (theme.id === "taurus" || theme.id === "light") {
+    html.removeAttribute("data-theme");
+  } else {
+    html.setAttribute("data-theme", theme.id);
+  }
+
+  // Persiste
+  localStorage.setItem("selectedTheme", themeId);
+
+  // Atualiza ícone do botão
+  const btn = document.getElementById("theme-picker-btn");
+  if (btn) {
+    lucide.createIcons();
+  }
+}
+
+function openThemePicker() {
+  const activeId = localStorage.getItem("selectedTheme") || "taurus";
+  const grid = document.getElementById("theme-cards-grid");
+  grid.innerHTML = THEMES.map(t => buildThemeCard(t, activeId)).join("");
+
+  // Listeners dos cards
+  grid.querySelectorAll(".theme-card").forEach(card => {
+    card.addEventListener("click", () => {
+      const id = card.dataset.themeId;
+      applyTheme(id);
+      // Atualiza estado ativo dos cards
+      grid.querySelectorAll(".theme-card").forEach(c => c.classList.remove("active"));
+      card.classList.add("active");
+      // Atualiza badge
+      grid.querySelectorAll(".check-badge").forEach(b => b.style.display = "none");
+      card.querySelector(".check-badge").style.display = "flex";
+    });
+  });
+
+  openModal(document.getElementById("theme-modal-overlay"));
+}
+
+function initThemeSystem() {
+  // Botão de abrir seletor
+  document.getElementById("theme-picker-btn").addEventListener("click", openThemePicker);
+
+  // Fechar modal
+  const overlay = document.getElementById("theme-modal-overlay");
+  document.getElementById("theme-modal-close-btn").addEventListener("click", () => closeModal(overlay));
+  overlay.addEventListener("click", e => e.target === overlay && closeModal(overlay));
+
+  // Restaurar tema salvo
+  const saved = localStorage.getItem("selectedTheme") || "taurus";
+  applyTheme(saved);
+}

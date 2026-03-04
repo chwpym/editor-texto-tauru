@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
@@ -105,13 +105,16 @@
               class="w-16 p-1 border-none rounded-md text-center bg-transparent text-slate-600 dark:text-slate-300 focus:ring-0"
             />
           </div>
-          <button
-            id="toggle-mode-btn"
-            title="Alternar Tema"
-            class="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors"
-          >
-            <i data-lucide="moon"></i>
-          </button>
+          <!-- Seletor de Temas -->
+          <div class="relative">
+            <button
+              id="theme-picker-btn"
+              title="Escolher Tema"
+              class="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors"
+            >
+              <i data-lucide="palette"></i>
+            </button>
+          </div>
           <button
             id="show-shortcuts-btn"
             title="Ver Atalhos"
@@ -204,6 +207,19 @@
     </div>
 
     <!-- Modais -->
+
+    <!-- Modal: Seletor de Temas -->
+    <div id="theme-modal-overlay" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 opacity-0 invisible">
+      <div class="modal-content bg-white dark:bg-slate-800 p-6 rounded-xl shadow-2xl max-w-md w-full relative transform -translate-y-5 text-slate-800 dark:text-slate-200">
+        <button id="theme-modal-close-btn" class="modal-close-btn absolute top-3 right-3 p-1 rounded-full text-2xl hover:bg-gray-200 dark:hover:bg-slate-700">&times;</button>
+        <h2 class="text-xl font-bold mb-5 flex items-center gap-2">
+          <i data-lucide="palette" class="w-5 h-5"></i> Escolher Tema
+        </h2>
+        <div id="theme-cards-grid" class="grid grid-cols-2 gap-3">
+          <!-- Cards gerados por JS -->
+        </div>
+      </div>
+    </div>
 
     <!-- Modal: Ir para Linha (Ctrl+G) -->
     <div id="goto-line-modal-overlay" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 opacity-0 invisible">

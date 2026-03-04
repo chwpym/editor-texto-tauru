@@ -5,6 +5,160 @@
 /* Variável CSS para a coluna da régua */
 :root {
   --ruler-column: 80;
+  /* Cores do tema atual (sobrescritas por data-theme) */
+  --theme-editor-bg: #ffffff;
+  --theme-editor-text: #1e293b;
+  --theme-toolbar-bg: #e2e8f0;
+  --theme-statusbar-bg: #e2e8f0;
+  --theme-gutter-bg: #ffffff;
+  --theme-gutter-text: #94a3b8;
+  --theme-border: rgba(0,0,0,0.08);
+}
+
+/* ---- TEMA: TAURUS DARK (padrão) ---- */
+html.dark {
+  --theme-editor-bg: #020617;
+  --theme-editor-text: #e2e8f0;
+  --theme-toolbar-bg: #0f172a;
+  --theme-statusbar-bg: #0f172a;
+  --theme-gutter-bg: #020617;
+  --theme-gutter-text: #475569;
+  --theme-border: rgba(255,255,255,0.05);
+}
+
+/* ---- TEMA: VS CODE DARK+ ---- */
+html.dark[data-theme="vscode"] {
+  --theme-editor-bg: #1e1e1e;
+  --theme-editor-text: #d4d4d4;
+  --theme-toolbar-bg: #2d2d2d;
+  --theme-statusbar-bg: #007acc;
+  --theme-gutter-bg: #1e1e1e;
+  --theme-gutter-text: #858585;
+  --theme-border: rgba(255,255,255,0.08);
+}
+
+/* ---- TEMA: TOKYO NIGHT ---- */
+html.dark[data-theme="tokyo"] {
+  --theme-editor-bg: #1a1b2e;
+  --theme-editor-text: #a9b1d6;
+  --theme-toolbar-bg: #16213e;
+  --theme-statusbar-bg: #16213e;
+  --theme-gutter-bg: #1a1b2e;
+  --theme-gutter-text: #3b4261;
+  --theme-border: rgba(255,255,255,0.05);
+}
+
+/* ---- TEMA: AYU DARK ---- */
+html.dark[data-theme="ayu"] {
+  --theme-editor-bg: #0d1017;
+  --theme-editor-text: #bfbdb6;
+  --theme-toolbar-bg: #131721;
+  --theme-statusbar-bg: #e6b450;
+  --theme-gutter-bg: #0d1017;
+  --theme-gutter-text: #3d424d;
+  --theme-border: rgba(255,255,255,0.04);
+}
+
+/* ---- TEMA: DRACULA ---- */
+html.dark[data-theme="dracula"] {
+  --theme-editor-bg: #282a36;
+  --theme-editor-text: #f8f8f2;
+  --theme-toolbar-bg: #21222c;
+  --theme-statusbar-bg: #bd93f9;
+  --theme-gutter-bg: #282a36;
+  --theme-gutter-text: #6272a4;
+  --theme-border: rgba(255,255,255,0.06);
+}
+
+/* ---- APLICAÇÃO DAS VARIÁVEIS ---- */
+/* Editor principal */
+#editor-wrapper {
+  background-color: var(--theme-editor-bg) !important;
+}
+#editor {
+  background-color: transparent !important;
+  color: var(--theme-editor-text) !important;
+}
+#line-numbers {
+  background-color: var(--theme-gutter-bg) !important;
+  color: var(--theme-gutter-text) !important;
+}
+
+/* Tema: status bar com cor de accent (VS Code, Ayu, Dracula) */
+html.dark[data-theme="vscode"] .status-bar,
+html.dark[data-theme="ayu"] .status-bar,
+html.dark[data-theme="dracula"] .status-bar {
+  background-color: var(--theme-statusbar-bg) !important;
+  color: rgba(255,255,255,0.9) !important;
+}
+
+/* Tema: cards de seleção de tema */
+.theme-card {
+  border: 2px solid transparent;
+  border-radius: 10px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+.theme-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+.theme-card.active {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.25);
+}
+.theme-card .preview {
+  border-radius: 6px;
+  overflow: hidden;
+  height: 60px;
+  margin-bottom: 8px;
+  display: flex;
+}
+.theme-card .preview-gutter {
+  width: 28px;
+  display: flex;
+  flex-direction: column;
+  padding: 4px 2px;
+  gap: 3px;
+  align-items: flex-end;
+}
+.theme-card .preview-gutter span {
+  width: 10px;
+  height: 4px;
+  border-radius: 2px;
+  opacity: 0.5;
+}
+.theme-card .preview-content {
+  flex: 1;
+  padding: 4px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.theme-card .preview-line {
+  height: 4px;
+  border-radius: 2px;
+  opacity: 0.7;
+}
+.theme-card .check-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #3b82f6;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  display: none;
+}
+.theme-card.active .check-badge {
+  display: flex;
 }
 
 /* ========================================
