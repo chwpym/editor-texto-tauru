@@ -196,7 +196,6 @@ const wordCountEl = document.getElementById("word-count");
 const charCountEl = document.getElementById("char-count");
 const lineCountEl = document.getElementById("line-count");
 const cursorPosEl = document.getElementById("cursor-pos");
-const toggleModeBtn = document.getElementById("toggle-mode-btn");
 const rulerColumnInput = document.getElementById("ruler-column-input");
 const rulerLine = document.getElementById("ruler-line");
 const docSelector = document.getElementById("doc-selector");
@@ -562,7 +561,7 @@ function addEventListeners() {
     }
     handleKeyboardShortcuts(e);
   });
-  toggleModeBtn.addEventListener("click", toggleTheme);
+  // Tema: listener gerenciado pelo initThemeSystem()
   document.getElementById("ruler-toggle-btn").addEventListener("click", toggleRulerVisibility);
   rulerColumnInput.addEventListener("input", updateRulerPosition);
   docSelector.addEventListener("change", (e) => switchDocument(e.target.value));
