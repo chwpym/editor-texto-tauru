@@ -161,8 +161,8 @@ html.dark #message-box {
   top: 0;
   /* SEM bottom:0 — deixa a div crescer naturalmente com o conteúdo */
   width: 48px;
-  background-color: #f8fafc;
-  border-right: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  border-right: 1px solid rgba(0,0,0,0.06);
   overflow: hidden; /* Oculta spans extras fora do viewport via transform */
   user-select: none;
   pointer-events: none;
@@ -173,16 +173,14 @@ html.dark #message-box {
   color: #94a3b8;
   text-align: right;
   z-index: 15;
-  box-shadow: 2px 0 5px rgba(0,0,0,0.05);
   /* Altura mínima para cobrir a área visível do editor */
   min-height: 100%;
 }
 
 html.dark #line-numbers {
-  background-color: #0f172a; /* Fundo escuro sólido */
-  border-right-color: #1e293b;
+  background-color: #0f172a; /* Igual ao fundo do editor escuro */
+  border-right-color: rgba(255,255,255,0.04);
   color: #64748b;
-  box-shadow: 2px 0 5px rgba(0,0,0,0.2);
 }
 
 .line-number {
