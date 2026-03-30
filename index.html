@@ -116,6 +116,14 @@
             </button>
           </div>
           <button
+            id="tasks-btn"
+            title="Lista de Tarefas"
+            class="p-2 rounded-md text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900 transition-colors"
+          >
+            <i data-lucide="check-square"></i>
+          </button>
+          
+          <button
             id="show-shortcuts-btn"
             title="Ver Atalhos"
             class="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors"
@@ -192,7 +200,9 @@
       <div
         class="status-bar relative z-10 flex justify-end items-center p-2 px-4 bg-slate-200 dark:bg-slate-900 text-sm text-gray-600 dark:text-slate-400 gap-4 flex-shrink-0 shadow-[0_-1px_3px_rgba(0,0,0,0.1)]"
       >
-        <span id="save-status"></span>
+        <span id="save-status" class="flex items-center gap-1 font-mono text-xs" title="Status de Salvamento">
+          <i data-lucide="circle-dashed" class="w-3 h-3 text-slate-400"></i>
+        </span>
         <span id="line-count" class="text-slate-500 font-mono text-xs"></span>
         <span id="cursor-pos" class="text-slate-500 font-mono text-xs" title="Linha e Coluna do cursor"></span>
         <span id="file-size" class="text-blue-500 font-mono"></span>
@@ -530,8 +540,43 @@
       </div>
     </div>
 
-    <!-- Scripts do Editor -->
-    <script src="./js/app.js"></script>
+    <!-- Painel Lateral de Tarefas (Drawer) -->
+    <div id="tasks-drawer-overlay" class="fixed inset-0 bg-black/50 z-40 opacity-0 invisible transition-all duration-300"></div>
+    <div id="tasks-drawer" class="fixed top-0 right-0 h-full w-80 bg-slate-50 dark:bg-slate-900 shadow-[-5px_0_15px_rgba(0,0,0,0.1)] z-50 transform translate-x-full transition-transform duration-300 flex flex-col border-l border-slate-200 dark:border-slate-800">
+      
+      <!-- Drawer Header -->
+      <div class="flex justify-between items-center p-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
+        <h2 class="font-bold text-lg text-slate-800 dark:text-slate-200 flex items-center gap-2">
+          <i data-lucide="check-square" class="w-5 h-5 text-emerald-500"></i> Tarefas do Projeto
+        </h2>
+        <button id="tasks-close-btn" class="p-1 rounded-md text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Formulário de Nova Tarefa -->
+      <div class="p-4 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+        <form id="new-task-form" class="flex gap-2">
+          <input type="text" id="new-task-input" placeholder="Nova tarefa..." class="flex-1 px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-md bg-transparent text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+          <button type="submit" class="px-3 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition flex-shrink-0">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+          </button>
+        </form>
+      </div>
+
+      <!-- Lista de Tarefas -->
+      <div class="flex-1 overflow-y-auto p-4 space-y-2" id="tasks-list-container">
+        <!-- Itens inseridos via JS -->
+      </div>
+      
+      <!-- Footer Actions -->
+      <div class="p-3 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 flex justify-between items-center">
+        <span id="tasks-count" class="text-xs text-slate-500 font-mono">0 / 0 concluídas</span>
+        <button id="clear-completed-tasks-btn" class="text-xs text-red-500 hover:text-red-700 transition" title="Limpar completadas">Limpar Feitas</button>
+      </div>
+    </div>
+
+    <!-- Referência ao script principal da aplicação -->
+    <script src="js/app.js"></script>
   </body>
 </html>
-

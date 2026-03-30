@@ -249,12 +249,18 @@ async function switchDocument(docId) {
   const doc = await getDoc(currentDocId);
   if (doc) {
     editor.value = doc.content || "";
+    // Reseta o protection
+    contentBeforeEdit = editor.value;
     updateStatusBar();
+    
+    // Força repintar linhas mudando counter zero
+    currentRenderedLines = 0;
     updateLineNumbers();
   } else {
     editor.value = "";
   }
   editor.disabled = false;
+  renderSaveStatus("saved");
 }
 
 async function createNewDocument(title = "Novo Documento") {
@@ -272,6 +278,7 @@ async function createNewDocument(title = "Novo Documento") {
   await loadDocumentsList();
   docSelector.value = newDoc.id;
   await switchDocument(newDoc.id);
+  contentBeforeEdit = "";
 }
 
 async function deleteCurrentDocument() {
@@ -316,14 +323,29 @@ async function renameDocument() {
   showMessage(`Documento renomeado para "${newName}"`, 2000);
 }
 
+function renderSaveStatus(state) {
+  if (state === 'unsaved') {
+    saveStatus.innerHTML = `<i data-lucide="circle-dot" class="w-3 h-3 text-amber-500"></i>`;
+  } else if (state === 'saved') {
+    saveStatus.innerHTML = `<i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-500 opacity-60"></i>`;
+  } else if (state === 'error') {
+    saveStatus.textContent = "Nenhum doc ativo."; 
+    return;
+  }
+  lucide.createIcons();
+}
+
 function debounceSave() {
   clearTimeout(saveTimeout);
   if (!editorReady || isSaving) return;
-  saveStatus.textContent = "Salvando...";
+  
+  // Sinaliza visualmente que algo foi digitado e passará a salvar
+  renderSaveStatus("unsaved");
+
   saveTimeout = setTimeout(async () => {
     if (!currentDocId) {
-      saveStatus.textContent = "Nenhum doc ativo.";
-      return;
+       renderSaveStatus("error");
+       return;
     }
     isSaving = true;
     const doc = await getDoc(currentDocId);
@@ -331,10 +353,7 @@ function debounceSave() {
       doc.content = editor.value;
       doc.updatedAt = Date.now();
       await saveDoc(doc);
-      const now = new Date();
-      const hh = String(now.getHours()).padStart(2, '0');
-      const mm = String(now.getMinutes()).padStart(2, '0');
-      saveStatus.textContent = `Salvo às ${hh}:${mm}`;
+      renderSaveStatus("saved");
     }
     isSaving = false;
   }, 1500);
@@ -899,16 +918,23 @@ function scrollToSelection(position) {
   editor.scrollTop = Math.max(0, scrollPosition - editor.clientHeight / 2);
 }
 
+let currentRenderedLines = 0;
+
 function updateLineNumbers() {
-  const lines = editor.value.split('\n');
-  const lineCount = lines.length;
-
-  let html = '';
-  for (let i = 1; i <= lineCount; i++) {
-    html += `<span class="line-number" data-line="${i}">${i}</span>`;
+  const lineCount = editor.value.split('\n').length;
+  
+  // Otimização Extrema de Performance (O(1) na digitação): 
+  // Só recria os elementos do DOM se a quantidade de VERDADE mudou.
+  if (lineCount !== currentRenderedLines) {
+    let html = '';
+    for (let i = 1; i <= lineCount; i++) {
+      html += `<span class="line-number" data-line="${i}">${i}</span>`;
+    }
+    lineNumbers.innerHTML = html;
+    currentRenderedLines = lineCount;
   }
-
-  lineNumbers.innerHTML = html;
+  
+  // Atualiza highlights de multi-cursor.
   highlightSelectedLines();
 }
 
@@ -1350,12 +1376,21 @@ function hideAutocompletePopup() {
 function acceptAutocomplete() {
   if (!acSuggestion) return false;
   const pos = editor.selectionStart;
-  const suffix = acSuggestion.slice(acCurrentWord.length);
+  const text = editor.value;
+  const realCurrentWord = getCurrentWord(text, pos);
+
+  let suffix = acSuggestion;
+  if (acSuggestion.toLowerCase().startsWith(realCurrentWord.toLowerCase())) {
+    suffix = acSuggestion.slice(realCurrentWord.length);
+  }
+
   const before = editor.value.slice(0, pos);
   const after = editor.value.slice(pos);
   editor.value = before + suffix + after;
+  
   const newPos = pos + suffix.length;
   editor.setSelectionRange(newPos, newPos);
+  
   hideAutocompletePopup();
   debounceSave();
   updateStatusBar();
@@ -1668,8 +1703,113 @@ function selectQuickOpenItem(doc) {
   editor.focus();
 }
 
+/* --- PROJECT TASKS --- */
+const TASKS_KEY = "editor-taurus-tasks";
+let projectTasks = [];
+
+function loadTasks() {
+  const data = localStorage.getItem(TASKS_KEY);
+  if (data) {
+    try { projectTasks = JSON.parse(data); } catch(e) { projectTasks = []; }
+  }
+  renderTasks();
+}
+
+function saveTasks() {
+  localStorage.setItem(TASKS_KEY, JSON.stringify(projectTasks));
+  renderTasks();
+}
+
+function renderTasks() {
+  const container = document.getElementById("tasks-list-container");
+  if (!container) return;
+  container.innerHTML = "";
+  let completed = 0;
+  
+  projectTasks.forEach((task, i) => {
+    if (task.done) completed++;
+    
+    const div = document.createElement("div");
+    div.className = `flex items-center gap-3 p-3 rounded-md border text-sm ${task.done ? "bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 opacity-70" : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm"}`;
+    
+    div.innerHTML = `
+      <button class="flex-shrink-0 w-5 h-5 rounded border flex items-center justify-center transition-colors ${task.done ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 dark:border-slate-600 hover:border-emerald-500 dark:hover:border-emerald-500 text-transparent'}" onclick="toggleTask(${i})">
+        <i data-lucide="check" class="w-3 h-3"></i>
+      </button>
+      <span class="flex-1 ${task.done ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-200'}">${escapeHtml(task.title)}</span>
+      <button class="text-slate-400 hover:text-red-500 transition-colors" onclick="deleteTask(${i})" title="Excluir">
+        <i data-lucide="trash-2" class="w-4 h-4"></i>
+      </button>
+    `;
+    container.appendChild(div);
+  });
+  
+  const countEl = document.getElementById("tasks-count");
+  if (countEl) countEl.textContent = `${completed} / ${projectTasks.length} concluídas`;
+  lucide.createIcons({ root: container });
+}
+
+window.toggleTask = function(index) {
+  projectTasks[index].done = !projectTasks[index].done;
+  saveTasks();
+};
+
+window.deleteTask = function(index) {
+  projectTasks.splice(index, 1);
+  saveTasks();
+};
+
+function initTasksSystem() {
+  loadTasks();
+  
+  const drawer = document.getElementById("tasks-drawer");
+  const overlay = document.getElementById("tasks-drawer-overlay");
+  
+  function openDrawer() {
+    overlay.classList.remove("opacity-0", "invisible");
+    drawer.classList.remove("translate-x-full");
+  }
+  
+  function closeDrawer() {
+    overlay.classList.add("opacity-0", "invisible");
+    drawer.classList.add("translate-x-full");
+  }
+  
+  const tasksBtn = document.getElementById("tasks-btn");
+  if (tasksBtn) tasksBtn.addEventListener("click", openDrawer);
+  
+  const tasksCloseBtn = document.getElementById("tasks-close-btn");
+  if (tasksCloseBtn) tasksCloseBtn.addEventListener("click", closeDrawer);
+  
+  if (overlay) overlay.addEventListener("click", closeDrawer);
+  
+  const taskForm = document.getElementById("new-task-form");
+  if (taskForm) {
+    taskForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const input = document.getElementById("new-task-input");
+      const val = input.value.trim();
+      if (!val) return;
+      
+      projectTasks.push({ title: val, done: false, id: Date.now() });
+      input.value = "";
+      saveTasks();
+    });
+  }
+  
+  const clearBtn = document.getElementById("clear-completed-tasks-btn");
+  if (clearBtn) {
+    clearBtn.addEventListener("click", () => {
+      projectTasks = projectTasks.filter(t => !t.done);
+      saveTasks();
+    });
+  }
+}
+
 /* --- Inicialização --- */
 document.addEventListener("DOMContentLoaded", async () => {
+  initThemeSystem();
+  initTasksSystem();
   loadTheme();
   lucide.createIcons();
   loadRulerPosition();
