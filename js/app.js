@@ -1749,6 +1749,18 @@ function renderTasks() {
   
   const countEl = document.getElementById("tasks-count");
   if (countEl) countEl.textContent = `${completed} / ${projectTasks.length} concluídas`;
+  
+  const badge = document.getElementById("tasks-badge");
+  if (badge) {
+    const uncompleted = projectTasks.length - completed;
+    if (uncompleted > 0) {
+      badge.textContent = uncompleted > 99 ? '99+' : uncompleted;
+      badge.classList.remove("hidden");
+    } else {
+      badge.classList.add("hidden");
+    }
+  }
+  
   lucide.createIcons({ root: container });
 }
 
