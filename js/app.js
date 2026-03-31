@@ -212,8 +212,13 @@ const multiActionsModalOverlay = document.getElementById("multi-actions-modal-ov
 const multiSelectionIndicator = document.getElementById("multi-selection-indicator");
 const multiSelectionText = document.getElementById("multi-selection-text");
 const lineNumbers = document.getElementById("line-numbers");
+const tabsBar = document.getElementById("tabs-bar");
+const emptyStateContainer = document.getElementById("empty-state-container");
+const editorWrapper = document.getElementById("editor-wrapper");
+const tabNewBtn = document.getElementById("tab-new-btn");
 
 let currentDocId = null;
+let openTabs = JSON.parse(localStorage.getItem("openTabs") || "[]");
 let saveTimeout = null;
 let isSaving = false;
 let editorReady = false;
@@ -241,26 +246,120 @@ async function loadDocumentsList() {
 }
 
 async function switchDocument(docId) {
-  if (currentDocId === docId) return;
+  if (!docId) {
+    currentDocId = null;
+    updateEmptyState();
+    return;
+  }
+
+  // Adiciona à lista de abas se não estiver lá
+  if (!openTabs.includes(docId)) {
+    openTabs.push(docId);
+    saveOpenTabs();
+  }
+
+  if (currentDocId === docId) {
+    updateEmptyState();
+    renderTabs();
+    return;
+  }
+
   currentDocId = docId;
   localStorage.setItem(`lastDocId`, docId);
+  
+  updateEmptyState();
+  renderTabs();
+
   editor.value = "Carregando...";
   editor.disabled = true;
+  
   const doc = await getDoc(currentDocId);
   if (doc) {
     editor.value = doc.content || "";
-    // Reseta o protection
     contentBeforeEdit = editor.value;
     updateStatusBar();
     
-    // Força repintar linhas mudando counter zero
     currentRenderedLines = 0;
     updateLineNumbers();
+    
+    // Sincroniza o dropdown
+    if (docSelector.value !== docId) {
+      docSelector.value = docId;
+    }
   } else {
-    editor.value = "";
+    // Se o documento não existe mais, remove a aba
+    closeTab(docId);
+    return;
   }
+  
   editor.disabled = false;
   renderSaveStatus("saved");
+}
+
+/* --- Sistema de Abas (Tabs Logic) --- */
+function saveOpenTabs() {
+  localStorage.setItem("openTabs", JSON.stringify(openTabs));
+}
+
+async function renderTabs() {
+  if (!tabsBar) return;
+  
+  // Limpa apenas os itens de tab, mantém o botão de (+)
+  const existingTabs = tabsBar.querySelectorAll('.document-tab');
+  existingTabs.forEach(t => t.remove());
+
+  const docs = await getAllDocs();
+  
+  openTabs.forEach(docId => {
+    const doc = docs.find(d => d.id === docId);
+    if (!doc) return;
+
+    const tab = document.createElement("div");
+    tab.className = `document-tab ${currentDocId === docId ? 'active' : ''}`;
+    tab.innerHTML = `
+      <span class="tab-title-text">${escapeHtml(doc.name)}</span>
+      <button class="tab-close-btn" onclick="event.stopPropagation(); closeTab('${docId}')">
+        <i data-lucide="x" class="w-3 h-3"></i>
+      </button>
+    `;
+    
+    tab.onclick = () => switchDocument(docId);
+    tabsBar.insertBefore(tab, tabNewBtn);
+  });
+  
+  lucide.createIcons({ root: tabsBar });
+}
+
+window.closeTab = function(docId) {
+  openTabs = openTabs.filter(id => id !== docId);
+  saveOpenTabs();
+  
+  if (currentDocId === docId) {
+    if (openTabs.length > 0) {
+      switchDocument(openTabs[openTabs.length - 1]);
+    } else {
+      switchDocument(null);
+    }
+  } else {
+    renderTabs();
+  }
+};
+
+function updateEmptyState() {
+  if (!currentDocId) {
+    emptyStateContainer.classList.remove("hidden");
+    emptyStateContainer.classList.add("flex");
+    editorWrapper.classList.add("hidden");
+    // Oculta status bar e line numbers para limpeza visual
+    document.querySelector(".status-bar").classList.add("hidden");
+    lineNumbers.classList.add("hidden");
+  } else {
+    emptyStateContainer.classList.add("hidden");
+    emptyStateContainer.classList.remove("flex");
+    editorWrapper.classList.remove("hidden");
+    document.querySelector(".status-bar").classList.remove("hidden");
+    lineNumbers.classList.remove("hidden");
+  }
 }
 
 async function createNewDocument(title = "Novo Documento") {
@@ -286,9 +385,10 @@ async function deleteCurrentDocument() {
   const docTitle = docSelector.options[docSelector.selectedIndex].text;
   const confirmed = await customConfirm("Excluir Documento", `Tem certeza que deseja apagar "${docTitle}"? Esta ação é definitiva.`);
   if (confirmed) {
-    await deleteDocById(currentDocId);
+    const idToDelete = currentDocId;
+    await deleteDocById(idToDelete);
     showMessage("Documento excluído.");
-    currentDocId = null;
+    closeTab(idToDelete); // Isso já vai cuidar de trocar o doc se necessário
     await loadDocumentsList();
   }
 }
@@ -610,6 +710,8 @@ function addEventListeners() {
     if (e.key === "Escape") closeModal(gotoOverlay);
   });
   gotoOverlay.addEventListener("click", (e) => e.target === gotoOverlay && closeModal(gotoOverlay));
+
+  tabNewBtn.addEventListener("click", () => createNewDocument());
 
   shortcutsModalOverlay.addEventListener("click", (e) =>
     e.target === shortcutsModalOverlay && closeModal(shortcutsModalOverlay)

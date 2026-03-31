@@ -1,4 +1,4 @@
-const CACHE_NAME = "editor-taurus-v9";
+const CACHE_NAME = "editor-taurus-v10";
 const ASSETS = [
   "./index.html",
   "./css/main.css",
