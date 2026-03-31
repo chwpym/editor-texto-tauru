@@ -330,7 +330,13 @@ async function renderTabs() {
   lucide.createIcons({ root: tabsBar });
 }
 
-window.closeTab = function(docId) {
+window.closeTab = async function(docId) {
+  // Se estivermos fechando o documento atual, garante que salvamos qualquer alteração pendente primeiro
+  if (currentDocId === docId && saveTimeout) {
+    clearTimeout(saveTimeout);
+    await saveCurrentDocument();
+  }
+
   openTabs = openTabs.filter(id => id !== docId);
   saveOpenTabs();
   
@@ -435,6 +441,23 @@ function renderSaveStatus(state) {
   lucide.createIcons();
 }
 
+async function saveCurrentDocument() {
+  if (!currentDocId) {
+    renderSaveStatus("error");
+    return;
+  }
+  isSaving = true;
+  const doc = await getDoc(currentDocId);
+  if (doc) {
+    doc.content = editor.value;
+    doc.updatedAt = Date.now();
+    await saveDoc(doc);
+    renderSaveStatus("saved");
+  }
+  isSaving = false;
+  saveTimeout = null; // Limpa a referência do timeout após salvar com sucesso
+}
+
 function debounceSave() {
   clearTimeout(saveTimeout);
   if (!editorReady || isSaving) return;
@@ -442,21 +465,7 @@ function debounceSave() {
   // Sinaliza visualmente que algo foi digitado e passará a salvar
   renderSaveStatus("unsaved");
 
-  saveTimeout = setTimeout(async () => {
-    if (!currentDocId) {
-       renderSaveStatus("error");
-       return;
-    }
-    isSaving = true;
-    const doc = await getDoc(currentDocId);
-    if (doc) {
-      doc.content = editor.value;
-      doc.updatedAt = Date.now();
-      await saveDoc(doc);
-      renderSaveStatus("saved");
-    }
-    isSaving = false;
-  }, 1500);
+  saveTimeout = setTimeout(saveCurrentDocument, 1500);
 }
 
 /* --- Editor Features --- */
