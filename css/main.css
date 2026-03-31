@@ -186,6 +186,7 @@ body {
   font-family: "Roboto Mono", monospace;
   resize: none;
   padding-left: 48px !important;
+  scroll-padding-left: 48px !important; /* Fix block bug on side scroll (HOME / END) */
   white-space: pre;
   overflow: auto;
   font-size: 16px;
