@@ -617,4 +617,52 @@ html.dark #quickopen-list li.active {
   to { transform: translateY(0); opacity: 1; }
 }
 
+/* ========================================
+   AI ASSISTANT STYLES (v12.5)
+   ======================================== */
+
+#floating-ai-menu {
+  backdrop-filter: blur(8px);
+  background-color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.2);
+}
+
+html.dark #floating-ai-menu {
+  background-color: rgba(15, 23, 42, 0.9);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.ai-action-item {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ai-action-item:active {
+  transform: scale(0.95);
+}
+
+/* Animação de processamento Glow */
+@keyframes ai-glow {
+  0% { box-shadow: 0 0 5px rgba(168, 85, 247, 0.2); }
+  50% { box-shadow: 0 0 20px rgba(168, 85, 247, 0.5); }
+  100% { box-shadow: 0 0 5px rgba(168, 85, 247, 0.2); }
+}
+
+.ai-processing {
+  animation: ai-glow 2s infinite;
+  border-color: #a855f7 !important;
+}
+
+/* Custom Scrollbar para os menus de IA */
+#floating-ai-menu::-webkit-scrollbar {
+  width: 4px;
+}
+#floating-ai-menu::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+html.dark #floating-ai-menu::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
 
