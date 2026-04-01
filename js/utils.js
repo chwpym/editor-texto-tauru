@@ -2,6 +2,8 @@
    UTILS - Diálogos e Helpers Genéricos
    ======================================== */
 
+import * as ui from './ui.js';
+
 /**
  * Caixa de confirmação customizada (substitui confirm() nativo)
  */
@@ -15,15 +17,15 @@ export function customConfirm(title, message) {
 
     titleEl.textContent = title;
     messageEl.textContent = message;
-    overlay.classList.add("show");
+    ui.openModal(overlay);
 
     const handleOk = () => {
-      overlay.classList.remove("show");
+      ui.closeModal(overlay);
       cleanup();
       resolve(true);
     };
     const handleCancel = () => {
-      overlay.classList.remove("show");
+      ui.closeModal(overlay);
       cleanup();
       resolve(false);
     };
@@ -47,30 +49,29 @@ export function customPrompt(title, message, defaultValue = "") {
     const messageEl = document.getElementById("prompt-modal-message");
     const inputEl = document.getElementById("prompt-modal-input");
     const okBtn = document.getElementById("prompt-modal-ok-btn");
-    const cancelBtn = document.getElementById("confirm-modal-cancel-btn"); // Ajustado seletor se necessário
+    const cancelBtn = document.getElementById("prompt-modal-cancel-btn");
 
     titleEl.textContent = title;
     messageEl.textContent = message;
     inputEl.value = defaultValue;
-    overlay.classList.add("show");
+    ui.openModal(overlay);
 
     setTimeout(() => inputEl.focus(), 100);
 
     const handleOk = () => {
       const val = inputEl.value;
-      overlay.classList.remove("show");
+      ui.closeModal(overlay);
       cleanup();
       resolve(val);
     };
     const handleCancel = () => {
-      overlay.classList.remove("show");
+      ui.closeModal(overlay);
       cleanup();
       resolve(null);
     };
     const cleanup = () => {
       okBtn.removeEventListener("click", handleOk);
-      const cancelBtnPrompt = document.getElementById("prompt-modal-cancel-btn");
-      if(cancelBtnPrompt) cancelBtnPrompt.removeEventListener("click", handleCancel);
+      cancelBtn.removeEventListener("click", handleCancel);
       inputEl.removeEventListener("keydown", handleKey);
     };
     const handleKey = (e) => {
@@ -79,26 +80,16 @@ export function customPrompt(title, message, defaultValue = "") {
     };
 
     okBtn.addEventListener("click", handleOk);
-    const cancelBtnMain = document.getElementById("prompt-modal-cancel-btn") || cancelBtn;
-    cancelBtnMain.addEventListener("click", handleCancel);
+    cancelBtn.addEventListener("click", handleCancel);
     inputEl.addEventListener("keydown", handleKey);
   });
 }
 
 /**
- * Exibe mensagem toast rápida
+ * Exibe mensagem toast rápida (repassa para ui.js)
  */
-export function showMessage(text, duration = 3000) {
-  const messageBox = document.getElementById("message-box");
-  if (!messageBox) return;
-  messageBox.textContent = text;
-  messageBox.style.opacity = "1";
-  messageBox.style.transform = "translateX(-50%) translateY(0)";
-
-  setTimeout(() => {
-    messageBox.style.opacity = "0";
-    messageBox.style.transform = "translateX(-50%) translateY(100px)";
-  }, duration);
+export function showMessage(text, type = "info") {
+  ui.showMessage(text, type);
 }
 
 /**

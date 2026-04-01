@@ -130,8 +130,15 @@ function setupEventListeners() {
     }
   });
 
-  // Outros botões...
-  document.getElementById("new-doc-btn").addEventListener("click", () => docs.createNewDocument("Novo Documento", state));
+  // Outros botões de Documentos
+  const createNew = () => docs.createNewDocument("Novo Documento", state);
+  
+  document.getElementById("new-doc-btn").addEventListener("click", createNew);
+  if (state.tabNewBtn) state.tabNewBtn.addEventListener("click", createNew);
+  
+  const emptyNewBtn = document.getElementById("empty-state-new-btn");
+  if (emptyNewBtn) emptyNewBtn.addEventListener("click", createNew);
+
   document.getElementById("rename-doc-btn").addEventListener("click", () => docs.renameCurrentDocument(state.currentDocId, state.docSelector));
   document.getElementById("delete-doc-btn").addEventListener("click", deleteCurrentDoc);
   
