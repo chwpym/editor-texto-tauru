@@ -1,6 +1,8 @@
 /* ========================================
    EDITOR DE CÓDIGO - ESTILOS PRINCIPAIS
    ======================================== */
+@import "tailwindcss";
+
 
 /* Variável CSS para a coluna da régua */
 :root {

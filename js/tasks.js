@@ -2,6 +2,8 @@
    TASKS - Gerenciador de Tarefas (Drawer)
    ======================================== */
 
+import { createIcons, icons } from 'lucide';
+
 const TASKS_KEY = "editor-taurus-tasks";
 let projectTasks = [];
 
@@ -60,7 +62,7 @@ export function renderTasks() {
   
   updateTasksBadge(completed, projectTasks.length);
   
-  if (window.lucide) window.lucide.createIcons({ root: container });
+  createIcons({ icons, nameAttr: 'data-lucide', root: container });
 }
 
 function updateTasksBadge(completed, total) {

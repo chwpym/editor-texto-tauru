@@ -86,3 +86,40 @@ export function deleteDocById(id) {
     });
   });
 }
+
+/**
+ * Exporta todos os documentos para JSON
+ */
+export async function exportAllDocs() {
+  const docs = await getAllDocs();
+  const blob = new Blob([JSON.stringify(docs, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `backup_taurus_${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Importa documentos a partir de um arquivo JSON
+ */
+export async function importDocs(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const docs = JSON.parse(e.target.result);
+        if (!Array.isArray(docs)) throw new Error("Formato de backup inválido");
+        for (const doc of docs) {
+          if (doc.id && doc.name) await saveDoc(doc);
+        }
+        resolve(docs.length);
+      } catch (err) {
+        reject(err);
+      }
+    };
+    reader.onerror = reject;
+    reader.readAsText(file);
+  });
+}

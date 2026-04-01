@@ -2,6 +2,8 @@
    UI - Interface do Usuário (Helpers) 🎨
    ======================================== */
 
+import { createIcons, icons } from 'lucide';
+
 /**
  * Abre um modal com animação
  */
@@ -44,7 +46,7 @@ export function renderSaveStatus(status) {
   } else {
     el.innerHTML = '<i data-lucide="circle-dashed" class="w-3 h-3 text-slate-400"></i> Não Salvo';
   }
-  if (window.lucide) window.lucide.createIcons();
+  createIcons({ icons, nameAttr: 'data-lucide' });
 }
 
 /**

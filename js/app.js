@@ -13,6 +13,7 @@ import * as tasks from './tasks.js';
 import * as shortcuts from './shortcuts.js';
 import * as ai from './ai.js';
 import { THEMES, applyTheme, initThemeSystem } from './theme.js';
+import { createIcons, icons } from 'lucide';
 
 // Estado Global da Aplicação
 const state = {
@@ -141,6 +142,70 @@ function setupEventListeners() {
 
   document.getElementById("rename-doc-btn").addEventListener("click", () => docs.renameCurrentDocument(state.currentDocId, state.docSelector));
   document.getElementById("delete-doc-btn").addEventListener("click", deleteCurrentDoc);
+  
+  // Modals and Tools Events
+  document.getElementById("theme-picker-btn").addEventListener("click", openThemePicker);
+  
+  document.getElementById("tasks-btn").addEventListener("click", () => {
+    const overlay = document.getElementById("tasks-drawer-overlay");
+    const drawer = document.getElementById("tasks-drawer");
+    overlay.classList.remove("invisible");
+    overlay.style.opacity = "1";
+    drawer.classList.add("active");
+  });
+  
+  document.getElementById("tasks-close-btn").addEventListener("click", () => {
+    const overlay = document.getElementById("tasks-drawer-overlay");
+    const drawer = document.getElementById("tasks-drawer");
+    overlay.style.opacity = "0";
+    drawer.classList.remove("active");
+    setTimeout(() => overlay.classList.add("invisible"), 300);
+  });
+  
+  document.getElementById("tasks-drawer-overlay").addEventListener("click", () => document.getElementById("tasks-close-btn").click());
+
+  document.getElementById("find-replace-btn").addEventListener("click", () => ui.openModal(document.getElementById("find-replace-modal-overlay")));
+  document.getElementById("show-shortcuts-btn").addEventListener("click", () => ui.openModal(document.getElementById("shortcuts-modal-overlay")));
+  document.getElementById("help-btn").addEventListener("click", () => ui.openModal(document.getElementById("help-modal-overlay")));
+  document.getElementById("personal-dict-btn").addEventListener("click", () => ui.openModal(document.getElementById("personal-dict-modal-overlay")));
+  
+  document.getElementById("export-db-btn").addEventListener("click", () => db.exportAllDocs());
+  
+  const importInput = document.getElementById("import-db-input");
+  document.getElementById("import-db-btn").addEventListener("click", () => importInput.click());
+  importInput.addEventListener("change", async (e) => {
+    if (e.target.files.length > 0) {
+      try {
+        const count = await db.importDocs(e.target.files[0]);
+        ui.showMessage(`${count} documentos restaurados com sucesso!`, "success");
+        await docs.loadDocumentsList(state.docSelector);
+      } catch (err) {
+        ui.showMessage("Erro ao importar backup: " + err.message, "error");
+      }
+      e.target.value = "";
+    }
+  });
+  
+  document.getElementById("download-btn").addEventListener("click", () => {
+    if(!state.currentDocId) return;
+    const text = state.editor.value;
+    const btn = document.getElementById("doc-selector");
+    const name = btn.options[btn.selectedIndex]?.text || "documento";
+    const blob = new Blob([text], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${name}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+  
+  document.getElementById("typewriter-btn").addEventListener("click", () => core.toggleTypewriterMode(state.editor));
+  
+  document.getElementById("ruler-toggle-btn").addEventListener("click", () => state.rulerLine.classList.toggle("hidden"));
+  state.rulerColumnInput.addEventListener("change", () => core.updateRulerPosition(state.rulerColumnInput, state.rulerLine));
+
+  createIcons({ icons, nameAttr: 'data-lucide' });
   
   state.editor.addEventListener("input", handleEditorInput);
   state.editor.addEventListener("scroll", () => {
