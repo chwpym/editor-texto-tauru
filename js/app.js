@@ -45,7 +45,10 @@ const state = {
  * Inicialização do Editor
  */
 async function init() {
-  console.log("Iniciando Editor Taurus v12...");
+  const APP_VERSION = "v12";
+  console.log(`Iniciando Editor Taurus ${APP_VERSION}...`);
+  const versionEl = document.getElementById("app-version");
+  if (versionEl) versionEl.textContent = APP_VERSION;
 
   // 1. Banco de Dados e Documentos
   const allDocs = await docs.loadDocumentsList(state.docSelector);
