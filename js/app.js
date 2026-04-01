@@ -15,43 +15,56 @@ import * as ai from './ai.js';
 import { THEMES, applyTheme, initThemeSystem } from './theme.js';
 import { createIcons, icons } from 'lucide';
 
-// Estado Global da Aplicação
 const state = {
   currentDocId: null,
-  openTabs: tabs.getOpenTabsFromStorage(),
+  openTabs: [],
   contentBeforeEdit: "",
   editorReady: false,
   saveTimeout: null,
   isSaving: false,
   aiEnabled: false,
   
-  // Elementos do DOM
-  editor: document.getElementById("editor"),
-  lineNumbers: document.getElementById("line-numbers"),
-  docSelector: document.getElementById("doc-selector"),
-  tabsBar: document.getElementById("tabs-bar"),
-  tabNewBtn: document.getElementById("tab-new-btn"),
-  rulerLine: document.getElementById("ruler-line"),
-  rulerColumnInput: document.getElementById("ruler-column-input"),
+  // Referências que serão preenchidas no init
+  editor: null,
+  lineNumbers: null,
+  docSelector: null,
+  tabsBar: null,
+  tabNewBtn: null,
+  rulerLine: null,
+  rulerColumnInput: null,
   
   metrics: {
-    fileSize: document.getElementById("file-size"),
-    wordCount: document.getElementById("word-count"),
-    charCount: document.getElementById("char-count"),
-    lineCount: document.getElementById("line-count"),
-    cursorPos: document.getElementById("cursor-pos")
+    fileSize: null,
+    wordCount: null,
+    charCount: null,
+    lineCount: null,
+    cursorPos: null
   }
 };
 
-/**
- * Inicialização
- */
 async function init() {
   const APP_VERSION = "v12.5";
   console.log(`Iniciando Editor Taurus ${APP_VERSION}...`);
+  
+  // Mapeamento de Elementos
+  state.editor = document.getElementById("editor");
+  state.lineNumbers = document.getElementById("line-numbers");
+  state.docSelector = document.getElementById("doc-selector");
+  state.tabsBar = document.getElementById("tabs-bar");
+  state.tabNewBtn = document.getElementById("tab-new-btn");
+  state.rulerLine = document.getElementById("ruler-line");
+  state.rulerColumnInput = document.getElementById("ruler-column-input");
+  
+  state.metrics.fileSize = document.getElementById("file-size");
+  state.metrics.wordCount = document.getElementById("word-count");
+  state.metrics.charCount = document.getElementById("char-count");
+  state.metrics.lineCount = document.getElementById("line-count");
+  state.metrics.cursorPos = document.getElementById("cursor-pos");
+
   const versionEl = document.getElementById("app-version");
   if (versionEl) versionEl.textContent = APP_VERSION;
 
+  state.openTabs = tabs.getOpenTabsFromStorage();
   const allDocs = await docs.loadDocumentsList(state.docSelector);
   const lastDocId = localStorage.getItem("lastDocId") || (allDocs.length > 0 ? allDocs[0].id : null);
   
@@ -139,6 +152,22 @@ function setupEventListeners() {
   
   const emptyNewBtn = document.getElementById("empty-state-new-btn");
   if (emptyNewBtn) emptyNewBtn.addEventListener("click", createNew);
+
+  // Tabs Events Delegation
+  state.tabsBar.addEventListener("click", (e) => {
+    const tab = e.target.closest(".document-tab");
+    const closeBtn = e.target.closest(".tab-close-btn");
+    
+    if (closeBtn) {
+      e.stopPropagation();
+      window.closeTab(closeBtn.dataset.docId);
+      return;
+    }
+    
+    if (tab) {
+      docs.switchDocument(tab.dataset.docId, state);
+    }
+  });
 
   document.getElementById("rename-doc-btn").addEventListener("click", () => docs.renameCurrentDocument(state.currentDocId, state.docSelector));
   document.getElementById("delete-doc-btn").addEventListener("click", deleteCurrentDoc);

@@ -1,6 +1,4 @@
-/* ========================================
-   TABS - Gerenciamento de Abas/Guias
-   ======================================== */
+import { createIcons, icons } from 'lucide';
 
 /**
  * Inicializa lista de abas abertas
@@ -47,5 +45,5 @@ export async function renderTabs(tabsBar, openTabs, currentDocId, dbFuncs, tabNe
     tabsBar.insertBefore(tab, tabNewBtn);
   });
 
-  if (window.lucide) window.lucide.createIcons({ root: tabsBar });
+  createIcons({ icons, nameAttr: 'data-lucide', root: tabsBar });
 }
