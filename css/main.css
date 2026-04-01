@@ -618,23 +618,70 @@ html.dark #quickopen-list li.active {
 }
 
 /* ========================================
-   AI ASSISTANT STYLES (v12.5)
+   TASKS DRAWER
+   ======================================== */
+
+#tasks-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 40;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s;
+}
+
+#tasks-drawer-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+#tasks-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 320px;
+  background-color: var(--theme-editor-bg);
+  box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+  z-index: 50;
+  transform: translateX(100%);
+  transition: transform 0.3s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--theme-border);
+}
+
+#tasks-drawer.active {
+  transform: translateX(0);
+}
+
+/* ========================================
+   AI ASSISTANT & MODAL THEMING (v12.5)
    ======================================== */
 
 #floating-ai-menu {
-  backdrop-filter: blur(8px);
-  background-color: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(12px);
+  background-color: var(--theme-toolbar-bg);
+  border: 1px solid var(--theme-border);
+  box-shadow: 0 10px 40px -5px rgba(0, 0, 0, 0.4);
+  color: var(--theme-editor-text);
 }
 
-html.dark #floating-ai-menu {
-  background-color: rgba(15, 23, 42, 0.9);
-  border-color: rgba(255, 255, 255, 0.1);
+#floating-ai-menu .ai-action-item:hover {
+  background-color: rgba(168, 85, 247, 0.15);
+}
+
+.modal-content {
+  background-color: var(--theme-editor-bg) !important;
+  color: var(--theme-editor-text) !important;
+  border: 1px solid var(--theme-border) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
 .ai-action-item {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  color: var(--theme-editor-text) !important;
 }
 
 .ai-action-item:active {
@@ -658,11 +705,8 @@ html.dark #floating-ai-menu {
   width: 4px;
 }
 #floating-ai-menu::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--theme-border);
   border-radius: 10px;
-}
-html.dark #floating-ai-menu::-webkit-scrollbar-thumb {
-  background: #334155;
 }
 
 
