@@ -13,7 +13,22 @@ import * as tasks from './tasks.js';
 import * as shortcuts from './shortcuts.js';
 import * as ai from './ai.js';
 import { THEMES, applyTheme, initThemeSystem } from './theme.js';
-import { createIcons, icons } from 'lucide';
+import { createIcons, 
+  FilePlus2, Edit3, Trash2, Download, Search, Ruler, Palette, CheckSquare, 
+  Keyboard, HelpCircle, DownloadCloud, UploadCloud, BookMarked, AlignCenter, 
+  Sparkles, Settings2, X, Plus, FolderCode, FilePlus, CircleDashed, CornerDownLeft, 
+  Cpu, Key, BookOpen, WandSparkles, MousePointer2, CheckCircle2, Replace, Type, Trash, Check, Edit2
+} from 'lucide';
+
+import '../css/main.css';
+
+const icons = {
+  FilePlus2, Edit3, Trash2, Download, Search, Ruler, Palette, CheckSquare, 
+  Keyboard, HelpCircle, DownloadCloud, UploadCloud, BookMarked, AlignCenter, 
+  Sparkles, Settings2, X, Plus, FolderCode, FilePlus, CircleDashed, CornerDownLeft, 
+  Cpu, Key, BookOpen, WandSparkles, MousePointer2, CheckCircle2, Replace, Type, Trash
+};
+
 
 const state = {
   currentDocId: null,
@@ -94,20 +109,25 @@ function setupEventListeners() {
   
   const aiToggle = document.getElementById("ai-toggle-switch");
   const aiActionsBtn = document.getElementById("ai-actions-btn");
-  const aiStatusText = aiToggle.parentElement.nextElementSibling;
+  const aiStatusText = aiToggle?.parentElement?.nextElementSibling;
 
-  aiToggle.addEventListener("change", (e) => {
-    state.aiEnabled = e.target.checked;
-    aiStatusText.textContent = state.aiEnabled ? "IA ON" : "IA OFF";
-    aiStatusText.classList.toggle("text-purple-500", state.aiEnabled);
-    aiActionsBtn.disabled = !state.aiEnabled;
-    aiActionsBtn.classList.toggle("opacity-50", !state.aiEnabled);
-    aiActionsBtn.classList.toggle("cursor-not-allowed", !state.aiEnabled);
-    
-    if (!state.aiEnabled) {
-       document.getElementById("floating-ai-menu").classList.add("hidden");
-    }
-  });
+  if (aiToggle) {
+    aiToggle.addEventListener("change", (e) => {
+      state.aiEnabled = e.target.checked;
+      if (aiStatusText) {
+        aiStatusText.textContent = state.aiEnabled ? "IA ON" : "IA OFF";
+        aiStatusText.classList.toggle("text-purple-500", state.aiEnabled);
+      }
+      aiActionsBtn.disabled = !state.aiEnabled;
+      aiActionsBtn.classList.toggle("opacity-50", !state.aiEnabled);
+      aiActionsBtn.classList.toggle("cursor-not-allowed", !state.aiEnabled);
+      
+      if (!state.aiEnabled) {
+         document.getElementById("floating-ai-menu").classList.add("hidden");
+      }
+    });
+  }
+
 
   document.getElementById("ai-config-btn").addEventListener("click", () => {
     document.getElementById("openai-key-input").value = ai.getApiKey();
@@ -187,9 +207,38 @@ function setupEventListeners() {
   document.getElementById("tasks-drawer-overlay").addEventListener("click", () => document.getElementById("tasks-close-btn").click());
 
   document.getElementById("find-replace-btn").addEventListener("click", () => ui.openModal(document.getElementById("find-replace-modal-overlay")));
+  document.getElementById("find-replace-modal-close-btn").addEventListener("click", () => ui.closeModal(document.getElementById("find-replace-modal-overlay")));
+
   document.getElementById("show-shortcuts-btn").addEventListener("click", () => ui.openModal(document.getElementById("shortcuts-modal-overlay")));
+  document.getElementById("shortcuts-modal-close-btn").addEventListener("click", () => ui.closeModal(document.getElementById("shortcuts-modal-overlay")));
+
   document.getElementById("help-btn").addEventListener("click", () => ui.openModal(document.getElementById("help-modal-overlay")));
+  document.getElementById("guide-modal-close-btn").addEventListener("click", () => ui.closeModal(document.getElementById("help-modal-overlay")));
+  document.getElementById("help-close-guide-btn").addEventListener("click", () => ui.closeModal(document.getElementById("help-modal-overlay")));
+
   document.getElementById("personal-dict-btn").addEventListener("click", () => ui.openModal(document.getElementById("personal-dict-modal-overlay")));
+  document.getElementById("personal-dict-modal-close-btn").addEventListener("click", () => ui.closeModal(document.getElementById("personal-dict-modal-overlay")));
+
+  document.getElementById("theme-modal-close-btn").addEventListener("click", () => ui.closeModal(document.getElementById("theme-modal-overlay")));
+  
+  // Modais de Confirmação e Prompt
+  document.getElementById("confirm-modal-cancel-btn").addEventListener("click", () => ui.closeModal(document.getElementById("confirm-modal-overlay")));
+  document.getElementById("prompt-modal-cancel-btn").addEventListener("click", () => ui.closeModal(document.getElementById("prompt-modal-overlay")));
+
+  // Submissão do Formulário de Tarefas
+  const taskForm = document.getElementById("new-task-form");
+  if (taskForm) {
+    taskForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const input = document.getElementById("new-task-input");
+      if (input && input.value.trim()) {
+        window.addNewTask(input.value.trim());
+        input.value = "";
+      }
+
+    });
+  }
+
   
   document.getElementById("export-db-btn").addEventListener("click", () => db.exportAllDocs());
   
