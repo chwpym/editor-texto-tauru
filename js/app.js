@@ -89,13 +89,9 @@ async function init() {
   }
 }
 
-/**
- * Eventos
- */
 function setupEventListeners() {
   state.docSelector.addEventListener("change", (e) => docs.switchDocument(e.target.value, state));
   
-  // Toolbar AI
   const aiToggle = document.getElementById("ai-toggle-switch");
   const aiActionsBtn = document.getElementById("ai-actions-btn");
   const aiStatusText = aiToggle.parentElement.nextElementSibling;
@@ -133,7 +129,6 @@ function setupEventListeners() {
     }
   });
 
-  // Ações de IA (Event Delegation para Menu Flutuante e Toolbar)
   document.addEventListener("click", async (e) => {
     const actionItem = e.target.closest(".ai-action-item") || (e.target.closest("#ai-actions-btn") ? { dataset: { action: "improve" } } : null);
     
@@ -144,7 +139,6 @@ function setupEventListeners() {
     }
   });
 
-  // Outros botões de Documentos
   const createNew = () => docs.createNewDocument("Novo Documento", state);
   
   document.getElementById("new-doc-btn").addEventListener("click", createNew);
@@ -172,7 +166,6 @@ function setupEventListeners() {
   document.getElementById("rename-doc-btn").addEventListener("click", () => docs.renameCurrentDocument(state.currentDocId, state.docSelector));
   document.getElementById("delete-doc-btn").addEventListener("click", deleteCurrentDoc);
   
-  // Modals and Tools Events
   document.getElementById("theme-picker-btn").addEventListener("click", openThemePicker);
   
   document.getElementById("tasks-btn").addEventListener("click", () => {
@@ -249,9 +242,6 @@ function setupEventListeners() {
   });
 }
 
-/**
- * Lógica das Ações de IA
- */
 async function handleAiAction(action) {
   if (!ai.getApiKey()) {
     ui.showMessage("Configure sua API Key primeiro!", "error");
@@ -315,7 +305,6 @@ async function saveNow() {
 }
 
 function openThemePicker() {
-  // ... (mesmo do app.js anterior)
   const grid = document.getElementById("theme-cards-grid");
   const activeId = localStorage.getItem("selectedTheme") || "taurus";
   grid.innerHTML = THEMES.map(t => `<button class="theme-card ${t.id === activeId ? 'active' : ''} bg-slate-100 dark:bg-slate-700/50 text-left w-full p-2 rounded-md" data-theme-id="${t.id}"><div class="text-xs font-semibold text-center mb-1">${t.name}</div><div class="h-8 rounded" style="background:${t.editorBg}"></div></button>`).join("");
