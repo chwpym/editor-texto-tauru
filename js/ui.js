@@ -9,12 +9,7 @@ import { createIcons, icons } from 'lucide';
  */
 export function openModal(overlay) {
   if (!overlay) return;
-  overlay.classList.remove("invisible");
-  overlay.style.opacity = "1";
-  const content = overlay.querySelector(".modal-content");
-  if (content) {
-    content.style.transform = "translateY(0)";
-  }
+  overlay.classList.add("show");
 }
 
 /**
@@ -22,11 +17,7 @@ export function openModal(overlay) {
  */
 export function closeModal(overlay) {
   if (!overlay) return;
-  overlay.style.opacity = "0";
-  const content = overlay.querySelector(".modal-content");
-  if (content) {
-    content.style.transform = "translateY(-20px)";
-  }
+  overlay.classList.remove("show");
   setTimeout(() => {
     overlay.classList.add("invisible");
   }, 300);
@@ -143,24 +134,29 @@ function getCursorXY(textarea, selectionEnd) {
 export function updateEmptyState(currentDocId) {
   const emptyStateContainer = document.getElementById("empty-state-container");
   const editorWrapper = document.getElementById("editor-wrapper");
-  const lineNumbers = document.getElementById("line-numbers");
   const statusBar = document.querySelector(".status-bar");
   
   if (!currentDocId) {
     if (emptyStateContainer) {
       emptyStateContainer.classList.remove("hidden");
-      emptyStateContainer.classList.add("flex");
+      emptyStateContainer.style.display = "flex";
+      emptyStateContainer.style.height = "100%"; // Ocupa todo o espaço
     }
-    if (editorWrapper) editorWrapper.classList.add("hidden");
-    if (statusBar) statusBar.classList.add("hidden");
-    if (lineNumbers) lineNumbers.classList.add("hidden");
+    if (editorWrapper) editorWrapper.style.display = "none";
+    if (statusBar) statusBar.style.display = "none";
   } else {
     if (emptyStateContainer) {
       emptyStateContainer.classList.add("hidden");
-      emptyStateContainer.classList.remove("flex");
+      emptyStateContainer.style.display = "none";
     }
-    if (editorWrapper) editorWrapper.classList.remove("hidden");
-    if (statusBar) statusBar.classList.remove("hidden");
-    if (lineNumbers) lineNumbers.classList.remove("hidden");
+    if (editorWrapper) {
+      editorWrapper.style.display = "flex";
+      editorWrapper.classList.remove("hidden");
+    }
+    if (statusBar) {
+      statusBar.style.display = "flex";
+      statusBar.classList.remove("hidden");
+    }
   }
 }
+

@@ -12,15 +12,27 @@ export function updateLineNumbers(editor, lineNumbers) {
   const lines = editor.value.split("\n");
   const count = lines.length;
 
-  // SÓ REPAINT NO DOM SE O NÚMERO DE LINHAS MUDAR
+  // SÓ AGE SE O NÚMERO DE LINHAS REALMENTE MUDAR
   if (count === currentRenderedLines) return;
 
-  currentRenderedLines = count;
-  let html = "";
-  for (let i = 1; i <= count; i++) {
-    html += `<div class="line-number">${i}</div>`;
+  if (count > currentRenderedLines) {
+    // Adiciona apenas as novas linhas
+    const fragment = document.createDocumentFragment();
+    for (let i = currentRenderedLines + 1; i <= count; i++) {
+      const div = document.createElement("div");
+      div.className = "line-number";
+      div.textContent = i;
+      fragment.appendChild(div);
+    }
+    lineNumbers.appendChild(fragment);
+  } else {
+    // Remove as linhas excedentes do final
+    while (lineNumbers.childNodes.length > count) {
+      lineNumbers.removeChild(lineNumbers.lastChild);
+    }
   }
-  lineNumbers.innerHTML = html;
+
+  currentRenderedLines = count;
 }
 
 /**
@@ -34,11 +46,9 @@ export function updateRulerPosition(rulerColumnInput, rulerLine) {
 }
 
 export function loadRulerPosition(rulerColumnInput, rulerLine) {
-  const saved = localStorage.getItem("rulerColumn");
-  if (saved && rulerColumnInput && rulerLine) {
-    rulerColumnInput.value = saved;
-    updateRulerPosition(rulerColumnInput, rulerLine);
-  }
+  const column = localStorage.getItem("rulerColumn") || 84;
+  if (rulerColumnInput) rulerColumnInput.value = column;
+  updateRulerPosition(rulerColumnInput, rulerLine);
 }
 
 /**
@@ -46,7 +56,7 @@ export function loadRulerPosition(rulerColumnInput, rulerLine) {
  */
 export function toggleTypewriterMode(editor) {
   if (!editor) return;
-  const active = editor.classList.toggle("typewriter-mode");
+  const active = document.body.classList.toggle("typewriter-mode");
   localStorage.setItem("typewriterMode", active);
   
   const btn = document.getElementById("typewriter-btn");
@@ -60,7 +70,7 @@ export function loadTypewriterMode(editor) {
   if (!editor) return;
   const saved = localStorage.getItem("typewriterMode") === "true";
   if (saved) {
-    editor.classList.add("typewriter-mode");
+    document.body.classList.add("typewriter-mode");
     const btn = document.getElementById("typewriter-btn");
     if (btn) {
       btn.classList.add("bg-blue-100", "dark:bg-blue-900");
@@ -99,3 +109,30 @@ export function updateCursorPos(editor, cursorPosEl) {
   const col = lines[lines.length - 1].length + 1;
   cursorPosEl.textContent = `Lin ${row}, Col ${col}`;
 }
+
+export function toggleRuler(rulerLine) {
+  if (!rulerLine) return;
+  const isHidden = rulerLine.classList.toggle("hidden");
+  localStorage.setItem("rulerVisible", !isHidden);
+  
+  const btn = document.getElementById("ruler-toggle-btn");
+  if (btn) {
+    btn.classList.toggle("text-blue-600", !isHidden);
+    btn.classList.toggle("dark:text-blue-400", !isHidden);
+  }
+}
+
+export function loadRuler(rulerLine, rulerColumnInput) {
+  const visible = localStorage.getItem("rulerVisible") !== "false";
+  if (!visible) {
+    rulerLine.classList.add("hidden");
+  } else {
+    rulerLine.classList.remove("hidden");
+    const btn = document.getElementById("ruler-toggle-btn");
+    if (btn) {
+      btn.classList.add("text-blue-600", "dark:text-blue-400");
+    }
+  }
+  loadRulerPosition(rulerColumnInput, rulerLine);
+}
+

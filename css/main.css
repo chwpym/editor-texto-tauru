@@ -4,21 +4,11 @@
 @import "tailwindcss";
 
 
-/* Variável CSS para a coluna da régua */
+/* ---- VARIÁVEIS DO TEMA DINÂMICO (Atualizadas via applyTheme no JS) ---- */
 :root {
   --ruler-column: 80;
-  /* Cores do tema atual (sobrescritas por data-theme) */
-  --theme-editor-bg: #ffffff;
-  --theme-editor-text: #1e293b;
-  --theme-toolbar-bg: #e2e8f0;
-  --theme-statusbar-bg: #e2e8f0;
-  --theme-gutter-bg: #ffffff;
-  --theme-gutter-text: #94a3b8;
-  --theme-border: rgba(0,0,0,0.08);
-}
-
-/* ---- TEMA: TAURUS DARK (padrão) ---- */
-html.dark {
+  
+  /* Valores padrão (Taurus Dark) */
   --theme-editor-bg: #020617;
   --theme-editor-text: #e2e8f0;
   --theme-toolbar-bg: #0f172a;
@@ -26,51 +16,43 @@ html.dark {
   --theme-gutter-bg: #020617;
   --theme-gutter-text: #475569;
   --theme-border: rgba(255,255,255,0.05);
+  --theme-accent: #3b82f6; /* Destaque padrão */
 }
 
-/* ---- TEMA: VS CODE DARK+ ---- */
-html.dark[data-theme="vscode"] {
-  --theme-editor-bg: #1e1e1e;
-  --theme-editor-text: #d4d4d4;
-  --theme-toolbar-bg: #2d2d2d;
-  --theme-statusbar-bg: #007acc;
-  --theme-gutter-bg: #1e1e1e;
-  --theme-gutter-text: #858585;
-  --theme-border: rgba(255,255,255,0.08);
+/* ---- ESTILOS DAS ABAS TEMÁTICAS ---- */
+.document-tab {
+  border-right: 1px solid var(--theme-border);
+  transition: all 0.2s;
+  color: var(--theme-gutter-text);
+  font-size: 0.85rem;
+}
+.document-tab.active {
+  background-color: var(--theme-editor-bg) !important;
+  color: var(--theme-editor-text) !important;
+  border-bottom: 2px solid var(--theme-accent) !important;
+  font-weight: 600;
 }
 
-/* ---- TEMA: TOKYO NIGHT ---- */
-html.dark[data-theme="tokyo"] {
-  --theme-editor-bg: #1a1b2e;
-  --theme-editor-text: #a9b1d6;
-  --theme-toolbar-bg: #16213e;
-  --theme-statusbar-bg: #16213e;
-  --theme-gutter-bg: #1a1b2e;
-  --theme-gutter-text: #3b4261;
-  --theme-border: rgba(255,255,255,0.05);
+/* ---- CORREÇÃO DE CONTRASTE MODO CLARO ---- */
+[data-theme="light"] i, 
+[data-theme="light"] button[title], 
+[data-theme="light"] .status-bar, 
+[data-theme="light"] .tab-title-text {
+  color: #0f172a !important; /* Grafite escuro para ícones/texto no modo claro */
 }
 
-/* ---- TEMA: AYU DARK ---- */
-html.dark[data-theme="ayu"] {
-  --theme-editor-bg: #0d1017;
-  --theme-editor-text: #bfbdb6;
-  --theme-toolbar-bg: #131721;
-  --theme-statusbar-bg: #e6b450;
-  --theme-gutter-bg: #0d1017;
-  --theme-gutter-text: #3d424d;
-  --theme-border: rgba(255,255,255,0.04);
+[data-theme="light"] .modal-content h2, 
+[data-theme="light"] .modal-content p, 
+[data-theme="light"] .modal-content li, 
+[data-theme="light"] .modal-content th, 
+[data-theme="light"] .modal-content td {
+  color: #1e293b !important;
 }
 
-/* ---- TEMA: DRACULA ---- */
-html.dark[data-theme="dracula"] {
-  --theme-editor-bg: #282a36;
-  --theme-editor-text: #f8f8f2;
-  --theme-toolbar-bg: #21222c;
-  --theme-statusbar-bg: #bd93f9;
-  --theme-gutter-bg: #282a36;
-  --theme-gutter-text: #6272a4;
-  --theme-border: rgba(255,255,255,0.06);
-}
+
+/* Nota: Os temas VS Code, Tokyo, Ayu e Dracula agora são alimentados 
+   dinamicamente pelas variáveis injetadas via JS no :root */
+
 
 /* ---- APLICAÇÃO DAS VARIÁVEIS ---- */
 /* Editor principal */
@@ -86,13 +68,17 @@ html.dark[data-theme="dracula"] {
   color: var(--theme-gutter-text) !important;
 }
 
-/* Tema: status bar com cor de accent (VS Code, Ayu, Dracula) */
-html.dark[data-theme="vscode"] .status-bar,
-html.dark[data-theme="ayu"] .status-bar,
-html.dark[data-theme="dracula"] .status-bar {
-  background-color: var(--theme-statusbar-bg) !important;
-  color: rgba(255,255,255,0.9) !important;
+/* Toolbar e Status bar */
+.toolbar {
+  background-color: var(--theme-toolbar-bg) !important;
+  border-bottom: 1px solid var(--theme-border);
 }
+.status-bar {
+  background-color: var(--theme-statusbar-bg) !important;
+  color: var(--theme-editor-text);
+  opacity: 0.9;
+}
+
 
 /* Tema: cards de seleção de tema */
 .theme-card {
@@ -277,20 +263,22 @@ body {
    ======================================== */
 
 .modal-overlay {
-  transition:
-    opacity 0.3s ease,
-    visibility 0.3s ease;
+  background-color: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(4px);
+  transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
 .modal-content {
-  transition:
-    transform 0.3s ease,
-    opacity 0.3s ease;
+  background-color: var(--theme-editor-bg) !important;
+  color: var(--theme-editor-text) !important;
+  border: 1px solid var(--theme-border) !important;
+  transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
 .modal-overlay.show {
-  opacity: 1;
-  visibility: visible;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: flex !important;
 }
 
 .modal-overlay.show .modal-content {
@@ -711,4 +699,10 @@ html.dark #quickopen-list li.active {
   border-radius: 10px;
 }
 
+.hidden {
+  display: none !important;
+}
 
+#ruler-line.hidden {
+  display: none !important;
+}

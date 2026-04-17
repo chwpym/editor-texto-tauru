@@ -4,7 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Editor Taurus</title>
-    <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
     <link rel="apple-touch-icon" href="icon.png">
     <!-- Bibliotecas transferidas para NPM via Vite -->
@@ -14,8 +13,11 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
+    <!-- O CSS agora é gerenciado pelo Vite via import no app.js -->
     
-    <!-- Estilos controlados via Vite no app.js -->
+
+
+    
   </head>
   <body class="bg-slate-100 dark:bg-slate-900 flex flex-col">
     <div
@@ -80,7 +82,7 @@
           >
             <button 
               id="ruler-toggle-btn" 
-              title="Mostrar/Ocultar Régua" 
+              title="Mostrar/Ocultar Régua Vertical" 
               class="p-1.5 rounded-md hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors"
             >
               <i data-lucide="ruler"></i>
@@ -90,8 +92,8 @@
               id="ruler-column-input"
               min="10"
               max="200"
-              value="80"
-              class="w-16 p-1 border-none rounded-md text-center bg-transparent text-slate-600 dark:text-slate-300 focus:ring-0"
+              value="84"
+              class="w-12 p-1 border-none rounded-md text-center bg-transparent text-slate-600 dark:text-slate-300 focus:ring-0 font-mono text-xs"
             />
           </div>
           <!-- Seletor de Temas -->
@@ -152,7 +154,6 @@
           >
             <i data-lucide="book-marked"></i>
           </button>
-          <!-- Typewriter Mode -->
           <button
             id="typewriter-btn"
             title="Modo Maquina de Escrever (cursor centralizado)"
@@ -252,14 +253,14 @@
           class="font-mono text-xs"
           title="Seu ID de Usuário"
         ></span>
-        <span id="app-version" class="text-[10px] bg-slate-300 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-500 font-bold ml-2 opacity-70">v12</span>
+        <span id="app-version" class="text-[10px] bg-slate-300 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-500 font-bold ml-2 opacity-70">v13.4 DEBUG</span>
       </div>
     </div>
 
     <!-- Modais -->
 
     <!-- Modal: Seletor de Temas -->
-    <div id="theme-modal-overlay" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 opacity-0 invisible">
+    <div id="theme-modal-overlay" class="modal-overlay fixed inset-0 bg-black/60 flex justify-center items-center z-50 opacity-0 invisible">
       <div class="modal-content bg-white dark:bg-slate-800 p-6 rounded-xl shadow-2xl max-w-md w-full relative transform -translate-y-5 text-slate-800 dark:text-slate-200">
         <button id="theme-modal-close-btn" class="modal-close-btn absolute top-3 right-3 p-1 rounded-full text-2xl hover:bg-gray-200 dark:hover:bg-slate-700">&times;</button>
         <h2 class="text-xl font-bold mb-5 flex items-center gap-2">
@@ -272,7 +273,7 @@
     </div>
 
     <!-- Modal: Ir para Linha (Ctrl+G) -->
-    <div id="goto-line-modal-overlay" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 opacity-0 invisible">
+    <div id="goto-line-modal-overlay" class="modal-overlay fixed inset-0 bg-black/60 flex justify-center items-center z-50 opacity-0 invisible">
       <div class="modal-content bg-white dark:bg-slate-800 p-6 rounded-lg shadow-xl max-w-xs w-full relative transform -translate-y-5 text-slate-800 dark:text-slate-200">
         <button id="goto-line-modal-close-btn" class="modal-close-btn absolute top-3 right-3 p-1 rounded-full text-2xl hover:bg-gray-200 dark:hover:bg-slate-700">&times;</button>
         <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
@@ -284,7 +285,7 @@
     </div>
 
     <!-- Modal: Dicionário Pessoal -->
-    <div id="personal-dict-modal-overlay" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 opacity-0 invisible">
+    <div id="personal-dict-modal-overlay" class="modal-overlay fixed inset-0 bg-black/60 flex justify-center items-center z-50 opacity-0 invisible">
       <div class="modal-content bg-white dark:bg-slate-800 p-6 rounded-lg shadow-xl max-w-md w-full relative transform -translate-y-5 text-slate-800 dark:text-slate-200">
         <button id="personal-dict-modal-close-btn" class="modal-close-btn absolute top-3 right-3 p-1 rounded-full text-2xl hover:bg-gray-200 dark:hover:bg-slate-700">&times;</button>
         <h2 class="text-lg font-bold mb-1 flex items-center gap-2">
@@ -303,7 +304,7 @@
     </div>
 
     <!-- Modal de Atalhos -->
-    <div id="shortcuts-modal-overlay" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 opacity-0 invisible">
+    <div id="shortcuts-modal-overlay" class="modal-overlay fixed inset-0 bg-black/60 flex justify-center items-center z-50 opacity-0 invisible">
       <div class="modal-content bg-white dark:bg-slate-800 p-8 rounded-lg shadow-xl max-w-lg w-full relative transform -translate-y-5 text-slate-800 dark:text-slate-200">
         <button id="shortcuts-modal-close-btn" class="modal-close-btn absolute top-3 right-3 p-1 rounded-full text-2xl hover:bg-gray-200 dark:hover:bg-slate-700">&times;</button>
             <h2 class="text-2xl font-bold mb-4">Atalhos de Teclado</h2>
@@ -323,7 +324,7 @@
     </div>
 
     <!-- Modal: Localizar e Substituir -->
-    <div id="find-replace-modal-overlay" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 opacity-0 invisible">
+    <div id="find-replace-modal-overlay" class="modal-overlay fixed inset-0 bg-black/60 flex justify-center items-center z-50 opacity-0 invisible">
       <div class="modal-content bg-white dark:bg-slate-800 p-6 rounded-lg shadow-xl max-w-md w-full relative transform -translate-y-5 text-slate-800 dark:text-slate-200">
         <button id="find-replace-modal-close-btn" class="modal-close-btn absolute top-3 right-3 text-2xl p-1 rounded-full hover:bg-gray-200 dark:hover:bg-slate-700">&times;</button>
         <h2 class="text-xl font-bold mb-4">Localizar e Substituir</h2>
@@ -339,7 +340,7 @@
     </div>
 
     <!-- Modal de Ações Múltiplas -->
-    <div id="multi-actions-modal-overlay" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 opacity-0 invisible">
+    <div id="multi-actions-modal-overlay" class="modal-overlay fixed inset-0 bg-black/60 flex justify-center items-center z-50 opacity-0 invisible">
         <div class="modal-content bg-white dark:bg-slate-800 p-6 rounded-lg shadow-xl max-w-md w-full relative transform -translate-y-5 text-slate-800 dark:text-slate-200">
             <button id="multi-actions-modal-close-btn" class="modal-close-btn absolute top-3 right-3 text-2xl p-1 rounded-full hover:bg-gray-200 dark:hover:bg-slate-700">&times;</button>
             <h2 class="text-xl font-bold mb-4">Ações em Múltiplas Seleções</h2>
@@ -369,16 +370,78 @@
     </div>
 
     <!-- Modal de Ajuda Geral -->
-    <div id="help-modal-overlay" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 opacity-0 invisible">
+    <div id="help-modal-overlay" class="modal-overlay fixed inset-0 bg-black/60 flex justify-center items-center z-50 opacity-0 invisible">
       <div class="modal-content bg-white dark:bg-slate-800 p-8 rounded-lg shadow-xl max-w-2xl w-full relative transform -translate-y-5 text-slate-800 dark:text-slate-200 overflow-y-auto max-h-[90vh]">
         <button id="guide-modal-close-btn" class="modal-close-btn absolute top-3 right-3 p-1 rounded-full text-2xl hover:bg-gray-200 dark:hover:bg-slate-700">&times;</button>
         <h2 class="text-2xl font-bold mb-4 flex items-center gap-2">
           <i data-lucide="sparkles" class="text-yellow-500"></i> Guia de Uso Taurus
         </h2>
-        <div class="space-y-6">
-           <!-- Conteúdo do Guia (Mesmo de antes, simplificado aqui para brevidade) -->
-           <p>Bem-vindo ao Editor Taurus! Use os atalhos para uma edição ultra-rápida. Suas alterações são salvas automaticamente no banco local IndexedDB.</p>
+        <div class="space-y-6 text-sm leading-relaxed">
+           <section>
+             <h3 class="font-bold text-slate-700 dark:text-slate-200 mb-2 flex items-center gap-2">
+               <i data-lucide="zap" class="w-4 h-4 text-yellow-500"></i> O que é o Taurus?
+             </h3>
+             <p>Uma ferramenta de escrita leve, moderna e totalmente Web, projetada para ser ágil e produtiva, focando em funcionalidades realmente úteis para o dia a dia.</p>
+           </section>
+
+           <section>
+             <h3 class="font-bold text-slate-700 dark:text-slate-200 mb-2">🚀 Principais Recursos</h3>
+             <ul class="list-disc list-inside space-y-1 text-slate-600 dark:text-slate-400">
+               <li><strong>PWA</strong>: Instale como um aplicativo no Windows/Android.</li>
+               <li><strong>Seleções Múltiplas</strong>: Edite em vários pontos (Ctrl+D).</li>
+               <li><strong>Dicionário Pessoal</strong>: Sugestões fixas no autocomplete.</li>
+               <li><strong>Modo Máquina de Escrever</strong>: Cursor centralizado.</li>
+               <li><strong>Proteção de Conteúdo</strong>: Backup contra apagamentos acidentais.</li>
+             </ul>
+           </section>
+
+           <section>
+             <h3 class="font-bold text-slate-700 dark:text-slate-200 mb-2 flex items-center gap-2">
+               <i data-lucide="keyboard" class="w-4 h-4 text-blue-500"></i> Atalhos de Poder
+             </h3>
+             <div class="overflow-x-auto">
+               <table class="w-full text-left border-collapse">
+                 <thead>
+                   <tr class="border-b border-slate-200 dark:border-slate-700">
+                     <th class="py-2 font-bold">Atalho</th>
+                     <th class="py-2 font-bold">Ação</th>
+                   </tr>
+                 </thead>
+                 <tbody class="text-slate-600 dark:text-slate-400">
+                   <tr class="border-b border-slate-100 dark:border-slate-800/50">
+                     <td class="py-1.5 font-mono text-xs">Alt + N</td>
+                     <td class="py-1.5">Novo documento</td>
+                   </tr>
+                   <tr class="border-b border-slate-100 dark:border-slate-800/50">
+                     <td class="py-1.5 font-mono text-xs">Ctrl + S</td>
+                     <td class="py-1.5">Salvar manual</td>
+                   </tr>
+                   <tr class="border-b border-slate-100 dark:border-slate-800/50">
+                     <td class="py-1.5 font-mono text-xs">Ctrl + D</td>
+                     <td class="py-1.5">Próxima ocorrência</td>
+                   </tr>
+                   <tr class="border-b border-slate-100 dark:border-slate-800/50">
+                     <td class="py-1.5 font-mono text-xs">Ctrl + M</td>
+                     <td class="py-1.5">Menu de ações múltiplas</td>
+                   </tr>
+                   <tr class="border-b border-slate-100 dark:border-slate-800/50">
+                     <td class="py-1.5 font-mono text-xs">Ctrl + Shift + F</td>
+                     <td class="py-1.5">Localizar e Substituir</td>
+                   </tr>
+                   <tr class="border-b border-slate-100 dark:border-slate-800/50">
+                     <td class="py-1.5 font-mono text-xs">Alt + Shift + ↑/↓</td>
+                     <td class="py-1.5">Mover linha</td>
+                   </tr>
+                 </tbody>
+               </table>
+             </div>
+           </section>
+
+           <div class="p-3 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 rounded text-xs text-blue-700 dark:text-blue-300">
+             <strong>Dica:</strong> Use o botão de nuvem verde para Exportar um backup completo de todos os seus textos para segurança extra!
+           </div>
         </div>
+
         <button id="help-close-guide-btn" class="w-full mt-8 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">Entendi!</button>
       </div>
     </div>
@@ -505,7 +568,7 @@
         color: var(--theme-editor-text);
       }
     </style>
-    <div id="tasks-drawer" class="fixed top-0 right-0 h-full w-80 bg-slate-50 dark:bg-slate-900 shadow-[-5px_0_15px_rgba(0,0,0,0.1)] z-50 transform translate-x-full transition-transform duration-300 flex flex-col border-l border-slate-200 dark:border-slate-800">
+    <div id="tasks-drawer" class="fixed top-0 right-0 h-full w-80 bg-slate-50 dark:bg-slate-900 shadow-[-5px_0_15px_rgba(0,0,0,0.1)] z-50 transition-transform duration-300 flex flex-col border-l border-slate-200 dark:border-slate-800">
       <div class="flex justify-between items-center p-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
         <h2 class="font-bold text-lg text-slate-800 dark:text-slate-200 flex items-center gap-2">
           <i data-lucide="check-square" class="w-5 h-5 text-emerald-500"></i> Tarefas do Projeto
@@ -530,7 +593,7 @@
     </div>
 
     <!-- Modal: Confirmação Customizada -->
-    <div id="confirm-modal-overlay" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-[300] opacity-0 invisible transition-all duration-300">
+    <div id="confirm-modal-overlay" class="modal-overlay fixed inset-0 bg-black/60 flex justify-center items-center z-[300] transition-all duration-300">
       <div class="modal-content bg-white dark:bg-slate-800 p-6 rounded-xl shadow-2xl max-w-sm w-full relative transform -translate-y-5">
         <h2 id="confirm-modal-title" class="text-xl font-bold mb-2 flex items-center gap-2 text-slate-800 dark:text-slate-100">
           <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-500"></i> Confirmação
@@ -558,6 +621,7 @@
       </div>
     </div>
     <!-- Referência ao script principal da aplicação (Módulo ES6) -->
-    <script type="module" src="js/app.js"></script>
+    <script type="module" src="./js/app.js"></script>
+
   </body>
 </html>

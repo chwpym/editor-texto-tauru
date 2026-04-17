@@ -116,9 +116,42 @@ export function acceptAutocomplete(editor, suggestion) {
 }
 
 /**
- * Helpers para coordenadas (Simulado para Textarea)
+ * Calcula a posição X,Y (pixel) do cursor no textarea
  */
-function getCursorXY(editor) {
-  const { offsetLeft: left, offsetTop: top } = editor;
-  return { left, top, height: 0 };
+export function getCursorXY(textarea) {
+
+  const { offsetLeft: left, offsetTop: top, selectionEnd } = textarea;
+  
+  // Criar elemento espelho
+  const div = document.createElement('div');
+  const copyStyle = getComputedStyle(textarea);
+  for (const prop of copyStyle) {
+    div.style[prop] = copyStyle[prop];
+  }
+  
+  div.style.position = 'absolute';
+  div.style.visibility = 'hidden';
+  div.style.whiteSpace = 'pre-wrap';
+  div.style.width = textarea.clientWidth + 'px';
+  div.style.height = textarea.clientHeight + 'px';
+  
+  // Corta o texto até o cursor
+  const content = textarea.value.substring(0, selectionEnd);
+  div.textContent = content;
+  
+  // Adiciona um marcador no final
+  const span = document.createElement('span');
+  span.textContent = textarea.value.substring(selectionEnd) || '.';
+  div.appendChild(span);
+  
+  document.body.appendChild(div);
+  const { offsetLeft: spanLeft, offsetTop: spanTop } = span;
+  document.body.removeChild(div);
+  
+  return { 
+    left: left + spanLeft - textarea.scrollLeft, 
+    top: top + spanTop - textarea.scrollTop,
+    height: 18 // Altura média da linha
+  };
 }
+

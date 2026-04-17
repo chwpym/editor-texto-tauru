@@ -14,9 +14,18 @@ import * as tabs from './tabs.js';
 export async function switchDocument(docId, state) {
   if (!docId) {
     state.currentDocId = null;
+    const editor = document.getElementById("editor");
+    const lineNumbers = document.getElementById("line-numbers");
+    if (editor) {
+      editor.value = "";
+      editor.disabled = true;
+      core.updateStatusBarMetrics(editor, state.metrics);
+      core.updateLineNumbers(editor, lineNumbers);
+    }
     ui.updateEmptyState(null);
     return;
   }
+
 
   // Adiciona aba
   if (!state.openTabs.includes(docId)) {

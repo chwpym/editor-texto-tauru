@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "tauri:dev": "cd src-tauri && cargo tauri dev",
-    "tauri:build": "cd src-tauri && cargo tauri build"
+    "tauri:build": "cd src-tauri && cargo tauri build",
+    "test": "vitest run"
   },
   "keywords": [],
   "author": "",
@@ -25,6 +26,7 @@
     "happy-dom": "^20.8.9",
     "tailwindcss": "^4.2.2",
     "vite": "^8.0.3",
+    "vite-plugin-pwa": "^1.2.0",
     "vitest": "^4.1.2"
   }
 }

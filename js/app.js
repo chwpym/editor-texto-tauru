@@ -2,7 +2,10 @@
    EDITOR TAURUS - app.js (Módulo Principal)
    ======================================== */
 
+import '../css/main.css';
 import * as db from './db.js';
+
+
 import * as ui from './ui.js';
 import * as utils from './utils.js';
 import * as core from './editorCore.js';
@@ -10,24 +13,20 @@ import * as docs from './documents.js';
 import * as tabs from './tabs.js';
 import * as auto from './autocomplete.js';
 import * as tasks from './tasks.js';
+import * as dictionary from './dictionary.js';
 import * as shortcuts from './shortcuts.js';
+import { syncHighlightScroll } from './highlight.js';
+
 import * as ai from './ai.js';
 import { THEMES, applyTheme, initThemeSystem } from './theme.js';
-import { createIcons, 
-  FilePlus2, Edit3, Trash2, Download, Search, Ruler, Palette, CheckSquare, 
-  Keyboard, HelpCircle, DownloadCloud, UploadCloud, BookMarked, AlignCenter, 
-  Sparkles, Settings2, X, Plus, FolderCode, FilePlus, CircleDashed, CornerDownLeft, 
-  Cpu, Key, BookOpen, WandSparkles, MousePointer2, CheckCircle2, Replace, Type, Trash, Check, Edit2
-} from 'lucide';
+import { createIcons, icons } from 'lucide';
 
-import '../css/main.css';
+// Versão v12.7: Estabilização de Contraste e Abas
+const APP_VERSION = "v13.7 Stable";
 
-const icons = {
-  FilePlus2, Edit3, Trash2, Download, Search, Ruler, Palette, CheckSquare, 
-  Keyboard, HelpCircle, DownloadCloud, UploadCloud, BookMarked, AlignCenter, 
-  Sparkles, Settings2, X, Plus, FolderCode, FilePlus, CircleDashed, CornerDownLeft, 
-  Cpu, Key, BookOpen, WandSparkles, MousePointer2, CheckCircle2, Replace, Type, Trash
-};
+
+
+
 
 
 const state = {
@@ -38,7 +37,7 @@ const state = {
   saveTimeout: null,
   isSaving: false,
   aiEnabled: false,
-  
+
   // Referências que serão preenchidas no init
   editor: null,
   lineNumbers: null,
@@ -47,7 +46,7 @@ const state = {
   tabNewBtn: null,
   rulerLine: null,
   rulerColumnInput: null,
-  
+
   metrics: {
     fileSize: null,
     wordCount: null,
@@ -57,10 +56,15 @@ const state = {
   }
 };
 
-async function init() {
-  const APP_VERSION = "v12.5";
-  console.log(`Iniciando Editor Taurus ${APP_VERSION}...`);
+export async function init() {
+  // Inicializa estado de abas ANTES de trocar de documento para evitar duplicidade
+  state.openTabs = tabs.getOpenTabsFromStorage();
   
+  console.log(`Iniciando Editor Taurus ${APP_VERSION}...`);
+
+
+
+
   // Mapeamento de Elementos
   state.editor = document.getElementById("editor");
   state.lineNumbers = document.getElementById("line-numbers");
@@ -69,7 +73,7 @@ async function init() {
   state.tabNewBtn = document.getElementById("tab-new-btn");
   state.rulerLine = document.getElementById("ruler-line");
   state.rulerColumnInput = document.getElementById("ruler-column-input");
-  
+
   state.metrics.fileSize = document.getElementById("file-size");
   state.metrics.wordCount = document.getElementById("word-count");
   state.metrics.charCount = document.getElementById("char-count");
@@ -79,10 +83,11 @@ async function init() {
   const versionEl = document.getElementById("app-version");
   if (versionEl) versionEl.textContent = APP_VERSION;
 
+
   state.openTabs = tabs.getOpenTabsFromStorage();
   const allDocs = await docs.loadDocumentsList(state.docSelector);
   const lastDocId = localStorage.getItem("lastDocId") || (allDocs.length > 0 ? allDocs[0].id : null);
-  
+
   if (allDocs.length === 0) {
     await docs.createNewDocument("Primeiro Documento", state);
   } else {
@@ -91,22 +96,33 @@ async function init() {
 
   initThemeSystem(openThemePicker);
   tasks.initTasksSystem();
+  dictionary.initDictionary();
   auto.initAutocomplete();
-  core.loadRulerPosition(state.rulerColumnInput, state.rulerLine);
+  
+  // Renderiza ícones Lucide (NPM style)
+  if (window.lucide) {
+    window.lucide.createIcons();
+  } else {
+    createIcons({ icons });
+  }
+
+  core.loadRuler(state.rulerLine, state.rulerColumnInput);
+  
+
+
+
   core.loadTypewriterMode(state.editor);
   ui.initFloatingMenu(state.editor, () => state.aiEnabled);
-  
+
   setupEventListeners();
   state.editorReady = true;
 
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./service-worker.js').catch(err => console.error(err));
-  }
+  
 }
 
 function setupEventListeners() {
   state.docSelector.addEventListener("change", (e) => docs.switchDocument(e.target.value, state));
-  
+
   const aiToggle = document.getElementById("ai-toggle-switch");
   const aiActionsBtn = document.getElementById("ai-actions-btn");
   const aiStatusText = aiToggle?.parentElement?.nextElementSibling;
@@ -121,9 +137,9 @@ function setupEventListeners() {
       aiActionsBtn.disabled = !state.aiEnabled;
       aiActionsBtn.classList.toggle("opacity-50", !state.aiEnabled);
       aiActionsBtn.classList.toggle("cursor-not-allowed", !state.aiEnabled);
-      
+
       if (!state.aiEnabled) {
-         document.getElementById("floating-ai-menu").classList.add("hidden");
+        document.getElementById("floating-ai-menu").classList.add("hidden");
       }
     });
   }
@@ -151,7 +167,7 @@ function setupEventListeners() {
 
   document.addEventListener("click", async (e) => {
     const actionItem = e.target.closest(".ai-action-item") || (e.target.closest("#ai-actions-btn") ? { dataset: { action: "improve" } } : null);
-    
+
     if (actionItem && state.aiEnabled) {
       const action = actionItem.dataset.action;
       if (action) handleAiAction(action);
@@ -160,10 +176,10 @@ function setupEventListeners() {
   });
 
   const createNew = () => docs.createNewDocument("Novo Documento", state);
-  
+
   document.getElementById("new-doc-btn").addEventListener("click", createNew);
   if (state.tabNewBtn) state.tabNewBtn.addEventListener("click", createNew);
-  
+
   const emptyNewBtn = document.getElementById("empty-state-new-btn");
   if (emptyNewBtn) emptyNewBtn.addEventListener("click", createNew);
 
@@ -171,13 +187,13 @@ function setupEventListeners() {
   state.tabsBar.addEventListener("click", (e) => {
     const tab = e.target.closest(".document-tab");
     const closeBtn = e.target.closest(".tab-close-btn");
-    
+
     if (closeBtn) {
       e.stopPropagation();
       window.closeTab(closeBtn.dataset.docId);
       return;
     }
-    
+
     if (tab) {
       docs.switchDocument(tab.dataset.docId, state);
     }
@@ -185,25 +201,12 @@ function setupEventListeners() {
 
   document.getElementById("rename-doc-btn").addEventListener("click", () => docs.renameCurrentDocument(state.currentDocId, state.docSelector));
   document.getElementById("delete-doc-btn").addEventListener("click", deleteCurrentDoc);
-  
+
   document.getElementById("theme-picker-btn").addEventListener("click", openThemePicker);
-  
-  document.getElementById("tasks-btn").addEventListener("click", () => {
-    const overlay = document.getElementById("tasks-drawer-overlay");
-    const drawer = document.getElementById("tasks-drawer");
-    overlay.classList.remove("invisible");
-    overlay.style.opacity = "1";
-    drawer.classList.add("active");
-  });
-  
-  document.getElementById("tasks-close-btn").addEventListener("click", () => {
-    const overlay = document.getElementById("tasks-drawer-overlay");
-    const drawer = document.getElementById("tasks-drawer");
-    overlay.style.opacity = "0";
-    drawer.classList.remove("active");
-    setTimeout(() => overlay.classList.add("invisible"), 300);
-  });
-  
+
+  document.getElementById("tasks-close-btn").addEventListener("click", () => tasks.toggleTasksDrawer());
+
+
   document.getElementById("tasks-drawer-overlay").addEventListener("click", () => document.getElementById("tasks-close-btn").click());
 
   document.getElementById("find-replace-btn").addEventListener("click", () => ui.openModal(document.getElementById("find-replace-modal-overlay")));
@@ -216,11 +219,25 @@ function setupEventListeners() {
   document.getElementById("guide-modal-close-btn").addEventListener("click", () => ui.closeModal(document.getElementById("help-modal-overlay")));
   document.getElementById("help-close-guide-btn").addEventListener("click", () => ui.closeModal(document.getElementById("help-modal-overlay")));
 
-  document.getElementById("personal-dict-btn").addEventListener("click", () => ui.openModal(document.getElementById("personal-dict-modal-overlay")));
+  document.getElementById("personal-dict-btn").addEventListener("click", () => {
+    dictionary.renderPersonalDictWords();
+    ui.openModal(document.getElementById("personal-dict-modal-overlay"));
+  });
   document.getElementById("personal-dict-modal-close-btn").addEventListener("click", () => ui.closeModal(document.getElementById("personal-dict-modal-overlay")));
 
+
   document.getElementById("theme-modal-close-btn").addEventListener("click", () => ui.closeModal(document.getElementById("theme-modal-overlay")));
-  
+
+  // Eventos do Modal de Ações Múltiplas (Ctrl+M)
+  document.getElementById("multi-actions-modal-close-btn").addEventListener("click", () => ui.closeModal(document.getElementById("multi-actions-modal-overlay")));
+  document.getElementById("multi-cancel-btn").addEventListener("click", () => ui.closeModal(document.getElementById("multi-actions-modal-overlay")));
+
+  document.getElementById("multi-replace-btn").addEventListener("click", () => applyMultiAction("replace"));
+  document.getElementById("multi-uppercase-btn").addEventListener("click", () => applyMultiAction("uppercase"));
+  document.getElementById("multi-lowercase-btn").addEventListener("click", () => applyMultiAction("lowercase"));
+  document.getElementById("multi-delete-btn").addEventListener("click", () => applyMultiAction("delete"));
+
+
   // Modais de Confirmação e Prompt
   document.getElementById("confirm-modal-cancel-btn").addEventListener("click", () => ui.closeModal(document.getElementById("confirm-modal-overlay")));
   document.getElementById("prompt-modal-cancel-btn").addEventListener("click", () => ui.closeModal(document.getElementById("prompt-modal-overlay")));
@@ -239,9 +256,9 @@ function setupEventListeners() {
     });
   }
 
-  
+
   document.getElementById("export-db-btn").addEventListener("click", () => db.exportAllDocs());
-  
+
   const importInput = document.getElementById("import-db-input");
   document.getElementById("import-db-btn").addEventListener("click", () => importInput.click());
   importInput.addEventListener("change", async (e) => {
@@ -256,9 +273,9 @@ function setupEventListeners() {
       e.target.value = "";
     }
   });
-  
+
   document.getElementById("download-btn").addEventListener("click", () => {
-    if(!state.currentDocId) return;
+    if (!state.currentDocId) return;
     const text = state.editor.value;
     const btn = document.getElementById("doc-selector");
     const name = btn.options[btn.selectedIndex]?.text || "documento";
@@ -270,28 +287,38 @@ function setupEventListeners() {
     a.click();
     URL.revokeObjectURL(url);
   });
-  
+
+  document.getElementById("tasks-btn")?.addEventListener("click", () => tasks.toggleTasksDrawer());
+  document.getElementById("tasks-drawer-overlay")?.addEventListener("click", () => tasks.toggleTasksDrawer());
   document.getElementById("typewriter-btn").addEventListener("click", () => core.toggleTypewriterMode(state.editor));
+  document.getElementById("ruler-toggle-btn").addEventListener("click", () => core.toggleRuler(state.rulerLine));
   
-  document.getElementById("ruler-toggle-btn").addEventListener("click", () => state.rulerLine.classList.toggle("hidden"));
   state.rulerColumnInput.addEventListener("change", () => core.updateRulerPosition(state.rulerColumnInput, state.rulerLine));
 
-  createIcons({ icons, nameAttr: 'data-lucide' });
-  
   state.editor.addEventListener("input", handleEditorInput);
   state.editor.addEventListener("scroll", () => {
     state.lineNumbers.scrollTop = state.editor.scrollTop;
+    syncHighlightScroll(state.editor);
   });
 
   shortcuts.initShortcuts(state.editor, {
     save: () => saveNow(),
     new: () => docs.createNewDocument("Novo Documento", state),
     find: () => ui.openModal(document.getElementById("find-replace-modal-overlay")),
-    isAutocompleteOpen: () => !document.getElementById("autocomplete-popup").classList.contains("hidden")
+    isAutocompleteOpen: () => !document.getElementById("autocomplete-popup").classList.contains("hidden"),
+    openMultiActions: () => ui.openModal(document.getElementById("multi-actions-modal-overlay")),
+    onInput: () => handleEditorInput()
+  });
+
+  // Aceitar sugestão do autocomplete via evento customizado
+  window.addEventListener('accept-autocomplete', (e) => {
+    auto.acceptAutocomplete(state.editor, e.detail);
+    handleEditorInput();
   });
 }
 
 async function handleAiAction(action) {
+
   if (!ai.getApiKey()) {
     ui.showMessage("Configure sua API Key primeiro!", "error");
     return;
@@ -332,13 +359,28 @@ async function handleAiAction(action) {
   }
 }
 
+
 function handleEditorInput() {
+
   core.updateLineNumbers(state.editor, state.lineNumbers);
+  core.updateCursorPos(state.editor, state.metrics.cursorPos);
   core.updateStatusBarMetrics(state.editor, state.metrics);
   clearTimeout(state.saveTimeout);
   ui.renderSaveStatus("unsaved");
   state.saveTimeout = setTimeout(saveNow, 1500);
+
+  // Dispara o autocomplete com as palavras do documento + dicionário pessoal
+  const text = state.editor.value;
+  // Regex aprimorada: pega palavras alfanuméricas com 2+ caracteres (incluindo acentuação)
+  const documentWords = [...new Set(text.match(/[\wÀ-ú]{2,}/g) || [])];
+  const personalDict = dictionary.getPersonalDict();
+  // Combina, remove duplicatas e remove a própria palavra que está sendo digitada (lógica interna do auto.js cuidará do resto)
+  const keywords = [...new Set([...personalDict, ...documentWords])];
+  auto.triggerAutocomplete(state.editor, keywords);
 }
+
+
+
 
 async function saveNow() {
   if (!state.currentDocId || state.isSaving) return;
@@ -353,6 +395,39 @@ async function saveNow() {
   state.isSaving = false;
 }
 
+/**
+ * Aplica uma ação (Substituir, Upper, Lower, Delete) em todas as seleções múltiplas
+ */
+function applyMultiAction(type) {
+  const { selections, term } = shortcuts.getMultiSelections();
+  if (selections.length === 0) {
+    ui.showMessage("Nenhuma seleção ativa!", "info");
+    return;
+  }
+
+  let text = state.editor.value;
+  const newTextVal = document.getElementById("multi-replace-input").value || "";
+
+  // Ordena do fim para o início para não quebrar os índices conforme substitui
+  const sortedSeqs = [...selections].sort((a, b) => b - a);
+
+  sortedSeqs.forEach(idx => {
+    let replacement = "";
+    if (type === "replace") replacement = newTextVal;
+    else if (type === "uppercase") replacement = term.toUpperCase();
+    else if (type === "lowercase") replacement = term.toLowerCase();
+    else if (type === "delete") replacement = "";
+
+    text = text.substring(0, idx) + replacement + text.substring(idx + term.length);
+  });
+
+  state.editor.value = text;
+  shortcuts.clearMultiSelectionsPublic();
+  ui.closeModal(document.getElementById("multi-actions-modal-overlay"));
+  handleEditorInput();
+  ui.showMessage(`${sortedSeqs.length} ocorrências processadas!`, "success");
+}
+
 function openThemePicker() {
   const grid = document.getElementById("theme-cards-grid");
   const activeId = localStorage.getItem("selectedTheme") || "taurus";
@@ -361,11 +436,11 @@ function openThemePicker() {
   ui.openModal(document.getElementById("theme-modal-overlay"));
 }
 
-window.closeTab = async function(docId) {
+window.closeTab = async function (docId) {
   if (state.currentDocId === docId && state.saveTimeout) { clearTimeout(state.saveTimeout); await saveNow(); }
   state.openTabs = state.openTabs.filter(id => id !== docId);
   tabs.saveOpenTabs(state.openTabs);
-  if (state.currentDocId === docId) { if (state.openTabs.length > 0) docs.switchDocument(state.openTabs[state.openTabs.length - 1], state); else docs.switchDocument(null, state); } 
+  if (state.currentDocId === docId) { if (state.openTabs.length > 0) docs.switchDocument(state.openTabs[state.openTabs.length - 1], state); else docs.switchDocument(null, state); }
   else { tabs.renderTabs(state.tabsBar, state.openTabs, state.currentDocId, db, state.tabNewBtn); }
 };
 

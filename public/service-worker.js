@@ -1,4 +1,5 @@
-const CACHE_NAME = "editor-taurus-v12.5";
+const CACHE_NAME = "editor-taurus-v13.4";
+
 const ASSETS = [
   "./index.html",
   "./css/main.css",
@@ -14,11 +15,14 @@ const ASSETS = [
   "./js/shortcuts.js",
   "./js/theme.js",
   "./js/ai.js",
+  "./js/highlight.js",
+  "./js/dictionary.js",
   "./icon.png",
   "./manifest.json",
 ];
 
 self.addEventListener("install", (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS);
@@ -46,4 +50,5 @@ self.addEventListener("activate", (event) => {
       );
     }),
   );
+  return self.clients.claim();
 });

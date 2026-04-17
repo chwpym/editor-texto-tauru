@@ -2,7 +2,8 @@
    TASKS - Gerenciador de Tarefas (Drawer)
    ======================================== */
 
-import { createIcons, icons } from 'lucide';
+import { customConfirm, customPrompt, escapeHtml } from './utils.js';
+
 
 const TASKS_KEY = "editor-taurus-tasks";
 let projectTasks = [];
@@ -15,8 +16,23 @@ export function initTasksSystem() {
   if (data) {
     try { projectTasks = JSON.parse(data); } catch(e) { projectTasks = []; }
   }
+  
+  const form = document.getElementById("new-task-form");
+  if (form) {
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const input = document.getElementById("new-task-input");
+      if (input && input.value.trim() !== "") {
+        window.addNewTask(input.value.trim());
+        input.value = "";
+        input.focus();
+      }
+    });
+  }
+
   renderTasks();
 }
+
 
 /**
  * Salva e renderiza
@@ -26,6 +42,9 @@ export function saveTasks() {
   renderTasks();
 }
 
+/**
+ * Renderiza lista de tarefas no container
+ */
 /**
  * Renderiza lista de tarefas no container
  */
@@ -62,8 +81,13 @@ export function renderTasks() {
   
   updateTasksBadge(completed, projectTasks.length);
   
-  createIcons({ icons, nameAttr: 'data-lucide', root: container });
+  // Re-inicializa os ícones do Lucide apenas no container das tarefas
+  import('lucide').then((mod) => {
+     mod.createIcons({ icons: mod.icons, nameAttr: 'data-lucide', root: container });
+  });
 }
+
+
 
 function updateTasksBadge(completed, total) {
   const badge = document.getElementById("tasks-badge");
@@ -92,13 +116,13 @@ window.deleteTask = function(index) {
 
 window.editTask = async function(index) {
   const task = projectTasks[index];
-  const customModalFuncs = await import('./utils.js');
-  const newTitle = await customModalFuncs.customPrompt("Editar Tarefa", "Corrija o texto da tarefa:", task.title);
+  const newTitle = await customPrompt("Editar Tarefa", "Corrija o texto da tarefa:", task.title);
   if (newTitle !== null && newTitle.trim() !== "") {
     projectTasks[index].title = newTitle.trim();
     saveTasks();
   }
 };
+
 
 window.clearCompletedTasks = function() {
   projectTasks = projectTasks.filter(t => !t.done);
@@ -111,7 +135,16 @@ window.addNewTask = function(title) {
   saveTasks();
 };
 
-function escapeHtml(s) {
-  if (typeof s !== "string") return s;
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+export function toggleTasksDrawer() {
+  const overlay = document.getElementById("tasks-drawer-overlay");
+  const drawer = document.getElementById("tasks-drawer");
+  if (!overlay || !drawer) return;
+
+  const isActive = drawer.classList.toggle("active");
+  overlay.classList.toggle("active", isActive);
+  
+  if (isActive) {
+    renderTasks();
+  }
 }
+
