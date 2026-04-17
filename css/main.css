@@ -515,13 +515,13 @@ html:not(.dark) #autocomplete-popup .autocomplete-hint {
 }
 
 #search-highlight-overlay mark {
-  background-color: rgba(251, 191, 36, 0.45);
+  background-color: rgba(37, 99, 235, 0.4); /* Azul Royal Premium */
   border-radius: 2px;
   color: transparent;
 }
 
 #search-highlight-overlay mark.current-match {
-  background-color: rgba(251, 146, 60, 0.7);
+  background-color: rgba(37, 99, 235, 0.7); /* Azul Intenso */
 }
 
 /* Badge contador de ocorrências na busca */
@@ -705,4 +705,15 @@ html.dark #quickopen-list li.active {
 
 #ruler-line.hidden {
   display: none !important;
+}
+
+/* Badge de Seleção Múltipla */
+#multi-selection-indicator {
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+#multi-selection-indicator.show {
+  transform: translateY(0) !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
 }

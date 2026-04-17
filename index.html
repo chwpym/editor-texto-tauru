@@ -620,6 +620,13 @@
         </div>
       </div>
     </div>
+    <!-- Indicador de Múltiplas Seleções (Badge) -->
+    <div id="multi-selection-indicator" class="fixed bottom-12 right-6 bg-blue-600 text-white px-4 py-2 rounded-full shadow-2xl z-[200] flex items-center gap-2 transform transition-all duration-300 translate-y-20 opacity-0 pointer-events-none border-2 border-blue-400/50">
+      <i data-lucide="layers" class="w-4 h-4"></i>
+      <span id="multi-selection-text" class="text-xs font-bold font-mono">0 selecionadas</span>
+      <span class="text-[10px] bg-blue-800 px-1.5 py-0.5 rounded ml-1 opacity-80">ESC para limpar</span>
+    </div>
+
     <!-- Referência ao script principal da aplicação (Módulo ES6) -->
     <script type="module" src="./js/app.js"></script>
 
