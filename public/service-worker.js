@@ -6,10 +6,6 @@ const CACHE_NAME = "editor-taurus-v14.9";
 
 
 
-
-
-
-
 const ASSETS = [
   "./index.html",
   "./css/main.css",

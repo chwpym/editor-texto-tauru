@@ -22,7 +22,7 @@ import { THEMES, applyTheme, initThemeSystem } from './theme.js';
 import { createIcons, icons } from 'lucide';
 
 // Versão v12.7: Estabilização de Contraste e Abas
-const APP_VERSION = "v14.9 Consistência";
+const APP_VERSION = "v15.1 Estável";
 
 
 
