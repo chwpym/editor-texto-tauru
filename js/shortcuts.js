@@ -8,6 +8,7 @@ import { updateSearchHighlight } from './highlight.js';
 // Estado interno de seleções múltiplas
 let multiSelections = [];
 let multiSelectTerm = '';
+let lastDTime = 0; // Trava para evitar disparos duplos (debounce)
 
 /**
  * Inicializa todos os ouvintes de atalho
@@ -139,6 +140,11 @@ function insertText(editor, text) {
  * Seleciona a próxima ocorrência da palavra/seleção atual (Ctrl+D)
  */
 function selectNextOccurrence(editor) {
+  // 🔥 DEBOUNCE: Ignora se a tecla foi apertada há menos de 100ms (evita salto de 2 em 2)
+  const now = Date.now();
+  if (now - lastDTime < 100) return;
+  lastDTime = now;
+
   const val = editor.value;
   let start = editor.selectionStart;
   let end = editor.selectionEnd;

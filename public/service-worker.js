@@ -1,9 +1,4 @@
-const CACHE_NAME = "editor-taurus-v15.2";
-
-
-
-
-
+const CACHE_NAME = "editor-taurus-v15.3";
 
 
 const ASSETS = [
