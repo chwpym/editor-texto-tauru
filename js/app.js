@@ -22,7 +22,7 @@ import { THEMES, applyTheme, initThemeSystem } from './theme.js';
 import { createIcons, icons } from 'lucide';
 
 // Versão v12.7: Estabilização de Contraste e Abas
-const APP_VERSION = "v13.9 Visual Excellence";
+const APP_VERSION = "v14.9 Consistência";
 
 
 
@@ -113,6 +113,15 @@ export async function init() {
 
   core.loadTypewriterMode(state.editor);
   ui.initFloatingMenu(state.editor, () => state.aiEnabled);
+
+  // Inicializa o sistema de atalhos (Ctrl+D, Ctrl+M, ESC, etc.)
+  shortcuts.initShortcuts(state.editor, {
+    onInput: handleEditorInput,
+    openMultiActions: () => {
+      document.getElementById("multi-selection-count").textContent = `${shortcuts.getMultiSelections().selections.length} selecionadas`;
+      ui.openModal(document.getElementById("multi-actions-modal-overlay"));
+    }
+  });
 
   setupEventListeners();
   state.editorReady = true;
@@ -236,6 +245,15 @@ function setupEventListeners() {
   document.getElementById("multi-uppercase-btn").addEventListener("click", () => applyMultiAction("uppercase"));
   document.getElementById("multi-lowercase-btn").addEventListener("click", () => applyMultiAction("lowercase"));
   document.getElementById("multi-delete-btn").addEventListener("click", () => applyMultiAction("delete"));
+
+  // Clique no Badge Azul para abrir ações múltiplas
+  document.getElementById("multi-selection-indicator")?.addEventListener("click", () => {
+    const { selections } = shortcuts.getMultiSelections();
+    if (selections.length > 0) {
+      document.getElementById("multi-selection-count").textContent = `${selections.length} selecionadas`;
+      ui.openModal(document.getElementById("multi-actions-modal-overlay"));
+    }
+  });
 
 
   // Modais de Confirmação e Prompt

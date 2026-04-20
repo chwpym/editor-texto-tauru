@@ -56,8 +56,8 @@ export function initShortcuts(editor, actions) {
       return;
     }
 
-    // Ctrl + D → Selecionar próxima ocorrência da palavra atual
-    if (ctrl && !e.shiftKey && e.key === "d") {
+    // Ctrl + D → Selecionar próxima ocorrência (e.code evita conflito com Favoritos do browser)
+    if (ctrl && !e.shiftKey && e.code === "KeyD") {
       e.preventDefault();
       selectNextOccurrence(editor);
       return;
@@ -108,6 +108,18 @@ export function initShortcuts(editor, actions) {
       actions.onInput?.();
       return;
     }
+
+    // Resetar multi-seleções ao mover o cursor manualmente com as setas (sem ser Ctrl+D)
+    if (multiSelections.length > 0 && e.key.startsWith("Arrow") && !e.ctrlKey) {
+      clearMultiSelections(editor);
+    }
+  });
+
+  // Limpar multi-seleções ao clicar no editor
+  editor.addEventListener("mousedown", () => {
+    if (multiSelections.length > 0) {
+      clearMultiSelections(editor);
+    }
   });
 }
 
@@ -131,52 +143,63 @@ function selectNextOccurrence(editor) {
   let start = editor.selectionStart;
   let end = editor.selectionEnd;
 
-  // Se nada estiver selecionado, tenta selecionar a palavra sob o cursor
+  // Helper interno para evitar duplicações
+  const addSelection = (idx) => {
+    if (!multiSelections.includes(idx)) {
+      multiSelections.push(idx);
+    }
+  };
+
+  // 1. Se nada estiver selecionado, seleciona a palavra E já registra (Badge "1")
   if (start === end) {
     const textBefore = val.substring(0, start);
     const textAfter = val.substring(start);
-    
+
     const wordBefore = textBefore.match(/[\wÀ-ÿ]+$/);
     const wordAfter = textAfter.match(/^[\wÀ-ÿ]+/);
-    
+
     if (wordBefore || wordAfter) {
       const startPos = start - (wordBefore ? wordBefore[0].length : 0);
       const endPos = start + (wordAfter ? wordAfter[0].length : 0);
+
       editor.setSelectionRange(startPos, endPos);
-      start = startPos;
-      end = endPos;
+
+      // 🔥 RESET TOTAL (não inicia multi ainda)
+      multiSelections = [];
+      multiSelectTerm = '';
+
+      return;
     } else {
-      return; // Sem palavra encontrada
+      return;
     }
   }
 
   const term = val.substring(start, end);
   multiSelectTerm = term;
 
-  // Busca próxima ocorrência
-  const searchFrom = multiSelections.length > 0 
-    ? Math.max(...multiSelections) + term.length 
-    : end;
-    
-  let nextIdx = val.indexOf(term, searchFrom);
-  
-  // Se não encontrou do ponto atual, volta para o início (wrap-around)
-  if (nextIdx === -1) {
-    nextIdx = val.indexOf(term, 0);
+  // 2. Se for a PRIMEIRA entrada no fluxo de multi-select (Badge "1")
+  if (multiSelections.length === 0) {
+    multiSelections = [start];
+    updateMultiSelectionCount();
+    updateSearchHighlight(editor, term, multiSelections);
+    return; // 🔥 CHAVE: Para aqui no primeiro Ctrl+D para não pular 2
   }
 
-  // Se ainda não encontrou ou é a mesma seleção, para
+  // 3. Buscar PRÓXIMA ocorrência (Sempre +1 por vez)
+  const last = multiSelections[multiSelections.length - 1];
+  let nextIdx = val.indexOf(term, last + term.length);
+
+  if (nextIdx === -1) {
+    nextIdx = val.indexOf(term, 0); // Wrap-around
+  }
+
   if (nextIdx === -1 || multiSelections.includes(nextIdx)) return;
 
-  if (!multiSelections.includes(start)) {
-    multiSelections.push(start);
-  }
-  
-  multiSelections.push(nextIdx);
+  addSelection(nextIdx);
   editor.setSelectionRange(nextIdx, nextIdx + term.length);
-  
+
   updateMultiSelectionCount();
-  updateSearchHighlight(editor, term);
+  updateSearchHighlight(editor, term, multiSelections);
 }
 
 /**
@@ -206,7 +229,7 @@ function selectAllOccurrences(editor) {
     editor.setSelectionRange(last, last + term.length);
   }
   updateMultiSelectionCount();
-  updateSearchHighlight(editor, term);
+  updateSearchHighlight(editor, term, multiSelections);
 }
 
 /**

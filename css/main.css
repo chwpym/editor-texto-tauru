@@ -709,10 +709,26 @@ html.dark #quickopen-list li.active {
 
 /* Badge de Seleção Múltipla */
 #multi-selection-indicator {
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  width: auto !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  max-width: fit-content !important;
+  padding: 0 20px !important;
+  border-radius: 20px !important;
+  white-space: nowrap !important;
+  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.4), 0 4px 6px -2px rgba(37, 99, 235, 0.2) !important;
+  color: white !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
 }
 
 #multi-selection-indicator.show {
+  display: flex !important;
   transform: translateY(0) !important;
   opacity: 1 !important;
   pointer-events: auto !important;

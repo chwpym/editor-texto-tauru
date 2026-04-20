@@ -14,12 +14,16 @@ function escapeRegex(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-/**
- * Atualiza o realce de busca no overlay
- */
-export function updateSearchHighlight(editor, term) {
+let lastRenderKey = "";
+
+export function updateSearchHighlight(editor, term, specificIndices = null) {
   const overlay = document.getElementById("search-highlight-overlay");
   if (!overlay || !editor) return;
+
+  // 🔥 ESCUDO ANTI-DUPLICAÇÃO: evita renderizar 2x a mesma coisa
+  const renderKey = term + "|" + (specificIndices ? specificIndices.join(",") : "");
+  if (renderKey === lastRenderKey) return;
+  lastRenderKey = renderKey;
 
   searchHighlightTerm = term;
   
@@ -30,11 +34,19 @@ export function updateSearchHighlight(editor, term) {
   }
 
   const text = editor.value;
-  const regex = new RegExp(escapeRegex(term), "gi");
   let matches = [];
-  let m;
-  while ((m = regex.exec(text)) !== null) {
-    matches.push({ start: m.index, end: m.index + m[0].length });
+
+  if (specificIndices && specificIndices.length > 0) {
+    // Se passarmos índices específicos (Ctrl+D), destacamos apenas esses
+    matches = specificIndices.map(idx => ({ start: idx, end: idx + term.length }));
+    matches.sort((a, b) => a.start - b.start);
+  } else {
+    // Busca padrão por RegExp (Ctrl+F)
+    const regex = new RegExp(escapeRegex(term), "gi");
+    let m;
+    while ((m = regex.exec(text)) !== null) {
+      matches.push({ start: m.index, end: m.index + m[0].length });
+    }
   }
 
   updateFindMatchCount(searchMatchIndex + 1, matches.length);
