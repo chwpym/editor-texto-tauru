@@ -138,6 +138,12 @@ export function initShortcuts(editor, actions) {
         applyTextToMultiSelections(editor, "", -1);
         return;
       }
+      // Delete (Apagar para frente)
+      if (e.key === "Delete") {
+        e.preventDefault();
+        applyTextToMultiSelections(editor, "", 1);
+        return;
+      }
       // Enter
       if (e.key === "Enter") {
         e.preventDefault();
@@ -378,8 +384,9 @@ function applyTextToMultiSelections(editor, text, offset = 0) {
       start = idx;
       end = idx + termLen;
     } else {
+      // Se offset < 0 (Backspace), start recua. Se offset > 0 (Delete), end avança.
       start = Math.max(0, idx + (offset < 0 ? offset : 0));
-      end = idx;
+      end = Math.min(val.length, idx + (offset > 0 ? offset : 0));
     }
     val = val.substring(0, start) + text + val.substring(end);
   });
