@@ -153,6 +153,30 @@ export function initShortcuts(editor, actions) {
       clearMultiSelections(editor);
     }
   });
+
+  // 🔥 NOVO: Ouvinte para aplicar sugestão do Autocomplete
+  window.addEventListener('accept-autocomplete-internal', (e) => {
+    const { suggestion, editor: targetEditor } = e.detail;
+    if (targetEditor !== editor) return;
+
+    // Se houver multi-cursores, usa a lógica de aplicação múltipla
+    if (multiSelections.length > 0) {
+      applySuggestionToMultiCursors(editor, suggestion);
+    } else {
+      // Caso contrário, aplica no cursor único nativo
+      const text = editor.value;
+      const pos = editor.selectionStart;
+      const textBefore = text.substring(0, pos);
+      const wordMatch = textBefore.match(/[\wÀ-ú]+$/);
+      const wordStart = wordMatch ? pos - wordMatch[0].length : pos;
+
+      const newText = text.substring(0, wordStart) + suggestion + text.substring(pos);
+      editor.value = newText;
+      const newPos = wordStart + suggestion.length;
+      editor.setSelectionRange(newPos, newPos);
+      editor.dispatchEvent(new Event('input'));
+    }
+  });
 }
 
 // ── Operações de Texto ─────────────────────────────────────────────────────

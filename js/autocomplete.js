@@ -1,7 +1,6 @@
 /* ========================================
    AUTOCOMPLETE - Sugestões Inteligentes
    ======================================== */
-import * as shortcuts from './shortcuts.js';
 
 let autocompletePopup = null;
 let currentSuggestions = [];
@@ -102,33 +101,12 @@ export function handleAutocompleteKeys(e, editor) {
 export function acceptAutocomplete(editor, suggestion) {
   if (!suggestion) return;
 
-  const text = editor.value;
-  const pos = editor.selectionStart;
-  
-  // Acha o início da palavra atual para substituir
-  const textBefore = text.substring(0, pos);
-  const wordMatch = textBefore.match(/[\wÀ-ú]+$/);
-  const wordStart = wordMatch ? pos - wordMatch[0].length : pos;
-
-  // Se o editor estiver em modo multi-cursor, usamos a lógica de aplicação múltipla
-  const multi = shortcuts.getMultiSelections();
-  if (multi.selections.length > 0) {
-    if (shortcuts.applySuggestionToMultiCursors(editor, suggestion)) {
-       hideAutocompletePopup();
-       return;
-    }
-  }
-
-  const newText = text.substring(0, wordStart) + suggestion + text.substring(pos);
-  editor.value = newText;
-  
-  const newPos = wordStart + suggestion.length;
-  editor.setSelectionRange(newPos, newPos);
+  // Dispara evento global para que outros módulos (como shortcuts) possam reagir
+  window.dispatchEvent(new CustomEvent('accept-autocomplete-internal', { 
+    detail: { suggestion, editor } 
+  }));
   
   hideAutocompletePopup();
-  
-  // Força atualização de métricas e salvamento
-  editor.dispatchEvent(new Event('input'));
 }
 
 /**
