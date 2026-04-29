@@ -98,6 +98,7 @@ export async function init() {
   tasks.initTasksSystem();
   dictionary.initDictionary();
   auto.initAutocomplete();
+  ui.initResponsiveSidebar();
   
   // Renderiza ícones Lucide (NPM style)
   if (window.lucide) {
@@ -114,14 +115,7 @@ export async function init() {
   core.loadTypewriterMode(state.editor);
   ui.initFloatingMenu(state.editor, () => state.aiEnabled);
 
-  // Inicializa o sistema de atalhos (Ctrl+D, Ctrl+M, ESC, etc.)
-  shortcuts.initShortcuts(state.editor, {
-    onInput: handleEditorInput,
-    openMultiActions: () => {
-      document.getElementById("multi-selection-count").textContent = `${shortcuts.getMultiSelections().selections.length} selecionadas`;
-      ui.openModal(document.getElementById("multi-actions-modal-overlay"));
-    }
-  });
+  // A inicialização de atalhos foi movida para o final do setup para garantir que todas as ações estejam prontas
 
   setupEventListeners();
   state.editorReady = true;
@@ -130,7 +124,13 @@ export async function init() {
 }
 
 function setupEventListeners() {
-  state.docSelector.addEventListener("change", (e) => docs.switchDocument(e.target.value, state));
+  state.docSelector.addEventListener("change", async (e) => {
+    if (state.saveTimeout) {
+      clearTimeout(state.saveTimeout);
+      await saveNow();
+    }
+    docs.switchDocument(e.target.value, state);
+  });
 
   const aiToggle = document.getElementById("ai-toggle-switch");
   const aiActionsBtn = document.getElementById("ai-actions-btn");
@@ -204,6 +204,10 @@ function setupEventListeners() {
     }
 
     if (tab) {
+      if (state.saveTimeout) {
+        clearTimeout(state.saveTimeout);
+        saveNow();
+      }
       docs.switchDocument(tab.dataset.docId, state);
     }
   });
@@ -324,7 +328,11 @@ function setupEventListeners() {
     new: () => docs.createNewDocument("Novo Documento", state),
     find: () => ui.openModal(document.getElementById("find-replace-modal-overlay")),
     isAutocompleteOpen: () => !document.getElementById("autocomplete-popup").classList.contains("hidden"),
-    openMultiActions: () => ui.openModal(document.getElementById("multi-actions-modal-overlay")),
+    openMultiActions: () => {
+      const { selections } = shortcuts.getMultiSelections();
+      document.getElementById("multi-selection-count").textContent = `${selections.length} selecionadas`;
+      ui.openModal(document.getElementById("multi-actions-modal-overlay"));
+    },
     onInput: () => handleEditorInput()
   });
 
@@ -383,9 +391,11 @@ function handleEditorInput() {
   core.updateLineNumbers(state.editor, state.lineNumbers);
   core.updateCursorPos(state.editor, state.metrics.cursorPos);
   core.updateStatusBarMetrics(state.editor, state.metrics);
-  clearTimeout(state.saveTimeout);
+  
+  // Debounce de Salvamento: Aguarda 1s de inatividade para salvar
   ui.renderSaveStatus("unsaved");
-  state.saveTimeout = setTimeout(saveNow, 1500);
+  clearTimeout(state.saveTimeout);
+  state.saveTimeout = setTimeout(saveNow, 1000);
 
   // Dispara o autocomplete com as palavras do documento + dicionário pessoal
   const text = state.editor.value;
@@ -440,7 +450,7 @@ function applyMultiAction(type) {
   });
 
   state.editor.value = text;
-  shortcuts.clearMultiSelectionsPublic();
+  shortcuts.clearMultiSelectionsPublic(state.editor);
   ui.closeModal(document.getElementById("multi-actions-modal-overlay"));
   handleEditorInput();
   ui.showMessage(`${sortedSeqs.length} ocorrências processadas!`, "success");

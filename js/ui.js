@@ -160,3 +160,72 @@ export function updateEmptyState(currentDocId) {
   }
 }
 
+
+/**
+ * Inicializa o comportamento da Sidebar Responsiva
+ */
+export function initResponsiveSidebar() {
+  const mobileMenuBtn = document.getElementById("mobile-menu-btn");
+  const closeSidebarBtn = document.getElementById("close-sidebar-btn");
+  const sidebar = document.getElementById("mobile-sidebar");
+  const overlay = document.getElementById("sidebar-overlay");
+  const sidebarContent = document.getElementById("sidebar-content");
+  const secondaryGroups = document.querySelectorAll(".toolbar-group-secondary");
+
+  if (!mobileMenuBtn || !sidebar) return;
+
+  const toggleSidebar = () => {
+    sidebar.classList.toggle("open");
+    overlay.classList.toggle("hidden");
+    overlay.classList.toggle("active");
+    
+    // Popula a sidebar se estiver vazia
+    if (sidebar.classList.contains("open") && sidebarContent.children.length === 0) {
+      secondaryGroups.forEach(group => {
+        const items = group.querySelectorAll("button, .ruler-input-group");
+        items.forEach(item => {
+          const clone = item.cloneNode(true);
+          // Adiciona label baseado no title para ficar legível na lista vertical
+          const label = document.createElement("span");
+          label.className = "text-sm font-medium";
+          label.textContent = item.title || "Ação";
+          
+          const row = document.createElement("div");
+          row.className = "flex-row-mobile flex items-center gap-3 p-3 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg cursor-pointer";
+          
+          // Se for o grupo de régua, precisamos tratar o input
+          if (item.classList.contains("ruler-input-group")) {
+             row.innerHTML = item.innerHTML;
+             row.classList.add("justify-between");
+          } else {
+             // Tenta pegar o ícone (pode ser <i> ou <svg> se já renderizado)
+             const icon = item.querySelector("i, svg");
+             if (icon) {
+               const iconClone = icon.cloneNode(true);
+               iconClone.style.width = "20px";
+               iconClone.style.height = "20px";
+               row.appendChild(iconClone);
+             } else {
+               row.appendChild(document.createElement("div"));
+             }
+             
+             row.appendChild(label);
+             
+             // Vincula o clique do clone ao clique do original
+             row.onclick = () => {
+               item.click();
+               toggleSidebar();
+             };
+          }
+          
+          sidebarContent.appendChild(row);
+        });
+      });
+      createIcons({ icons, nameAttr: 'data-lucide' });
+    }
+  };
+
+  mobileMenuBtn.addEventListener("click", toggleSidebar);
+  closeSidebarBtn.addEventListener("click", toggleSidebar);
+  overlay.addEventListener("click", toggleSidebar);
+}

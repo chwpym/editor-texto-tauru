@@ -2,37 +2,33 @@
    EDITOR CORE - O motor de renderização
    ======================================== */
 
-let currentRenderedLines = 0; // Otimização de performance
-
 /**
- * Atualiza régua de números (O(1) na digitação, O(N) no Enter)
+ * Atualiza régua de números (Reconstrução Total para Resiliência)
  */
 export function updateLineNumbers(editor, lineNumbers) {
   if (!editor || !lineNumbers) return;
   const lines = editor.value.split("\n");
   const count = lines.length;
+  
+  // Usamos dataset para evitar reconstrução desnecessária se nada mudou
+  if (lineNumbers.dataset.lastCount === String(count)) return;
+  lineNumbers.dataset.lastCount = count;
 
-  // SÓ AGE SE O NÚMERO DE LINHAS REALMENTE MUDAR
-  if (count === currentRenderedLines) return;
-
-  if (count > currentRenderedLines) {
-    // Adiciona apenas as novas linhas
-    const fragment = document.createDocumentFragment();
-    for (let i = currentRenderedLines + 1; i <= count; i++) {
-      const div = document.createElement("div");
-      div.className = "line-number";
-      div.textContent = i;
-      fragment.appendChild(div);
-    }
-    lineNumbers.appendChild(fragment);
-  } else {
-    // Remove as linhas excedentes do final
-    while (lineNumbers.childNodes.length > count) {
-      lineNumbers.removeChild(lineNumbers.lastChild);
-    }
+  let html = "";
+  for (let i = 1; i <= count; i++) {
+    html += `<div class="line-number">${i}</div>`;
   }
+  lineNumbers.innerHTML = html;
+}
 
-  currentRenderedLines = count;
+/**
+ * Reseta o contador de linhas (Útil ao trocar de documento)
+ */
+export function resetLineCount(lineNumbers) {
+  if (lineNumbers) {
+    lineNumbers.innerHTML = "";
+    lineNumbers.dataset.lastCount = "0";
+  }
 }
 
 /**

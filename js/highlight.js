@@ -21,13 +21,14 @@ export function updateSearchHighlight(editor, term, specificIndices = null) {
   if (!overlay || !editor) return;
 
   // 🔥 ESCUDO ANTI-DUPLICAÇÃO: evita renderizar 2x a mesma coisa
-  const renderKey = term + "|" + (specificIndices ? specificIndices.join(",") : "");
+  // Adicionamos o comprimento do texto na chave para forçar re-render se o texto mudar
+  const renderKey = term + "|" + (specificIndices ? specificIndices.join(",") : "") + "|" + editor.value.length;
   if (renderKey === lastRenderKey) return;
   lastRenderKey = renderKey;
 
   searchHighlightTerm = term;
   
-  if (!term || term.length < 1) {
+  if ((!term || term.length < 1) && (!specificIndices || specificIndices.length === 0)) {
     overlay.innerHTML = "";
     updateFindMatchCount(0, 0);
     return;
@@ -51,9 +52,14 @@ export function updateSearchHighlight(editor, term, specificIndices = null) {
 
   updateFindMatchCount(searchMatchIndex + 1, matches.length);
   
-  if (matches.length === 0) {
+  if (matches.length === 0 && (!specificIndices || specificIndices.length === 0)) {
     overlay.innerHTML = "";
     return;
+  }
+  
+  // Caso especial: Multi-cursores sem seleção (termo vazio)
+  if (matches.length === 0 && specificIndices && specificIndices.length > 0) {
+    matches = specificIndices.map(idx => ({ start: idx, end: idx }));
   }
 
   // Renderiza texto com marcações
@@ -61,8 +67,11 @@ export function updateSearchHighlight(editor, term, specificIndices = null) {
   let last = 0;
   matches.forEach((match, i) => {
     html += escapeHtml(text.slice(last, match.start));
-    const cls = i === searchMatchIndex ? "current-match" : "";
-    html += `<mark class="${cls}">${escapeHtml(text.slice(match.start, match.end))}</mark>`;
+    const isCurrent = i === searchMatchIndex;
+    const cls = isCurrent ? "current-match" : "";
+    
+    // Renderiza a marcação e um cursor simulado
+    html += `<mark class="${cls}">${escapeHtml(text.slice(match.start, match.end))}<span class="fake-cursor"></span></mark>`;
     last = match.end;
   });
   html += escapeHtml(text.slice(last));

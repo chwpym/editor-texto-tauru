@@ -22,15 +22,15 @@ export function initShortcuts(editor, actions) {
 
     if (ctrl && e.key === "s") {
       e.preventDefault();
-      actions.save();
+      if (actions.save) actions.save();
     }
     if (e.altKey && e.key === "n") {
       e.preventDefault();
-      actions.new();
+      if (actions.new) actions.new();
     }
     if (ctrl && (e.key === "f" || (e.shiftKey && e.key === "F"))) {
       e.preventDefault();
-      actions.find();
+      if (actions.find) actions.find();
     }
   });
 
@@ -110,9 +110,40 @@ export function initShortcuts(editor, actions) {
       return;
     }
 
-    // Resetar multi-seleções ao mover o cursor manualmente com as setas (sem ser Ctrl+D)
-    if (multiSelections.length > 0 && e.key.startsWith("Arrow") && !e.ctrlKey) {
-      clearMultiSelections(editor);
+    // 🔥 NOVO: Movimentação de Multi-Cursor com as setas (Esquerda/Direita)
+    if (multiSelections.length > 0 && !ctrl && !e.altKey && !e.metaKey) {
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        moveMultiCursors(editor, -1);
+        return;
+      }
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        moveMultiCursors(editor, 1);
+        return;
+      }
+    }
+
+    // 🔥 NOVO: Lógica de Multi-Cursor (Digitação Simultânea)
+    if (multiSelections.length > 0 && !ctrl && !e.altKey && !e.metaKey) {
+      // Caracteres imprimíveis
+      if (e.key.length === 1) {
+        e.preventDefault();
+        applyTextToMultiSelections(editor, e.key);
+        return;
+      }
+      // Backspace
+      if (e.key === "Backspace") {
+        e.preventDefault();
+        applyTextToMultiSelections(editor, "", -1);
+        return;
+      }
+      // Enter
+      if (e.key === "Enter") {
+        e.preventDefault();
+        applyTextToMultiSelections(editor, "\n");
+        return;
+      }
     }
   });
 
@@ -308,6 +339,93 @@ function clearMultiSelections(editor) {
 }
 
 /**
+ * Aplica um texto (ou deleção) em todas as seleções múltiplas simultaneamente
+ */
+function applyTextToMultiSelections(editor, text, offset = 0) {
+  let val = editor.value;
+  const termLen = multiSelectTerm.length;
+  
+  // Ordenamos do fim para o início para que a substituição não mude os índices dos próximos
+  const sorted = [...multiSelections].sort((a, b) => b - a);
+  
+  sorted.forEach(idx => {
+    let start, end;
+    if (termLen > 0) {
+      start = idx;
+      end = idx + termLen;
+    } else {
+      start = Math.max(0, idx + (offset < 0 ? offset : 0));
+      end = idx;
+    }
+    val = val.substring(0, start) + text + val.substring(end);
+  });
+
+  editor.value = val;
+
+  // Cálculo de deslocamento para os cursores
+  const addedLen = text.length;
+  const removedLen = termLen > 0 ? termLen : (offset < 0 ? -offset : 0);
+  const diffPerCursor = addedLen - removedLen;
+
+  // Atualiza os índices dos cursores
+  multiSelections.sort((a, b) => a - b);
+  multiSelections = multiSelections.map((idx, i) => {
+    // Cada cursor é deslocado pelo que ele mesmo adicionou/removeu 
+    // MAIS o que os cursores anteriores a ele adicionaram/removeram
+    const myChange = (offset < 0 && termLen === 0) ? offset : 0;
+    const previousChanges = i * diffPerCursor;
+    const currentCursorMovement = termLen > 0 ? addedLen : addedLen; // Se havia seleção, cursor vai pro fim do novo texto
+    
+    // Se havia seleção ("RANGER"), e digitei "r", o novo índice deve ser o início + 1
+    if (termLen > 0) {
+        return idx + previousChanges + addedLen;
+    }
+    // Se era apenas cursor e digitei "r", o novo índice deve ser o antigo + 1
+    return idx + previousChanges + addedLen + myChange;
+  });
+  
+  // 🔥 IMPORTANTE: Após a primeira digitação, não há mais "termo selecionado"
+  // Transformamos as seleções em apenas cursores (comprimento 0)
+  multiSelectTerm = "";
+
+  // Move o cursor nativo para a última posição
+  const lastIdx = multiSelections[multiSelections.length - 1];
+  editor.setSelectionRange(lastIdx, lastIdx);
+
+  updateMultiSelectionCount();
+  updateSearchHighlight(editor, multiSelectTerm, multiSelections);
+  
+  // Dispara evento de input para o app.js salvar
+  editor.dispatchEvent(new Event('input'));
+}
+
+/**
+ * Move todos os multi-cursores para a esquerda ou direita
+ */
+function moveMultiCursors(editor, direction) {
+  const termLen = multiSelectTerm.length;
+  
+  multiSelections = multiSelections.map(idx => {
+    if (termLen > 0) {
+      // Se havia seleção, a seta "colapsa" o cursor para o início ou fim
+      return direction > 0 ? idx + termLen : idx;
+    }
+    // Se era apenas um cursor, move 1 posição
+    return Math.max(0, Math.min(editor.value.length, idx + direction));
+  });
+
+  // Após mover com a seta, a seleção vira apenas cursores (comprimento 0)
+  multiSelectTerm = "";
+  
+  // Sincroniza o cursor nativo com o último multi-cursor
+  const lastIdx = multiSelections[multiSelections.length - 1];
+  editor.setSelectionRange(lastIdx, lastIdx);
+
+  updateMultiSelectionCount();
+  updateSearchHighlight(editor, multiSelectTerm, multiSelections);
+}
+
+/**
  * Atualiza o indicador de seleções múltiplas no rodapé
  */
 function updateMultiSelectionCount() {
@@ -330,8 +448,12 @@ export function getMultiSelections() {
   return { selections: multiSelections, term: multiSelectTerm };
 }
 
-export function clearMultiSelectionsPublic() {
+export function clearMultiSelectionsPublic(editor) {
   multiSelections = [];
   multiSelectTerm = '';
   updateMultiSelectionCount();
+  // 🔥 CORREÇÃO: Também limpa o destaque visual (resolve "sujeira" na tela)
+  if (editor) {
+    updateSearchHighlight(editor, "");
+  }
 }

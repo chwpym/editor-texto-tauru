@@ -19,6 +19,7 @@ export async function switchDocument(docId, state) {
     if (editor) {
       editor.value = "";
       editor.disabled = true;
+      core.resetLineCount(lineNumbers);
       core.updateStatusBarMetrics(editor, state.metrics);
       core.updateLineNumbers(editor, lineNumbers);
     }
@@ -51,6 +52,7 @@ export async function switchDocument(docId, state) {
     editor.value = doc.content || "";
     state.contentBeforeEdit = editor.value;
     
+    core.resetLineCount(lineNumbers);
     core.updateStatusBarMetrics(editor, state.metrics);
     core.updateLineNumbers(editor, lineNumbers);
     

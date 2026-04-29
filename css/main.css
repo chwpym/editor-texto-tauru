@@ -17,6 +17,7 @@
   --theme-gutter-text: #475569;
   --theme-border: rgba(255,255,255,0.05);
   --theme-accent: #3b82f6; /* Destaque padrão */
+  --theme-gutter-width: 4rem; /* Largura base para acomodar 5+ dígitos confortavelmente */
 }
 
 /* ---- ESTILOS DAS ABAS TEMÁTICAS ---- */
@@ -235,8 +236,8 @@ body {
 #editor {
   font-family: "Roboto Mono", monospace;
   resize: none;
-  padding-left: 48px !important;
-  scroll-padding-left: 48px !important; /* Fix block bug on side scroll (HOME / END) */
+  padding-left: var(--theme-gutter-width) !important;
+  scroll-padding-left: var(--theme-gutter-width) !important; /* Fix block bug on side scroll (HOME / END) */
   white-space: pre;
   overflow: auto;
   font-size: 16px;
@@ -366,7 +367,7 @@ html.dark #message-box {
   position: absolute;
   left: 0;
   top: 0;
-  width: 48px;
+  width: var(--theme-gutter-width);
   background-color: #ffffff; /* Igual ao fundo claro do editor */
   border-right: none;
   overflow: hidden;
@@ -379,7 +380,7 @@ html.dark #message-box {
   color: #94a3b8;
   text-align: right;
   z-index: 15;
-  min-height: 100%;
+  height: 100%;
 }
 
 html.dark #line-numbers {
@@ -508,7 +509,7 @@ html:not(.dark) #autocomplete-popup .autocomplete-hint {
   font-family: "Roboto Mono", monospace;
   font-size: 16px;
   line-height: 24px;
-  padding: 16px 16px 16px 48px;
+  padding: 16px 16px 16px var(--theme-gutter-width);
   white-space: pre;
   color: transparent;
   word-wrap: break-word;
@@ -522,6 +523,22 @@ html:not(.dark) #autocomplete-popup .autocomplete-hint {
 
 #search-highlight-overlay mark.current-match {
   background-color: rgba(37, 99, 235, 0.7); /* Azul Intenso */
+}
+
+/* Cursor Simulado para Multi-cursores */
+.fake-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1.2em;
+  background-color: #3b82f6; /* Azul VS Code */
+  vertical-align: middle;
+  margin-left: 1px;
+  animation: cursor-blink 1s infinite;
+}
+
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
 
 /* Badge contador de ocorrências na busca */
@@ -642,6 +659,37 @@ html.dark #quickopen-list li.active {
   border-left: 1px solid var(--theme-border);
 }
 
+#status-bar {
+  font-size: 11px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--theme-border);
+  background: var(--theme-sidebar-bg);
+}
+
+@media (max-width: 768px) {
+  #status-bar {
+    padding: 4px 8px !important;
+    height: auto !important;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  
+  #status-bar .flex {
+    gap: 8px !important;
+  }
+
+  /* Esconde métricas menos importantes no celular para evitar quebra de linha feia */
+  #file-size, #word-count, #char-count {
+    display: none !important;
+  }
+  
+  #status-bar span {
+    font-size: 10px !important;
+  }
+}
+
 #tasks-drawer.active {
   transform: translateX(0);
 }
@@ -732,4 +780,142 @@ html.dark #quickopen-list li.active {
   transform: translateY(0) !important;
   opacity: 1 !important;
   pointer-events: auto !important;
+}
+
+/* ========================================
+   RESPONSIVIDADE - SIDEBAR (CSS PURO)
+   ======================================== */
+
+.mobile-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 280px;
+  background: #f8fafc; /* Slate 50 */
+  box-shadow: 10px 0 30px rgba(0,0,0,0.3);
+  z-index: 10000;
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #e2e8f0;
+}
+
+html.dark .mobile-sidebar {
+  background: #0f172a; /* Slate 900 */
+  border-right: 1px solid #1e293b;
+}
+
+.mobile-sidebar.open {
+  transform: translateX(0);
+}
+
+.sidebar-header {
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+html.dark .sidebar-header {
+  background: #020617;
+  border-bottom: 1px solid #1e293b;
+}
+
+.sidebar-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+html.dark .sidebar-title {
+  color: #f8fafc;
+}
+
+.sidebar-close {
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  background: transparent;
+  color: #64748b;
+  border: none;
+}
+
+.sidebar-close:hover {
+  background: rgba(0,0,0,0.05);
+}
+
+.sidebar-body {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay.active {
+  display: block;
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  #mobile-menu-btn {
+    display: block !important;
+  }
+
+  .toolbar {
+    flex-wrap: nowrap !important;
+    justify-content: flex-start !important;
+    padding: 8px !important;
+    height: 60px;
+    overflow: hidden;
+  }
+
+  .toolbar-group-secondary {
+    display: none !important;
+  }
+
+  #doc-selector {
+    max-width: 180px;
+    font-size: 14px;
+  }
+}
+
+/* Estilo para itens dentro da sidebar */
+#sidebar-content .flex-row-mobile {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 8px;
+  width: 100%;
+  color: var(--theme-editor-text);
+  transition: background 0.2s;
+}
+
+#sidebar-content .flex-row-mobile:hover {
+  background: rgba(0,0,0,0.05);
+}
+
+html.dark #sidebar-content .flex-row-mobile:hover {
+  background: rgba(255,255,255,0.05);
 }
