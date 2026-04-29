@@ -1,6 +1,7 @@
 /* ========================================
    AUTOCOMPLETE - Sugestões Inteligentes
    ======================================== */
+import * as shortcuts from './shortcuts.js';
 
 let autocompletePopup = null;
 let currentSuggestions = [];
@@ -48,8 +49,9 @@ export function triggerAutocomplete(editor, keywords) {
 function showAutocompletePopup(editor, lastWord) {
   const { top, left, height } = getCursorXY(editor);
   
+  // Posicionamento dinâmico baseado no cursor real
   autocompletePopup.style.top = `${top + height + 24}px`;
-  autocompletePopup.style.left = `${left + 48}px`; 
+  autocompletePopup.style.left = `${left}px`; 
   autocompletePopup.classList.remove("hidden");
 
   renderSuggestions();
@@ -98,6 +100,8 @@ export function handleAutocompleteKeys(e, editor) {
 }
 
 export function acceptAutocomplete(editor, suggestion) {
+  if (!suggestion) return;
+
   const text = editor.value;
   const pos = editor.selectionStart;
   
@@ -106,6 +110,15 @@ export function acceptAutocomplete(editor, suggestion) {
   const wordMatch = textBefore.match(/[\wÀ-ú]+$/);
   const wordStart = wordMatch ? pos - wordMatch[0].length : pos;
 
+  // Se o editor estiver em modo multi-cursor, usamos a lógica de aplicação múltipla
+  const multi = shortcuts.getMultiSelections();
+  if (multi.selections.length > 0) {
+    if (shortcuts.applySuggestionToMultiCursors(editor, suggestion)) {
+       hideAutocompletePopup();
+       return;
+    }
+  }
+
   const newText = text.substring(0, wordStart) + suggestion + text.substring(pos);
   editor.value = newText;
   
@@ -113,6 +126,9 @@ export function acceptAutocomplete(editor, suggestion) {
   editor.setSelectionRange(newPos, newPos);
   
   hideAutocompletePopup();
+  
+  // Força atualização de métricas e salvamento
+  editor.dispatchEvent(new Event('input'));
 }
 
 /**
@@ -151,7 +167,7 @@ export function getCursorXY(textarea) {
   return { 
     left: left + spanLeft - textarea.scrollLeft, 
     top: top + spanTop - textarea.scrollTop,
-    height: 18 // Altura média da linha
+    height: 18 
   };
 }
 

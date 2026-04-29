@@ -452,8 +452,30 @@ export function clearMultiSelectionsPublic(editor) {
   multiSelections = [];
   multiSelectTerm = '';
   updateMultiSelectionCount();
-  // 🔥 CORREÇÃO: Também limpa o destaque visual (resolve "sujeira" na tela)
   if (editor) {
     updateSearchHighlight(editor, "");
   }
+}
+
+/**
+ * Aplica uma sugestão do autocomplete em todos os multi-cursores
+ */
+export function applySuggestionToMultiCursors(editor, suggestion) {
+  if (!editor || multiSelections.length === 0) return false;
+
+  // Achar o que está sendo digitado em cada cursor (prefixo)
+  // Como assumimos que todos os cursores estão digitando a mesma coisa:
+  const text = editor.value;
+  const lastPos = multiSelections[multiSelections.length - 1];
+  const textBefore = text.substring(0, lastPos);
+  const wordMatch = textBefore.match(/[\wÀ-ú]+$/);
+  
+  if (!wordMatch) return false;
+  
+  const prefixLen = wordMatch[0].length;
+  const remainingText = suggestion.substring(prefixLen);
+
+  // Aplicamos apenas o RESTO da sugestão para cada cursor
+  applyTextToMultiSelections(editor, remainingText);
+  return true;
 }
