@@ -65,14 +65,14 @@ export function initShortcuts(editor, actions) {
     }
 
     // Ctrl + Shift + L → Selecionar TODAS as ocorrências
-    if (ctrl && e.shiftKey && e.key === "L") {
+    if (ctrl && e.shiftKey && e.code === "KeyL") {
       e.preventDefault();
       selectAllOccurrences(editor);
       return;
     }
 
     // Ctrl + Shift + D → Duplicar linha atual
-    if (ctrl && e.shiftKey && e.key === "D") {
+    if (ctrl && e.shiftKey && e.code === "KeyD") {
       e.preventDefault();
       duplicateLine(editor);
       actions.onInput?.();
@@ -80,7 +80,7 @@ export function initShortcuts(editor, actions) {
     }
 
     // Ctrl + Shift + U → Alternar MAIÚSCULAS / minúsculas
-    if (ctrl && e.shiftKey && e.key === "U") {
+    if (ctrl && e.shiftKey && e.code === "KeyU") {
       e.preventDefault();
       toggleCase(editor);
       actions.onInput?.();
