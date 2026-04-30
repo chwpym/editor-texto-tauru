@@ -99,7 +99,6 @@ export async function init() {
   dictionary.initDictionary();
   auto.initAutocomplete();
   ui.initResponsiveSidebar();
-  initSidebarMode();
   
   // Renderiza ícones Lucide (NPM style)
   if (window.lucide) {
@@ -319,6 +318,7 @@ function setupEventListeners() {
   document.getElementById("tasks-btn")?.addEventListener("click", () => tasks.toggleTasksDrawer());
   document.getElementById("tasks-drawer-overlay")?.addEventListener("click", () => tasks.toggleTasksDrawer());
   document.getElementById("typewriter-btn").addEventListener("click", () => core.toggleTypewriterMode(state.editor));
+  document.getElementById("zen-mode-btn").addEventListener("click", () => toggleZenMode());
   document.getElementById("ruler-toggle-btn").addEventListener("click", () => core.toggleRuler(state.rulerLine));
   
   state.rulerColumnInput.addEventListener("change", () => core.updateRulerPosition(state.rulerColumnInput, state.rulerLine));
@@ -333,6 +333,7 @@ function setupEventListeners() {
     save: () => saveNow(),
     new: () => docs.createNewDocument("Novo Documento", state),
     find: () => ui.openModal(document.getElementById("find-replace-modal-overlay")),
+    zen: () => toggleZenMode(),
     isAutocompleteOpen: () => !document.getElementById("autocomplete-popup").classList.contains("hidden"),
     openMultiActions: () => {
       const { selections } = shortcuts.getMultiSelections();
@@ -416,30 +417,21 @@ function handleEditorInput() {
 }
 
 
-/**
- * Alterna entre modo Barra Superior e Barra Lateral
- */
-function toggleSidebarMode() {
-  const container = document.getElementById("main-container");
-  const isSidebar = container.classList.toggle("sidebar-mode");
-  localStorage.setItem("sidebar-mode", isSidebar);
-  ui.showMessage(isSidebar ? "Modo Lateral Ativado" : "Modo Topo Ativado", "info");
-}
+
+
+
 
 /**
- * Inicializa a preferência do Modo Sidebar
+ * Alterna o Modo Zen (Esconde Barra de Ferramentas)
  */
-function initSidebarMode() {
-  const isSidebar = localStorage.getItem("sidebar-mode") === "true";
-  if (isSidebar) {
-    document.getElementById("main-container").classList.add("sidebar-mode");
+function toggleZenMode() {
+  const isZen = document.body.classList.toggle("zen-mode");
+  if (isZen) {
+    ui.showMessage("Modo Zen: Alt+Z para voltar", "info");
+  } else {
+    ui.showMessage("Barra de Ferramentas Restaurada", "info");
   }
-  
-  const btn = document.getElementById("sidebar-mode-btn");
-  if (btn) btn.addEventListener("click", toggleSidebarMode);
 }
-
-
 
 
 async function saveNow() {

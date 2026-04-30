@@ -1062,3 +1062,11 @@ html.dark .fake-cursor {
 #main-container.sidebar-mode #tabs-bar {
   border-bottom: 1px solid var(--theme-border);
 }
+
+/* Modo Zen (Maximizar Editor) */
+.zen-mode .toolbar {
+  display: none !important;
+}
+.zen-mode #tabs-bar {
+  border-top: 1px solid var(--theme-border);
+}

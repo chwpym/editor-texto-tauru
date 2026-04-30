@@ -32,6 +32,10 @@ export function initShortcuts(editor, actions) {
       e.preventDefault();
       if (actions.find) actions.find();
     }
+    if (e.altKey && e.key === "z") {
+      e.preventDefault();
+      if (actions.zen) actions.zen();
+    }
   });
 
   // ── Atalhos específicos do Editor ──────────────────────────────────────
