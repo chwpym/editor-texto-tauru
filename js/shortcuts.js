@@ -231,10 +231,11 @@ function selectNextOccurrence(editor) {
 
       editor.setSelectionRange(startPos, endPos);
 
-      // 🔥 RESET TOTAL (não inicia multi ainda)
-      multiSelections = [];
-      multiSelectTerm = '';
-
+      // 🔥 NOVO: Já inicia como a primeira seleção e avisa o realce
+      multiSelections = [startPos];
+      multiSelectTerm = val.substring(startPos, endPos);
+      updateMultiSelectionCount();
+      updateSearchHighlight(editor, multiSelectTerm, multiSelections);
       return;
     } else {
       return;
@@ -375,11 +376,13 @@ function applyTextToMultiSelections(editor, text, offset = 0) {
   let val = editor.value;
   const termLen = multiSelectTerm.length;
   
-  // Ordenamos do fim para o início para que a substituição não mude os índices dos próximos
-  const sorted = [...multiSelections].sort((a, b) => b - a);
-  
-  sorted.forEach(idx => {
+  // 🔥 IMPORTANTE: Iterar de TRÁS PARA FRENTE para que a mudança no texto 
+  // não invalide os índices das seleções que vêm antes.
+  const sortedSelections = [...multiSelections].sort((a, b) => b - a);
+
+  sortedSelections.forEach((idx) => {
     let start, end;
+
     if (termLen > 0) {
       start = idx;
       end = idx + termLen;
@@ -395,7 +398,7 @@ function applyTextToMultiSelections(editor, text, offset = 0) {
 
   // Cálculo de deslocamento para os cursores
   const addedLen = text.length;
-  const removedLen = termLen > 0 ? termLen : (offset < 0 ? -offset : 0);
+  const removedLen = termLen > 0 ? termLen : Math.abs(offset);
   const diffPerCursor = addedLen - removedLen;
 
   // Atualiza os índices dos cursores

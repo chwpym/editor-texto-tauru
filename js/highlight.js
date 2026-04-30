@@ -20,11 +20,10 @@ export function updateSearchHighlight(editor, term, specificIndices = null) {
   const overlay = document.getElementById("search-highlight-overlay");
   if (!overlay || !editor) return;
 
-  // 🔥 ESCUDO ANTI-DUPLICAÇÃO: evita renderizar 2x a mesma coisa
-  // Adicionamos o comprimento do texto na chave para forçar re-render se o texto mudar
-  const renderKey = term + "|" + (specificIndices ? specificIndices.join(",") : "") + "|" + editor.value.length;
-  if (renderKey === lastRenderKey) return;
-  lastRenderKey = renderKey;
+  // 🔥 REMOVIDO ESCUDO PARA DEPURAR: Força renderização total
+  // const renderKey = term + "|" + (specificIndices ? specificIndices.length : "0") + "|" + (specificIndices ? specificIndices.join(",") : "") + "|" + editor.value.length;
+  // if (renderKey === lastRenderKey) return;
+  // lastRenderKey = renderKey;
 
   searchHighlightTerm = term;
   
@@ -39,7 +38,7 @@ export function updateSearchHighlight(editor, term, specificIndices = null) {
 
   if (specificIndices && specificIndices.length > 0) {
     // Se passarmos índices específicos (Ctrl+D), destacamos apenas esses
-    matches = specificIndices.map(idx => ({ start: idx, end: idx + term.length }));
+    matches = specificIndices.map(idx => ({ start: idx, end: idx + (term ? term.length : 0) }));
     matches.sort((a, b) => a.start - b.start);
   } else {
     // Busca padrão por RegExp (Ctrl+F)
@@ -52,29 +51,54 @@ export function updateSearchHighlight(editor, term, specificIndices = null) {
 
   updateFindMatchCount(searchMatchIndex + 1, matches.length);
   
-  if (matches.length === 0 && (!specificIndices || specificIndices.length === 0)) {
+  if (matches.length === 0) {
     overlay.innerHTML = "";
     return;
   }
   
-  // Caso especial: Multi-cursores sem seleção (termo vazio)
-  if (matches.length === 0 && specificIndices && specificIndices.length > 0) {
-    matches = specificIndices.map(idx => ({ start: idx, end: idx }));
-  }
-
   // Renderiza texto com marcações
   let html = "";
-  let last = 0;
-  matches.forEach((match, i) => {
-    html += escapeHtml(text.slice(last, match.start));
-    const isCurrent = i === searchMatchIndex;
-    const cls = isCurrent ? "current-match" : "";
-    
-    // Renderiza a marcação e um cursor simulado
-    html += `<mark class="${cls}">${escapeHtml(text.slice(match.start, match.end))}<span class="fake-cursor"></span></mark>`;
-    last = match.end;
-  });
-  html += escapeHtml(text.slice(last));
+  let cursor = 0;
+  
+  const isMulti = specificIndices && specificIndices.length > 0;
+
+  if (isMulti) {
+    // 🛡️ MODO MULTI-CURSOR: Renderização ultra-segura
+    const uniqueIndices = [...new Set(specificIndices)].sort((a, b) => a - b);
+    const termLength = term ? term.length : 0;
+
+    uniqueIndices.forEach((idx) => {
+      // Pula índices inválidos ou sobrepostos
+      if (idx < cursor) return;
+
+      // Adiciona o texto ANTES do highlight
+      if (idx > cursor) {
+        html += escapeHtml(text.slice(cursor, idx));
+      }
+
+      // Adiciona a marcação AZUL
+      html += `<mark class="current-match">${escapeHtml(text.slice(idx, idx + termLength))}<span class="fake-cursor"></span></mark>`;
+      cursor = idx + termLength;
+    });
+
+    // Adiciona o restante do texto do arquivo
+    if (cursor < text.length) {
+      html += escapeHtml(text.slice(cursor));
+    }
+  } else {
+    // 🔍 MODO BUSCA NORMAL (Ctrl+F)
+    matches.forEach((match, i) => {
+      html += escapeHtml(text.slice(cursor, match.start));
+      const isCurrent = i === searchMatchIndex;
+      const cls = isCurrent ? "current-match" : "";
+      html += `<mark class="${cls}">${escapeHtml(text.slice(match.start, match.end))}<span class="fake-cursor"></span></mark>`;
+      cursor = match.end;
+    });
+    if (cursor < text.length) {
+      html += escapeHtml(text.slice(cursor));
+    }
+  }
+
   overlay.innerHTML = html;
 
   syncHighlightScroll(editor);

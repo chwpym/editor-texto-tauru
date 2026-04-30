@@ -411,15 +411,22 @@ function handleEditorInput() {
 
 
 async function saveNow() {
-  if (!state.currentDocId || state.isSaving) return;
-  state.isSaving = true;
-  const doc = await db.getDoc(state.currentDocId);
-  if (doc) {
-    doc.content = state.editor.value;
-    doc.updatedAt = Date.now();
-    await db.saveDoc(doc);
-    ui.renderSaveStatus("saved");
+  if (!state.currentDocId || !state.editorReady) return;
+
+  // 🛡️ TRAVA DE SEGURANÇA: Não salvar se o editor estiver carregando ou desabilitado
+  if (state.editor.disabled || state.editor.value === "Carregando...") {
+    console.warn("Salvamento abortado: Editor em estado de transição.");
+    return;
   }
+
+  const saveStatus = document.getElementById("save-status");
+  if (saveStatus) {
+    saveStatus.innerHTML = '<i data-lucide="refresh-cw" class="w-3 h-3 animate-spin text-blue-500"></i>';
+    window.lucide?.createIcons();
+  }
+
+  const contentToSave = state.editor.value;
+  await docs.updateDocument(state.currentDocId, contentToSave);
   state.isSaving = false;
 }
 

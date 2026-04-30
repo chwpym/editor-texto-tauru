@@ -919,3 +919,75 @@ html.dark .sidebar-title {
 html.dark #sidebar-content .flex-row-mobile:hover {
   background: rgba(255,255,255,0.05);
 }
+
+/* ========================================
+   REALCE DE BUSCA E MULTI-CURSOR (OVERLAY)
+   ======================================== */
+
+#search-highlight-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: 16px; 
+  padding-left: var(--theme-gutter-width) !important;
+  color: transparent !important; 
+  pointer-events: none; 
+  white-space: pre;
+  overflow: auto; /* Mudei para auto para sincronizar scrollbar */
+  font-family: "Roboto Mono", monospace;
+  font-size: 16px;
+  line-height: 24px;
+  z-index: 50; 
+  background: transparent !important;
+  scrollbar-width: none; /* Esconde scrollbar no Firefox */
+}
+
+#search-highlight-overlay::-webkit-scrollbar {
+  display: none; /* Esconde scrollbar no Chrome/Safari */
+}
+
+#editor {
+  z-index: 10;
+  position: relative;
+  background: transparent !important;
+}
+
+#search-highlight-overlay mark.current-match {
+  background-color: rgba(66, 153, 225, 0.5) !important; 
+  box-shadow: 0 0 0 1px #4299e1 !important;
+  color: transparent !important;
+  display: inline-block;
+  min-width: 1px;
+}
+
+html.dark #search-highlight-overlay mark.current-match {
+  background-color: rgba(66, 153, 225, 0.6) !important;
+  box-shadow: 0 0 0 1px #63b3ed !important;
+}
+
+/* Cursor Simulado */
+.fake-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1.2em;
+  background-color: #3182ce;
+  vertical-align: middle;
+  margin-left: -1px;
+  animation: fake-blink 1s infinite;
+}
+
+@keyframes fake-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+html.dark #search-highlight-overlay mark.current-match {
+  background-color: rgba(66, 153, 225, 0.5);
+  box-shadow: 0 0 0 1px #63b3ed;
+}
+
+html.dark .fake-cursor {
+  background-color: #63b3ed;
+}
