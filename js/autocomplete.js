@@ -15,7 +15,9 @@ export function initAutocomplete() {
     autocompletePopup = document.createElement("div");
     autocompletePopup.id = "autocomplete-popup";
     autocompletePopup.className = "hidden absolute z-50 bg-white dark:bg-slate-800 border dark:border-slate-700 shadow-lg rounded-md p-1 min-w-[150px]";
-    document.body.appendChild(autocompletePopup);
+    const wrapper = document.getElementById("editor-wrapper");
+    if (wrapper) wrapper.appendChild(autocompletePopup);
+    else document.body.appendChild(autocompletePopup);
   }
   return autocompletePopup;
 }
