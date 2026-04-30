@@ -180,7 +180,12 @@ export function initShortcuts(editor, actions) {
       const wordMatch = textBefore.match(/[\wÀ-ú]+$/);
       const wordStart = wordMatch ? pos - wordMatch[0].length : pos;
 
-      const newText = text.substring(0, wordStart) + suggestion + text.substring(pos);
+      // Detecta o fim da palavra atual para substituí-la por completo
+      const textAfter = text.substring(pos);
+      const wordEndMatch = textAfter.match(/^[\wÀ-ú]+/);
+      const wordEnd = wordEndMatch ? pos + wordEndMatch[0].length : pos;
+
+      const newText = text.substring(0, wordStart) + suggestion + text.substring(wordEnd);
       editor.value = newText;
       const newPos = wordStart + suggestion.length;
       editor.setSelectionRange(newPos, newPos);
@@ -511,9 +516,17 @@ export function applySuggestionToMultiCursors(editor, suggestion) {
   if (!wordMatch) return false;
   
   const prefixLen = wordMatch[0].length;
-  const remainingText = suggestion.substring(prefixLen);
+  
+  // Detecta o sufixo (restante da palavra após o cursor)
+  const textAfter = text.substring(lastPos);
+  const wordEndMatch = textAfter.match(/^[\wÀ-ú]+/);
+  const suffixLen = wordEndMatch ? wordEndMatch[0].length : 0;
 
-  // Aplicamos apenas o RESTO da sugestão para cada cursor
-  applyTextToMultiSelections(editor, remainingText);
+  // Ajustamos o estado global para que applyTextToMultiSelections saiba
+  // que deve substituir um intervalo (prefixo + sufixo) em vez de apenas inserir
+  multiSelections = multiSelections.map(idx => idx - prefixLen);
+  multiSelectTerm = " ".repeat(prefixLen + suffixLen); // Define o comprimento a ser substituído
+
+  applyTextToMultiSelections(editor, suggestion);
   return true;
 }

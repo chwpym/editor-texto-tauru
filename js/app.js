@@ -453,8 +453,80 @@ function initZenMode() {
   const floatingBtn = document.getElementById("zen-floating-btn");
   const toolbarBtn = document.getElementById("zen-mode-btn");
   
-  if (floatingBtn) floatingBtn.addEventListener("click", toggleZenMode);
+  if (floatingBtn) {
+    floatingBtn.addEventListener("click", (e) => {
+      // Se houve movimento significativo, não dispara o clique (apenas arrastou)
+      if (floatingBtn.dataset.dragged === "true") {
+        floatingBtn.dataset.dragged = "false";
+        return;
+      }
+      toggleZenMode();
+    });
+    
+    // Recupera posição salva
+    const savedPos = JSON.parse(localStorage.getItem("zen-btn-pos") || "null");
+    if (savedPos) {
+      floatingBtn.style.left = savedPos.x + "px";
+      floatingBtn.style.top = savedPos.y + "px";
+      floatingBtn.style.bottom = "auto";
+      floatingBtn.style.right = "auto";
+    }
+
+    makeDraggable(floatingBtn);
+  }
   if (toolbarBtn) toolbarBtn.addEventListener("click", toggleZenMode);
+}
+
+/**
+ * Torna um elemento arrastável
+ */
+function makeDraggable(el) {
+  let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+  
+  el.onmousedown = dragMouseDown;
+
+  function dragMouseDown(e) {
+    e = e || window.event;
+    e.preventDefault();
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    document.onmouseup = closeDragElement;
+    document.onmousemove = elementDrag;
+    el.dataset.dragged = "false";
+  }
+
+  function elementDrag(e) {
+    e = e || window.event;
+    e.preventDefault();
+    pos1 = pos3 - e.clientX;
+    pos2 = pos4 - e.clientY;
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    
+    // Marca como arrastado para ignorar o clique
+    if (Math.abs(pos1) > 2 || Math.abs(pos2) > 2) {
+      el.dataset.dragged = "true";
+    }
+
+    const newTop = el.offsetTop - pos2;
+    const newLeft = el.offsetLeft - pos1;
+    
+    el.style.top = newTop + "px";
+    el.style.left = newLeft + "px";
+    el.style.bottom = "auto";
+    el.style.right = "auto";
+  }
+
+  function closeDragElement() {
+    document.onmouseup = null;
+    document.onmousemove = null;
+    
+    // Salva posição
+    localStorage.setItem("zen-btn-pos", JSON.stringify({
+      x: el.offsetLeft,
+      y: el.offsetTop
+    }));
+  }
 }
 
 
