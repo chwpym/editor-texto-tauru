@@ -99,6 +99,7 @@ export async function init() {
   dictionary.initDictionary();
   auto.initAutocomplete();
   ui.initResponsiveSidebar();
+  initZenMode();
   
   // Renderiza ícones Lucide (NPM style)
   if (window.lucide) {
@@ -318,7 +319,6 @@ function setupEventListeners() {
   document.getElementById("tasks-btn")?.addEventListener("click", () => tasks.toggleTasksDrawer());
   document.getElementById("tasks-drawer-overlay")?.addEventListener("click", () => tasks.toggleTasksDrawer());
   document.getElementById("typewriter-btn").addEventListener("click", () => core.toggleTypewriterMode(state.editor));
-  document.getElementById("zen-mode-btn").addEventListener("click", () => toggleZenMode());
   document.getElementById("ruler-toggle-btn").addEventListener("click", () => core.toggleRuler(state.rulerLine));
   
   state.rulerColumnInput.addEventListener("change", () => core.updateRulerPosition(state.rulerColumnInput, state.rulerLine));
@@ -426,11 +426,35 @@ function handleEditorInput() {
  */
 function toggleZenMode() {
   const isZen = document.body.classList.toggle("zen-mode");
+  
+  // Atualiza ícones do botão flutuante e do botão da toolbar
+  const maxIcon = document.getElementById("zen-icon-maximize");
+  const minIcon = document.getElementById("zen-icon-minimize");
+  
+  if (maxIcon && minIcon) {
+    if (isZen) {
+      maxIcon.classList.add("hidden");
+      minIcon.classList.remove("hidden");
+    } else {
+      maxIcon.classList.remove("hidden");
+      minIcon.classList.add("hidden");
+    }
+  }
+
   if (isZen) {
     ui.showMessage("Modo Zen: Alt+Z para voltar", "info");
   } else {
     ui.showMessage("Barra de Ferramentas Restaurada", "info");
   }
+}
+
+
+function initZenMode() {
+  const floatingBtn = document.getElementById("zen-floating-btn");
+  const toolbarBtn = document.getElementById("zen-mode-btn");
+  
+  if (floatingBtn) floatingBtn.addEventListener("click", toggleZenMode);
+  if (toolbarBtn) toolbarBtn.addEventListener("click", toggleZenMode);
 }
 
 
