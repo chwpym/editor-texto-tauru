@@ -206,8 +206,13 @@ function setupEventListeners() {
     if (tab) {
       if (state.saveTimeout) {
         clearTimeout(state.saveTimeout);
-        saveNow();
+        state.saveTimeout = null;
       }
+      // Força o salvamento antes de trocar, caso o editor não esteja bloqueado
+      if (state.currentDocId && !state.editor.disabled && state.editor.value !== "Carregando...") {
+        docs.updateDocument(state.currentDocId, state.editor.value);
+      }
+      
       docs.switchDocument(tab.dataset.docId, state);
     }
   });

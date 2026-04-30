@@ -137,3 +137,16 @@ export async function renameCurrentDocument(currentDocId, docSelector) {
   docSelector.value = currentDocId;
   utils.showMessage(`Renomeado para "${newName}"`, 2000);
 }
+
+/**
+ * Atualiza o conteúdo de um documento
+ */
+export async function updateDocument(docId, content) {
+  if (!docId) return;
+  const doc = await db.getDoc(docId);
+  if (!doc) return;
+  
+  doc.content = content;
+  doc.updatedAt = Date.now();
+  await db.saveDoc(doc);
+}
