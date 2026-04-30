@@ -14,7 +14,7 @@ export function initAutocomplete() {
   if (!autocompletePopup) {
     autocompletePopup = document.createElement("div");
     autocompletePopup.id = "autocomplete-popup";
-    autocompletePopup.className = "hidden absolute z-50 bg-white dark:bg-slate-800 border dark:border-slate-700 shadow-lg rounded-md p-1 min-w-[150px]";
+    autocompletePopup.className = "hidden fixed z-[9999] bg-white dark:bg-slate-800 border dark:border-slate-700 shadow-xl rounded-md p-1 min-w-[150px]";
     document.body.appendChild(autocompletePopup);
   }
   return autocompletePopup;
@@ -48,8 +48,8 @@ export function triggerAutocomplete(editor, keywords) {
 function showAutocompletePopup(editor, lastWord) {
   const { top, left, height } = getCursorXY(editor);
   
-  // Posicionamento dinâmico baseado no cursor real
-  autocompletePopup.style.top = `${top + height + 24}px`;
+  // Posicionamento dinâmico baseado no cursor real (fixed)
+  autocompletePopup.style.top = `${top + height + 6}px`;
   autocompletePopup.style.left = `${left}px`; 
   autocompletePopup.classList.remove("hidden");
 
@@ -119,9 +119,19 @@ export function getCursorXY(textarea) {
   // Criar elemento espelho
   const div = document.createElement('div');
   const copyStyle = getComputedStyle(textarea);
-  for (const prop of copyStyle) {
+  
+  // Propriedades essenciais para o espelhamento perfeito
+  const essentialStyles = [
+    'fontFamily', 'fontSize', 'fontWeight', 'fontStyle', 'fontVariant', 'fontStretch',
+    'lineHeight', 'paddingLeft', 'paddingTop', 'paddingRight', 'paddingBottom',
+    'borderLeftWidth', 'borderTopWidth', 'borderRightWidth', 'borderBottomWidth',
+    'boxSizing', 'width', 'height', 'textIndent', 'textTransform', 'letterSpacing', 
+    'wordSpacing', 'textAlign', 'whiteSpace', 'wordBreak', 'overflowWrap'
+  ];
+
+  essentialStyles.forEach(prop => {
     div.style[prop] = copyStyle[prop];
-  }
+  });
   
   div.style.position = 'absolute';
   div.style.visibility = 'hidden';

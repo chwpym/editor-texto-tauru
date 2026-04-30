@@ -101,9 +101,18 @@ function getCursorXY(textarea, selectionEnd) {
   const { offsetLeft, offsetTop } = textarea;
   const div = document.createElement('div');
   const copyStyle = getComputedStyle(textarea);
-  for (const prop of copyStyle) {
+  
+  const essentialStyles = [
+    'fontFamily', 'fontSize', 'fontWeight', 'fontStyle', 'fontVariant', 'fontStretch',
+    'lineHeight', 'paddingLeft', 'paddingTop', 'paddingRight', 'paddingBottom',
+    'borderLeftWidth', 'borderTopWidth', 'borderRightWidth', 'borderBottomWidth',
+    'boxSizing', 'width', 'height', 'textIndent', 'textTransform', 'letterSpacing', 
+    'wordSpacing', 'textAlign', 'whiteSpace', 'wordBreak', 'overflowWrap'
+  ];
+
+  essentialStyles.forEach(prop => {
     div.style[prop] = copyStyle[prop];
-  }
+  });
   div.style.position = 'absolute';
   div.style.visibility = 'hidden';
   div.style.whiteSpace = 'pre-wrap';

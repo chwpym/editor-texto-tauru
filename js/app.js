@@ -99,6 +99,7 @@ export async function init() {
   dictionary.initDictionary();
   auto.initAutocomplete();
   ui.initResponsiveSidebar();
+  initSidebarMode();
   
   // Renderiza ícones Lucide (NPM style)
   if (window.lucide) {
@@ -402,14 +403,40 @@ function handleEditorInput() {
   clearTimeout(state.saveTimeout);
   state.saveTimeout = setTimeout(saveNow, 1000);
 
-  // Dispara o autocomplete com as palavras do documento + dicionário pessoal
-  const text = state.editor.value;
-  // Regex aprimorada: pega palavras alfanuméricas com 2+ caracteres (incluindo acentuação)
-  const documentWords = [...new Set(text.match(/[\wÀ-ú]{2,}/g) || [])];
-  const personalDict = dictionary.getPersonalDict();
-  // Combina, remove duplicatas e remove a própria palavra que está sendo digitada (lógica interna do auto.js cuidará do resto)
-  const keywords = [...new Set([...personalDict, ...documentWords])];
-  auto.triggerAutocomplete(state.editor, keywords);
+  // Debounce do Autocomplete: Aguarda 50ms para não travar o PC
+  clearTimeout(state.autoTimeout);
+  state.autoTimeout = setTimeout(() => {
+     // Dispara o autocomplete com as palavras do documento + dicionário pessoal
+    const text = state.editor.value;
+    const documentWords = [...new Set(text.match(/[\wÀ-ú]{2,}/g) || [])];
+    const personalDict = dictionary.getPersonalDict();
+    const keywords = [...new Set([...personalDict, ...documentWords])];
+    auto.triggerAutocomplete(state.editor, keywords);
+  }, 50);
+}
+
+
+/**
+ * Alterna entre modo Barra Superior e Barra Lateral
+ */
+function toggleSidebarMode() {
+  const container = document.getElementById("main-container");
+  const isSidebar = container.classList.toggle("sidebar-mode");
+  localStorage.setItem("sidebar-mode", isSidebar);
+  ui.showMessage(isSidebar ? "Modo Lateral Ativado" : "Modo Topo Ativado", "info");
+}
+
+/**
+ * Inicializa a preferência do Modo Sidebar
+ */
+function initSidebarMode() {
+  const isSidebar = localStorage.getItem("sidebar-mode") === "true";
+  if (isSidebar) {
+    document.getElementById("main-container").classList.add("sidebar-mode");
+  }
+  
+  const btn = document.getElementById("sidebar-mode-btn");
+  if (btn) btn.addEventListener("click", toggleSidebarMode);
 }
 
 
