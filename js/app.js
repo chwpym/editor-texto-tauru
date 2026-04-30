@@ -21,8 +21,8 @@ import * as ai from './ai.js';
 import { THEMES, applyTheme, initThemeSystem } from './theme.js';
 import { createIcons, icons } from 'lucide';
 
-// Versão v12.7: Estabilização de Contraste e Abas
-const APP_VERSION = "v15.3 Blindada Total";
+// Versão v16.0: Performance Ultra & Modo Sidebar
+const APP_VERSION = "v16.0 Pro - Performance & Sidebar";
 
 
 
