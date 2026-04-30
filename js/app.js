@@ -424,15 +424,12 @@ async function saveNow() {
     return;
   }
 
-  const saveStatus = document.getElementById("save-status");
-  if (saveStatus) {
-    saveStatus.innerHTML = '<i data-lucide="refresh-cw" class="w-3 h-3 animate-spin text-blue-500"></i>';
-    window.lucide?.createIcons();
-  }
+  ui.renderSaveStatus("saving");
 
   const contentToSave = state.editor.value;
   await docs.updateDocument(state.currentDocId, contentToSave);
   state.isSaving = false;
+  ui.renderSaveStatus("saved");
 }
 
 /**

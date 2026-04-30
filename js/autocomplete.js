@@ -15,9 +15,7 @@ export function initAutocomplete() {
     autocompletePopup = document.createElement("div");
     autocompletePopup.id = "autocomplete-popup";
     autocompletePopup.className = "hidden absolute z-50 bg-white dark:bg-slate-800 border dark:border-slate-700 shadow-lg rounded-md p-1 min-w-[150px]";
-    const wrapper = document.getElementById("editor-wrapper");
-    if (wrapper) wrapper.appendChild(autocompletePopup);
-    else document.body.appendChild(autocompletePopup);
+    document.body.appendChild(autocompletePopup);
   }
   return autocompletePopup;
 }
@@ -135,18 +133,20 @@ export function getCursorXY(textarea) {
   const content = textarea.value.substring(0, selectionEnd);
   div.textContent = content;
   
-  // Adiciona um marcador no final
+  // Adiciona um marcador no final para pegar a posição exata
   const span = document.createElement('span');
-  span.textContent = textarea.value.substring(selectionEnd) || '.';
+  span.textContent = '|';
   div.appendChild(span);
   
   document.body.appendChild(div);
   const { offsetLeft: spanLeft, offsetTop: spanTop } = span;
   document.body.removeChild(div);
   
+  const rect = textarea.getBoundingClientRect();
+  
   return { 
-    left: left + spanLeft - textarea.scrollLeft, 
-    top: top + spanTop - textarea.scrollTop,
+    left: rect.left + spanLeft - textarea.scrollLeft, 
+    top: rect.top + spanTop - textarea.scrollTop,
     height: 18 
   };
 }
