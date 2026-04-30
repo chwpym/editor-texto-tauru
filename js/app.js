@@ -21,8 +21,8 @@ import * as ai from './ai.js';
 import { THEMES, applyTheme, initThemeSystem } from './theme.js';
 import { createIcons, icons } from 'lucide';
 
-// Versão v16.0: Performance Ultra & Modo Sidebar
-const APP_VERSION = "v16.0 Pro - Performance & Sidebar";
+// Versão v16.5: Performance Ultra & Modo Zen
+const APP_VERSION = "v16.5 Pro - Ultra Performance & Zen Mode";
 
 
 
