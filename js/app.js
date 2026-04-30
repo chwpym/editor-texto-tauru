@@ -478,41 +478,50 @@ function initZenMode() {
 }
 
 /**
- * Torna um elemento arrastável
+ * Torna um elemento arrastável de forma fluida
  */
 function makeDraggable(el) {
-  let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+  let offsetX = 0, offsetY = 0;
   
   el.onmousedown = dragMouseDown;
 
   function dragMouseDown(e) {
     e = e || window.event;
     e.preventDefault();
-    pos3 = e.clientX;
-    pos4 = e.clientY;
+    
+    // Calcula onde o mouse clicou dentro do botão
+    const rect = el.getBoundingClientRect();
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
+    
     document.onmouseup = closeDragElement;
     document.onmousemove = elementDrag;
     el.dataset.dragged = "false";
+    el.dataset.startX = e.clientX;
+    el.dataset.startY = e.clientY;
   }
 
   function elementDrag(e) {
     e = e || window.event;
     e.preventDefault();
-    pos1 = pos3 - e.clientX;
-    pos2 = pos4 - e.clientY;
-    pos3 = e.clientX;
-    pos4 = e.clientY;
     
-    // Marca como arrastado para ignorar o clique
-    if (Math.abs(pos1) > 2 || Math.abs(pos2) > 2) {
+    // Verifica se houve movimento para não disparar o clique acidentalmente
+    const startX = parseFloat(el.dataset.startX);
+    const startY = parseFloat(el.dataset.startY);
+    if (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5) {
       el.dataset.dragged = "true";
     }
 
-    const newTop = el.offsetTop - pos2;
-    const newLeft = el.offsetLeft - pos1;
+    // Posiciona o botão exatamente onde o mouse está
+    const newLeft = e.clientX - offsetX;
+    const newTop = e.clientY - offsetY;
     
-    el.style.top = newTop + "px";
-    el.style.left = newLeft + "px";
+    // Mantém dentro dos limites da tela
+    const maxX = window.innerWidth - el.offsetWidth;
+    const maxY = window.innerHeight - el.offsetHeight;
+    
+    el.style.left = Math.max(0, Math.min(newLeft, maxX)) + "px";
+    el.style.top = Math.max(0, Math.min(newTop, maxY)) + "px";
     el.style.bottom = "auto";
     el.style.right = "auto";
   }
@@ -521,7 +530,7 @@ function makeDraggable(el) {
     document.onmouseup = null;
     document.onmousemove = null;
     
-    // Salva posição
+    // Salva a posição final
     localStorage.setItem("zen-btn-pos", JSON.stringify({
       x: el.offsetLeft,
       y: el.offsetTop
