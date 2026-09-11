@@ -36,6 +36,7 @@ export function triggerAutocomplete(editor, keywords) {
   }
 
   currentSuggestions = keywords.filter(w => w.toLowerCase().startsWith(lastWord.toLowerCase()) && w !== lastWord);
+  selectedIndex = 0;
 
   if (currentSuggestions.length === 0) {
     hideAutocompletePopup();
@@ -63,11 +64,16 @@ export function hideAutocompletePopup() {
 }
 
 function renderSuggestions() {
-  autocompletePopup.innerHTML = currentSuggestions.map((s, i) => `
-    <div class="p-2 cursor-pointer rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-sm ${i === selectedIndex ? 'bg-blue-50 dark:bg-blue-900/50' : ''}" onclick="window.dispatchEvent(new CustomEvent('accept-autocomplete', {detail: '${s}'}))">
-      ${s}
-    </div>
-  `).join("");
+  autocompletePopup.replaceChildren();
+  currentSuggestions.forEach((suggestion, index) => {
+    const item = document.createElement("div");
+    item.className = `p-2 cursor-pointer rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-sm ${index === selectedIndex ? 'bg-blue-50 dark:bg-blue-900/50' : ''}`;
+    item.textContent = suggestion;
+    item.addEventListener("click", () => {
+      window.dispatchEvent(new CustomEvent("accept-autocomplete", { detail: suggestion }));
+    });
+    autocompletePopup.appendChild(item);
+  });
 }
 
 export function handleAutocompleteKeys(e, editor) {
@@ -160,4 +166,3 @@ export function getCursorXY(textarea) {
     height: 18 
   };
 }
-

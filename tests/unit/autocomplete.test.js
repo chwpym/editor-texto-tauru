@@ -17,6 +17,11 @@ describe('Lógica de Autocomplete', () => {
       value: "",
       selectionStart: 0,
       selectionEnd: 0,
+      clientWidth: 400,
+      clientHeight: 200,
+      scrollLeft: 0,
+      scrollTop: 0,
+      getBoundingClientRect: vi.fn(() => ({ left: 0, top: 0 })),
       setSelectionRange: vi.fn((s, e) => {
         editor.selectionStart = s;
         editor.selectionEnd = e;
@@ -25,6 +30,7 @@ describe('Lógica de Autocomplete', () => {
   });
 
   it('deve filtrar sugestões corretamente baseada no "lastWord"', () => {
+    editor.value = "digi";
     editor.selectionStart = 4;
     editor.selectionEnd = 4;
     const keywords = ["digital", "digitando", "banana"];
@@ -39,15 +45,29 @@ describe('Lógica de Autocomplete', () => {
     expect(popup.innerHTML).not.toContain("banana");
   });
 
-  it('deve inserir a sugestão escolhida na posição correta', () => {
+  it('deve emitir a sugestão escolhida para o editor aplicar', () => {
     editor.value = "No meio da fra ";
     editor.selectionStart = 14; 
     editor.selectionEnd = 14;
+    const listener = vi.fn();
+    window.addEventListener('accept-autocomplete-internal', listener, { once: true });
     
     auto.acceptAutocomplete(editor, "frase");
     
-    expect(editor.value).toBe("No meio da frase ");
-    expect(editor.selectionStart).toBe(19); // "frase" tem 5 chars, começou em 11 (pós-espaço)
+    expect(listener).toHaveBeenCalledOnce();
+    expect(listener.mock.calls[0][0].detail.suggestion).toBe("frase");
+  });
+
+  it('deve renderizar sugestões como texto, sem interpretar HTML', () => {
+    editor.value = "te";
+    editor.selectionStart = 2;
+    editor.selectionEnd = 2;
+
+    auto.triggerAutocomplete(editor, ['teste<img src=x onerror=alert(1)>']);
+
+    const popup = document.getElementById("autocomplete-popup");
+    expect(popup.querySelector('img')).toBeNull();
+    expect(popup.textContent).toContain('teste<img src=x onerror=alert(1)>');
   });
 
   it('hideAutocompletePopup: deve esconder o popup', () => {

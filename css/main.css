@@ -611,20 +611,6 @@ html.dark #quickopen-list li.active {
 }
 
 /* ========================================
-   CONTENT PROTECTION BANNER
-   ======================================== */
-
-#content-protection-banner {
-  flex-shrink: 0;
-  animation: slideDown 0.2s ease-out;
-}
-
-@keyframes slideDown {
-  from { transform: translateY(-100%); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-
-/* ========================================
    TASKS DRAWER
    ======================================== */
 
@@ -692,59 +678,6 @@ html.dark #quickopen-list li.active {
 
 #tasks-drawer.active {
   transform: translateX(0);
-}
-
-/* ========================================
-   AI ASSISTANT & MODAL THEMING (v12.5)
-   ======================================== */
-
-#floating-ai-menu {
-  backdrop-filter: blur(12px);
-  background-color: var(--theme-toolbar-bg);
-  border: 1px solid var(--theme-border);
-  box-shadow: 0 10px 40px -5px rgba(0, 0, 0, 0.4);
-  color: var(--theme-editor-text);
-}
-
-#floating-ai-menu .ai-action-item:hover {
-  background-color: rgba(168, 85, 247, 0.15);
-}
-
-.modal-content {
-  background-color: var(--theme-editor-bg) !important;
-  color: var(--theme-editor-text) !important;
-  border: 1px solid var(--theme-border) !important;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-}
-
-.ai-action-item {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  color: var(--theme-editor-text) !important;
-}
-
-.ai-action-item:active {
-  transform: scale(0.95);
-}
-
-/* Animação de processamento Glow */
-@keyframes ai-glow {
-  0% { box-shadow: 0 0 5px rgba(168, 85, 247, 0.2); }
-  50% { box-shadow: 0 0 20px rgba(168, 85, 247, 0.5); }
-  100% { box-shadow: 0 0 5px rgba(168, 85, 247, 0.2); }
-}
-
-.ai-processing {
-  animation: ai-glow 2s infinite;
-  border-color: #a855f7 !important;
-}
-
-/* Custom Scrollbar para os menus de IA */
-#floating-ai-menu::-webkit-scrollbar {
-  width: 4px;
-}
-#floating-ai-menu::-webkit-scrollbar-thumb {
-  background: var(--theme-border);
-  border-radius: 10px;
 }
 
 .hidden {
@@ -957,6 +890,10 @@ html.dark #sidebar-content .flex-row-mobile:hover {
   box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important;
   max-height: 300px;
   overflow-y: auto;
+}
+
+#autocomplete-popup.hidden {
+  display: none !important;
 }
 
 html.dark #autocomplete-popup {

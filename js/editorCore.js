@@ -7,8 +7,10 @@
  */
 export function updateLineNumbers(editor, lineNumbers) {
   if (!editor || !lineNumbers) return;
-  const lines = editor.value.split("\n");
-  const count = lines.length;
+  let count = 1;
+  for (let i = 0; i < editor.value.length; i++) {
+    if (editor.value.charCodeAt(i) === 10) count++;
+  }
   
   // Usamos dataset para evitar reconstrução desnecessária se nada mudou
   if (lineNumbers.dataset.lastCount === String(count)) return;
@@ -80,9 +82,12 @@ export function loadTypewriterMode(editor) {
 export function updateStatusBarMetrics(editor, metrics) {
   if (!editor) return;
   const text = editor.value;
-  const lines = text.split("\n");
   const words = text.trim() ? text.trim().split(/\s+/).length : 0;
   const chars = text.length;
+  let lines = 1;
+  for (let i = 0; i < chars; i++) {
+    if (text.charCodeAt(i) === 10) lines++;
+  }
 
   if (metrics.fileSize) {
     const bytes = new Blob([text]).size;
@@ -90,7 +95,7 @@ export function updateStatusBarMetrics(editor, metrics) {
   }
   if (metrics.wordCount) metrics.wordCount.textContent = `${words} palavras`;
   if (metrics.charCount) metrics.charCount.textContent = `${chars} chars`;
-  if (metrics.lineCount) metrics.lineCount.textContent = `${lines.length} linhas`;
+  if (metrics.lineCount) metrics.lineCount.textContent = `${lines} linhas`;
 }
 
 /**
@@ -99,10 +104,15 @@ export function updateStatusBarMetrics(editor, metrics) {
 export function updateCursorPos(editor, cursorPosEl) {
   if (!editor || !cursorPosEl) return;
   const pos = editor.selectionStart;
-  const textBefore = editor.value.substring(0, pos);
-  const lines = textBefore.split("\n");
-  const row = lines.length;
-  const col = lines[lines.length - 1].length + 1;
+  let row = 1;
+  let lastBreak = -1;
+  for (let i = 0; i < pos; i++) {
+    if (editor.value.charCodeAt(i) === 10) {
+      row++;
+      lastBreak = i;
+    }
+  }
+  const col = pos - lastBreak;
   cursorPosEl.textContent = `Lin ${row}, Col ${col}`;
 }
 
@@ -131,4 +141,3 @@ export function loadRuler(rulerLine, rulerColumnInput) {
   }
   loadRulerPosition(rulerColumnInput, rulerLine);
 }
-

@@ -14,16 +14,14 @@ function escapeRegex(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-let lastRenderKey = "";
+const HIGHLIGHT_RENDER_LIMIT = 250_000;
+let lastRenderText = null;
+let lastRenderTerm = null;
+let lastRenderIndices = null;
 
 export function updateSearchHighlight(editor, term, specificIndices = null) {
   const overlay = document.getElementById("search-highlight-overlay");
   if (!overlay || !editor) return;
-
-  // 🔥 REMOVIDO ESCUDO PARA DEPURAR: Força renderização total
-  // const renderKey = term + "|" + (specificIndices ? specificIndices.length : "0") + "|" + (specificIndices ? specificIndices.join(",") : "") + "|" + editor.value.length;
-  // if (renderKey === lastRenderKey) return;
-  // lastRenderKey = renderKey;
 
   searchHighlightTerm = term;
   
@@ -34,6 +32,17 @@ export function updateSearchHighlight(editor, term, specificIndices = null) {
   }
 
   const text = editor.value;
+  const indicesKey = specificIndices ? specificIndices.join(",") : "";
+  if (text === lastRenderText && term === lastRenderTerm && indicesKey === lastRenderIndices) return;
+  lastRenderText = text;
+  lastRenderTerm = term;
+  lastRenderIndices = indicesKey;
+
+  if (text.length > HIGHLIGHT_RENDER_LIMIT) {
+    overlay.replaceChildren();
+    return;
+  }
+
   let matches = [];
 
   if (specificIndices && specificIndices.length > 0) {

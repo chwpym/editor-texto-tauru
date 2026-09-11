@@ -38,13 +38,15 @@ export function renderPersonalDictWords() {
     return;
   }
 
-  list.innerHTML = words.map(w => `
-    <button 
-      class="dict-chip px-3 py-1 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-full text-sm font-mono hover:bg-red-100 dark:hover:bg-red-900/50 hover:text-red-600 dark:hover:text-red-400 transition-colors" 
-      data-word="${w}" 
-      title="Clique para remover"
-    >${w}</button>
-  `).join('');
+  list.replaceChildren();
+  words.forEach((word) => {
+    const button = document.createElement("button");
+    button.className = "dict-chip px-3 py-1 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-full text-sm font-mono hover:bg-red-100 dark:hover:bg-red-900/50 hover:text-red-600 dark:hover:text-red-400 transition-colors";
+    button.dataset.word = word;
+    button.title = "Clique para remover";
+    button.textContent = word;
+    list.appendChild(button);
+  });
 
   // Evento: remover ao clicar no chip
   list.querySelectorAll('.dict-chip').forEach(btn => {

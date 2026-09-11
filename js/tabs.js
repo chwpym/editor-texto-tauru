@@ -4,7 +4,12 @@ import { createIcons, icons } from 'lucide';
  * Inicializa lista de abas abertas
  */
 export function getOpenTabsFromStorage() {
-  return JSON.parse(localStorage.getItem("openTabs") || "[]");
+  try {
+    const openTabs = JSON.parse(localStorage.getItem("openTabs") || "[]");
+    return Array.isArray(openTabs) ? openTabs : [];
+  } catch {
+    return [];
+  }
 }
 
 /**
@@ -31,14 +36,16 @@ export async function renderTabs(tabsBar, openTabs, currentDocId, dbFuncs, tabNe
 
     const tab = document.createElement("div");
     tab.className = `document-tab ${currentDocId === docId ? 'active' : ''}`;
-    const escapedName = doc.name.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    
-    tab.innerHTML = `
-      <span class="tab-title-text">${escapedName}</span>
-      <button class="tab-close-btn" data-doc-id="${docId}">
-        <i data-lucide="x" class="w-3 h-3"></i>
-      </button>
-    `;
+    const title = document.createElement("span");
+    title.className = "tab-title-text";
+    title.textContent = doc.name;
+
+    const closeButton = document.createElement("button");
+    closeButton.className = "tab-close-btn";
+    closeButton.dataset.docId = docId;
+    closeButton.innerHTML = '<i data-lucide="x" class="w-3 h-3"></i>';
+
+    tab.append(title, closeButton);
     
     // Anexar via data-doc-id e delegate para simplificar o app.js
     tab.dataset.docId = docId;

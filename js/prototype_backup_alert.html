@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>PROTÓTIPO: Lógica de Backup Diário & Escudo de Fechamento</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #0f172a; color: #f8fafc; padding: 2rem; }
+    .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 1.5rem; max-width: 650px; margin: 0 auto; }
+    .badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-weight: bold; font-size: 0.85rem; }
+    .badge-ok { background: #059669; color: #ecfdf5; }
+    .badge-warn { background: #d97706; color: #fffbeb; }
+    .btn { background: #2563eb; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 500; margin-top: 1rem; }
+    .btn-secondary { background: #475569; }
+    textarea { width: 100%; height: 120px; background: #0f172a; border: 1px solid #334155; color: #f8fafc; border-radius: 6px; padding: 0.75rem; margin-top: 1rem; box-sizing: border-box; }
+    .log-box { background: #000; padding: 1rem; border-radius: 6px; font-family: monospace; font-size: 0.8rem; height: 120px; overflow-y: auto; color: #38bdf8; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>🧪 Protótipo: Validação do Alerta Inteligente ao Fechar</h2>
+    <p>Simulação da verificação de <strong>Apenas Leitura</strong> vs <strong>Edição Real</strong>.</p>
+    
+    <div style="margin-top: 1rem;">
+      Status do Backup: <span id="status-badge" class="badge badge-ok">🟢 Backup do Dia Concluído</span>
+    </div>
+
+    <textarea id="demo-editor" placeholder="Digite algo para simular uma alteração no documento..."></textarea>
+
+    <div style="display: flex; gap: 0.5rem;">
+      <button id="sim-read-btn" class="btn btn-secondary">Simular Apenas Consulta/Leitura</button>
+      <button id="sim-backup-btn" class="btn">Fazer Backup Agora</button>
+      <button id="sim-close-btn" class="btn" style="background: #dc2626;">Simular Fechar Aba</button>
+    </div>
+
+    <h4>📋 Log do Estado em Tempo Real:</h4>
+    <div id="log" class="log-box"></div>
+  </div>
+
+  <script>
+    let hasEditsToday = false;
+    let backupDoneToday = true;
+
+    const logEl = document.getElementById("log");
+    const badgeEl = document.getElementById("status-badge");
+    const editorEl = document.getElementById("demo-editor");
+
+    function log(msg) {
+      logEl.innerHTML += `> ${msg}<br>`;
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function updateStateUI() {
+      if (backupDoneToday) {
+        badgeEl.className = "badge badge-ok";
+        badgeEl.textContent = "🟢 Backup do Dia Concluído";
+      } else {
+        badgeEl.className = "badge badge-warn";
+        badgeEl.textContent = "🟡 Backup Pendente (Edições Detectadas)";
+      }
+      log(`ESTADO ATUAL: hasEditsToday=${hasEditsToday} | backupDoneToday=${backupDoneToday}`);
+    }
+
+    editorEl.addEventListener("input", () => {
+      if (!hasEditsToday) {
+        hasEditsToday = true;
+        backupDoneToday = false;
+        log("✍️ Usuário começou a digitar. Marcou edições no dia = true e backupDoneToday = false.");
+        updateStateUI();
+      }
+    });
+
+    document.getElementById("sim-read-btn").addEventListener("click", () => {
+      hasEditsToday = false;
+      backupDoneToday = true;
+      editorEl.value = "Documento carregado apenas para consulta (sem alterações).";
+      log("👁️ Modo Apenas Leitura restaurado.");
+      updateStateUI();
+    });
+
+    document.getElementById("sim-backup-btn").addEventListener("click", () => {
+      backupDoneToday = true;
+      log("💾 Backup simulado com sucesso na pasta Desktop\\bkp editor!");
+      updateStateUI();
+    });
+
+    document.getElementById("sim-close-btn").addEventListener("click", () => {
+      if (!hasEditsToday || backupDoneToday) {
+        log("✅ PERMISSÃO CONCEDIDA: A aba fecha SILENCIOSAMENTE sem nenhum alerta chato!");
+        alert("✅ A aba fechou silenciosamente sem incomodar! (Motivo: Não houve edições ou o backup já estava feito)");
+      } else {
+        log("⚠️ ALERTA DISPARADO: Edições detectadas e backup pendente! Exibindo aviso de confirmação.");
+        alert("⚠️ ATENÇÃO: Você fez alterações hoje e o backup ainda não foi salvo na pasta local! Deseja realmente fechar?");
+      }
+    });
+
+    updateStateUI();
+  </script>
+</body>
+</html>

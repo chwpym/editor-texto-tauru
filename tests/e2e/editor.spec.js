@@ -5,6 +5,13 @@ test.describe('Interface do Editor Taurus', () => {
   test.beforeEach(async ({ page }) => {
     // Acessar a aplicação local
     await page.goto('/');
+    const initialPrompt = page.locator('#prompt-modal-overlay.show');
+    if (await initialPrompt.count()) {
+      await page.locator('#prompt-modal-input').fill('Primeiro Documento');
+      await page.locator('#prompt-modal-ok-btn').click();
+    }
+    await expect(page.locator('.document-tab')).toBeVisible();
+    await expect(page.locator('#editor')).not.toBeDisabled();
   });
 
   test('deve carregar o título corretamente', async ({ page }) => {
@@ -41,15 +48,15 @@ test.describe('Interface do Editor Taurus', () => {
     await expect(charCount).toContainText('32'); // "Olá mundo do teste automatizado!" tem 32 caracteres se não me engano
   });
 
-  test('deve alternar a IA e mostrar o status', async ({ page }) => {
-    const aiToggle = page.locator('#ai-toggle-switch');
-    const aiStatus = page.locator('text=IA OFF');
-    
-    await expect(aiStatus).toBeVisible();
-    
-    // Ligar a IA
-    await aiToggle.click();
-    
-    await expect(page.locator('text=IA ON')).toBeVisible();
+  test('deve localizar e substituir texto', async ({ page }) => {
+    const editor = page.locator('#editor');
+    await editor.fill('texto original');
+
+    await page.locator('#find-replace-btn').click();
+    await page.locator('#find-input').fill('original');
+    await page.locator('#replace-input').fill('atualizado');
+    await page.locator('#replace-btn').click();
+
+    await expect(editor).toHaveValue('texto atualizado');
   });
 });

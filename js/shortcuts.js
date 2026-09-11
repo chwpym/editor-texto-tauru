@@ -32,6 +32,10 @@ export function initShortcuts(editor, actions) {
       e.preventDefault();
       if (actions.find) actions.find();
     }
+    if (ctrl && e.key === "g") {
+      e.preventDefault();
+      if (actions.goto) actions.goto();
+    }
     if (e.altKey && e.key === "z") {
       e.preventDefault();
       if (actions.zen) actions.zen();

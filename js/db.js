@@ -111,10 +111,21 @@ export async function importDocs(file) {
       try {
         const docs = JSON.parse(e.target.result);
         if (!Array.isArray(docs)) throw new Error("Formato de backup inválido");
+        let imported = 0;
         for (const doc of docs) {
-          if (doc.id && doc.name) await saveDoc(doc);
+          if (
+            typeof doc?.id === "string" &&
+            typeof doc?.name === "string" &&
+            (doc.content === undefined || typeof doc.content === "string")
+          ) {
+            await saveDoc({
+              ...doc,
+              content: doc.content || "",
+            });
+            imported++;
+          }
         }
-        resolve(docs.length);
+        resolve(imported);
       } catch (err) {
         reject(err);
       }

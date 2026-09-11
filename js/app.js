@@ -15,14 +15,16 @@ import * as auto from './autocomplete.js';
 import * as tasks from './tasks.js';
 import * as dictionary from './dictionary.js';
 import * as shortcuts from './shortcuts.js';
-import { syncHighlightScroll } from './highlight.js';
+import { navigateSearchMatch, syncHighlightScroll, updateSearchHighlight } from './highlight.js';
 
-import * as ai from './ai.js';
+import * as backupManager from './backupManager.js';
+
 import { THEMES, applyTheme, initThemeSystem } from './theme.js';
 import { createIcons, icons } from 'lucide';
 
-// Versão v16.5: Performance Ultra & Modo Zen
-const APP_VERSION = "v16.5 Pro - Ultra Performance & Zen Mode";
+// Versão v17.0: Backup Diário Inteligente & Escudo de Fechamento
+const APP_VERSION = "v17.0 Pro - Backup Diário Inteligente";
+const AUTOCOMPLETE_SCAN_LIMIT = 100_000;
 
 
 
@@ -36,7 +38,6 @@ const state = {
   editorReady: false,
   saveTimeout: null,
   isSaving: false,
-  aiEnabled: false,
 
   // Referências que serão preenchidas no init
   editor: null,
@@ -100,6 +101,7 @@ export async function init() {
   auto.initAutocomplete();
   ui.initResponsiveSidebar();
   initZenMode();
+  await backupManager.initBackupManager();
   
   // Renderiza ícones Lucide (NPM style)
   if (window.lucide) {
@@ -114,7 +116,6 @@ export async function init() {
 
 
   core.loadTypewriterMode(state.editor);
-  ui.initFloatingMenu(state.editor, () => state.aiEnabled);
 
   // A inicialização de atalhos foi movida para o final do setup para garantir que todas as ações estejam prontas
 
@@ -130,59 +131,7 @@ function setupEventListeners() {
       clearTimeout(state.saveTimeout);
       await saveNow();
     }
-    docs.switchDocument(e.target.value, state);
-  });
-
-  const aiToggle = document.getElementById("ai-toggle-switch");
-  const aiActionsBtn = document.getElementById("ai-actions-btn");
-  const aiStatusText = aiToggle?.parentElement?.nextElementSibling;
-
-  if (aiToggle) {
-    aiToggle.addEventListener("change", (e) => {
-      state.aiEnabled = e.target.checked;
-      if (aiStatusText) {
-        aiStatusText.textContent = state.aiEnabled ? "IA ON" : "IA OFF";
-        aiStatusText.classList.toggle("text-purple-500", state.aiEnabled);
-      }
-      aiActionsBtn.disabled = !state.aiEnabled;
-      aiActionsBtn.classList.toggle("opacity-50", !state.aiEnabled);
-      aiActionsBtn.classList.toggle("cursor-not-allowed", !state.aiEnabled);
-
-      if (!state.aiEnabled) {
-        document.getElementById("floating-ai-menu").classList.add("hidden");
-      }
-    });
-  }
-
-
-  document.getElementById("ai-config-btn").addEventListener("click", () => {
-    document.getElementById("openai-key-input").value = ai.getApiKey();
-    ui.openModal(document.getElementById("ai-config-modal-overlay"));
-  });
-
-  document.getElementById("ai-modal-close-btn").addEventListener("click", () => {
-    ui.closeModal(document.getElementById("ai-config-modal-overlay"));
-  });
-
-  document.getElementById("save-ai-key-btn").addEventListener("click", () => {
-    const key = document.getElementById("openai-key-input").value.trim();
-    if (key.startsWith("sk-")) {
-      ai.setApiKey(key);
-      ui.showMessage("Chave OpenAI salva com sucesso!", "success");
-      ui.closeModal(document.getElementById("ai-config-modal-overlay"));
-    } else {
-      ui.showMessage("Chave inválida! Deve começar com 'sk-'", "error");
-    }
-  });
-
-  document.addEventListener("click", async (e) => {
-    const actionItem = e.target.closest(".ai-action-item") || (e.target.closest("#ai-actions-btn") ? { dataset: { action: "improve" } } : null);
-
-    if (actionItem && state.aiEnabled) {
-      const action = actionItem.dataset.action;
-      if (action) handleAiAction(action);
-      document.getElementById("floating-ai-menu").classList.add("hidden");
-    }
+    await docs.switchDocument(e.target.value, state);
   });
 
   const createNew = () => docs.createNewDocument("Novo Documento", state);
@@ -194,7 +143,7 @@ function setupEventListeners() {
   if (emptyNewBtn) emptyNewBtn.addEventListener("click", createNew);
 
   // Tabs Events Delegation
-  state.tabsBar.addEventListener("click", (e) => {
+  state.tabsBar.addEventListener("click", async (e) => {
     const tab = e.target.closest(".document-tab");
     const closeBtn = e.target.closest(".tab-close-btn");
 
@@ -211,10 +160,10 @@ function setupEventListeners() {
       }
       // Força o salvamento antes de trocar, caso o editor não esteja bloqueado
       if (state.currentDocId && !state.editor.disabled && state.editor.value !== "Carregando...") {
-        docs.updateDocument(state.currentDocId, state.editor.value);
+      await docs.updateDocument(state.currentDocId, state.editor.value);
       }
       
-      docs.switchDocument(tab.dataset.docId, state);
+      await docs.switchDocument(tab.dataset.docId, state);
     }
   });
 
@@ -230,6 +179,16 @@ function setupEventListeners() {
 
   document.getElementById("find-replace-btn").addEventListener("click", () => ui.openModal(document.getElementById("find-replace-modal-overlay")));
   document.getElementById("find-replace-modal-close-btn").addEventListener("click", () => ui.closeModal(document.getElementById("find-replace-modal-overlay")));
+  const findInput = document.getElementById("find-input");
+  findInput.addEventListener("input", () => updateSearchHighlight(state.editor, findInput.value));
+  findInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") navigateSearchMatch(state.editor, event.shiftKey ? -1 : 1);
+  });
+  document.getElementById("replace-btn").addEventListener("click", () => replaceNextMatch());
+  document.getElementById("replace-all-btn").addEventListener("click", () => replaceAllMatches());
+
+  document.getElementById("goto-line-modal-close-btn").addEventListener("click", () => ui.closeModal(document.getElementById("goto-line-modal-overlay")));
+  document.getElementById("goto-line-ok-btn").addEventListener("click", () => goToLine());
 
   document.getElementById("show-shortcuts-btn").addEventListener("click", () => ui.openModal(document.getElementById("shortcuts-modal-overlay")));
   document.getElementById("shortcuts-modal-close-btn").addEventListener("click", () => ui.closeModal(document.getElementById("shortcuts-modal-overlay")));
@@ -266,24 +225,24 @@ function setupEventListeners() {
   });
 
 
-  // Modais de Confirmação e Prompt
-  document.getElementById("confirm-modal-cancel-btn").addEventListener("click", () => ui.closeModal(document.getElementById("confirm-modal-overlay")));
-  document.getElementById("prompt-modal-cancel-btn").addEventListener("click", () => ui.closeModal(document.getElementById("prompt-modal-overlay")));
-
-  // Submissão do Formulário de Tarefas
-  const taskForm = document.getElementById("new-task-form");
-  if (taskForm) {
-    taskForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const input = document.getElementById("new-task-input");
-      if (input && input.value.trim()) {
-        window.addNewTask(input.value.trim());
-        input.value = "";
-      }
-
-    });
-  }
-
+  // Eventos do Modal de Backup Diário
+  document.getElementById("daily-backup-btn")?.addEventListener("click", () => {
+    backupManager.updateBackupUI();
+    ui.openModal(document.getElementById("daily-backup-modal-overlay"));
+  });
+  document.getElementById("daily-backup-modal-close-btn")?.addEventListener("click", () => ui.closeModal(document.getElementById("daily-backup-modal-overlay")));
+  document.getElementById("select-backup-folder-btn")?.addEventListener("click", async () => {
+    await backupManager.selectBackupFolder();
+    const { folderName } = backupManager.getBackupStatus();
+    const folderEl = document.getElementById("modal-backup-folder-path");
+    if (folderEl) folderEl.textContent = folderName;
+  });
+  document.getElementById("run-daily-backup-btn")?.addEventListener("click", async () => {
+    const success = await backupManager.performDailyBackup();
+    if (success) {
+      ui.closeModal(document.getElementById("daily-backup-modal-overlay"));
+    }
+  });
 
   document.getElementById("export-db-btn").addEventListener("click", () => db.exportAllDocs());
 
@@ -317,7 +276,6 @@ function setupEventListeners() {
   });
 
   document.getElementById("tasks-btn")?.addEventListener("click", () => tasks.toggleTasksDrawer());
-  document.getElementById("tasks-drawer-overlay")?.addEventListener("click", () => tasks.toggleTasksDrawer());
   document.getElementById("typewriter-btn").addEventListener("click", () => core.toggleTypewriterMode(state.editor));
   document.getElementById("ruler-toggle-btn").addEventListener("click", () => core.toggleRuler(state.rulerLine));
   
@@ -333,6 +291,7 @@ function setupEventListeners() {
     save: () => saveNow(),
     new: () => docs.createNewDocument("Novo Documento", state),
     find: () => ui.openModal(document.getElementById("find-replace-modal-overlay")),
+    goto: () => ui.openModal(document.getElementById("goto-line-modal-overlay")),
     zen: () => toggleZenMode(),
     isAutocompleteOpen: () => !document.getElementById("autocomplete-popup").classList.contains("hidden"),
     openMultiActions: () => {
@@ -350,70 +309,81 @@ function setupEventListeners() {
   });
 }
 
-async function handleAiAction(action) {
+function replaceNextMatch() {
+  const findInput = document.getElementById("find-input");
+  const replaceInput = document.getElementById("replace-input");
+  const term = findInput.value;
+  if (!term) return;
 
-  if (!ai.getApiKey()) {
-    ui.showMessage("Configure sua API Key primeiro!", "error");
-    return;
-  }
+  const text = state.editor.value;
+  let index = text.indexOf(term, state.editor.selectionEnd);
+  if (index === -1) index = text.indexOf(term);
+  if (index === -1) return;
 
-  const start = state.editor.selectionStart;
-  const end = state.editor.selectionEnd;
-  const selectedText = state.editor.value.substring(start, end).trim();
-
-  if (!selectedText) {
-    ui.showMessage("Selecione um texto para a magia funcionar! ✨", "info");
-    return;
-  }
-
-  ui.showMessage("Processando IA... 🪄", "info");
-  state.editor.classList.add("animate-pulse", "opacity-70");
-
-  try {
-    let result = "";
-    if (action === "improve") result = await ai.improveText(selectedText);
-    else if (action === "summarize") result = await ai.summarizeText(selectedText);
-    else if (action === "tone-formal") result = await ai.changeTone(selectedText, "formal");
-    else if (action === "tone-informal") result = await ai.changeTone(selectedText, "informal");
-
-    if (result) {
-      const before = state.editor.value.substring(0, start);
-      const after = state.editor.value.substring(end);
-      state.editor.value = before + result + after;
-      state.editor.selectionStart = start;
-      state.editor.selectionEnd = start + result.length;
-      handleEditorInput();
-      ui.showMessage("Magia concluída! ✨", "success");
-    }
-  } catch (err) {
-    ui.showMessage(err.message, "error");
-  } finally {
-    state.editor.classList.remove("animate-pulse", "opacity-70");
-  }
+  state.editor.value = text.slice(0, index) + replaceInput.value + text.slice(index + term.length);
+  state.editor.setSelectionRange(index, index + replaceInput.value.length);
+  handleEditorInput();
+  updateSearchHighlight(state.editor, term);
 }
 
+function replaceAllMatches() {
+  const findInput = document.getElementById("find-input");
+  const replaceInput = document.getElementById("replace-input");
+  const term = findInput.value;
+  if (!term || !state.editor.value.includes(term)) return;
+
+  state.editor.value = state.editor.value.split(term).join(replaceInput.value);
+  handleEditorInput();
+  updateSearchHighlight(state.editor, term);
+}
+
+function goToLine() {
+  const input = document.getElementById("goto-line-input");
+  const requestedLine = Math.max(1, Number.parseInt(input.value, 10) || 1);
+  const text = state.editor.value;
+  let position = 0;
+  let currentLine = 1;
+
+  while (currentLine < requestedLine) {
+    const nextBreak = text.indexOf("\n", position);
+    if (nextBreak === -1) break;
+    position = nextBreak + 1;
+    currentLine++;
+  }
+
+  state.editor.focus();
+  state.editor.setSelectionRange(position, position);
+  core.updateCursorPos(state.editor, state.metrics.cursorPos);
+  ui.closeModal(document.getElementById("goto-line-modal-overlay"));
+}
 
 function handleEditorInput() {
+  backupManager.markEditPerformed();
 
   core.updateLineNumbers(state.editor, state.lineNumbers);
   core.updateCursorPos(state.editor, state.metrics.cursorPos);
-  core.updateStatusBarMetrics(state.editor, state.metrics);
+  clearTimeout(state.metricsTimeout);
+  state.metricsTimeout = setTimeout(() => {
+    core.updateStatusBarMetrics(state.editor, state.metrics);
+  }, 150);
   
   // Debounce de Salvamento: Aguarda 1s de inatividade para salvar
   ui.renderSaveStatus("unsaved");
   clearTimeout(state.saveTimeout);
   state.saveTimeout = setTimeout(saveNow, 1000);
 
-  // Debounce do Autocomplete: Aguarda 50ms para não travar o PC
+  // Limita a varredura para manter a digitação responsiva em arquivos grandes.
   clearTimeout(state.autoTimeout);
   state.autoTimeout = setTimeout(() => {
-     // Dispara o autocomplete com as palavras do documento + dicionário pessoal
     const text = state.editor.value;
-    const documentWords = [...new Set(text.match(/[\wÀ-ú]{2,}/g) || [])];
+    const cursor = state.editor.selectionStart;
+    const start = Math.max(0, cursor - AUTOCOMPLETE_SCAN_LIMIT);
+    const end = Math.min(text.length, cursor + AUTOCOMPLETE_SCAN_LIMIT);
+    const documentWords = [...new Set(text.slice(start, end).match(/[\wÀ-ú]{2,}/g) || [])];
     const personalDict = dictionary.getPersonalDict();
     const keywords = [...new Set([...personalDict, ...documentWords])];
     auto.triggerAutocomplete(state.editor, keywords);
-  }, 50);
+  }, 200);
 }
 
 

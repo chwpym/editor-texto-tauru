@@ -20,7 +20,6 @@ O **Editor Taurus** é uma ferramenta de escrita leve, moderna e totalmente Web,
 - **📖 Dicionário Pessoal**: Salve suas palavras fixas (marcas, termos técnicos) que aparecem em todos os documentos.
 - **✍️ Typewriter Mode**: Modo máquina de escrever — mantém a linha atual sempre centralizada na tela.
 - **🔍 Highlight de Busca**: Todas as ocorrências destacadas em amarelo ao usar Localizar. Contador `X/Y` e navegação por `Enter`.
-- **🛡️ Proteção de Conteúdo**: Alerta e permite desfazer caso você apague mais de 30% do texto acidentalmente.
 - **📊 Status Bar Completa**: Linha, coluna, total de linhas, palavras, tamanho e horário do último salvamento.
 
 ---
@@ -60,11 +59,10 @@ O **Editor Taurus** é uma ferramenta de escrita leve, moderna e totalmente Web,
 ├── index.html          # HTML puro (interface)
 ├── css/
 │   └── main.css        # Estilos customizados
-├── js/
-│   └── app.js          # Toda a lógica do editor (~1700 linhas)
-├── manifest.json       # Configuração PWA
-├── service-worker.js   # Cache offline
-└── icon.png            # Ícone do app
+├── js/                 # Módulos JavaScript do editor
+├── public/
+│   └── icon.png        # Ícone publicado pela PWA
+└── vite.config.js      # Build, manifest e cache offline
 ```
 
 ---

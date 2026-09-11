@@ -30,6 +30,10 @@ export function initTasksSystem() {
     });
   }
 
+  document.getElementById("clear-completed-tasks-btn")?.addEventListener("click", () => {
+    window.clearCompletedTasks();
+  });
+
   renderTasks();
 }
 
@@ -147,4 +151,3 @@ export function toggleTasksDrawer() {
     renderTasks();
   }
 }
-
